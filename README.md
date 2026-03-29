@@ -1,0 +1,165 @@
+# Genome Toolkit
+
+Turn your raw genetic data into an actionable, evidence-based personal health vault.
+
+Genome Toolkit is a set of [Claude Code](https://claude.ai/claude-code) skills and Python scripts that import DTC genome data (23andMe, AncestryDNA, MyHeritage, Nebula, or any VCF), build a structured [Obsidian](https://obsidian.md) knowledge vault, and generate clinically useful outputs like drug safety cards and prescriber summaries.
+
+## What It Does
+
+1. **Import** raw genome data from any major DTC provider (auto-detected)
+2. **Ask** about your health goals (medication safety, mental health, gut, liver, sleep...)
+3. **Generate** personalized gene notes, system maps, and clinical reports
+4. **Validate** claims using multi-agent AI pipeline (Codex, NotebookLM, PubMed)
+5. **Track** biomarkers and compare lab results against genetic predictions
+6. **Expand** your data via guided imputation (600K -> 3-40M variants)
+
+## Quick Start
+
+### Prerequisites
+- [Obsidian](https://obsidian.md) with [Dataview](https://github.com/blacksmithgu/obsidian-dataview) plugin
+- Python 3.10+
+- [Claude Code](https://claude.ai/claude-code)
+
+### Setup
+
+```bash
+# Clone the toolkit
+git clone https://github.com/glebis/genome-toolkit.git
+cd genome-toolkit
+
+# Install Python dependencies
+pip install -e .
+
+# Set your vault location
+export GENOME_VAULT_ROOT=~/my-genome-vault
+
+# Copy the vault template
+cp -r vault-template/* $GENOME_VAULT_ROOT/
+
+# Install skills (copy to Claude Code skills directory)
+cp -r skills/* ~/.claude/skills/
+```
+
+### First Run
+
+```bash
+# 1. Place your raw genome file
+cp ~/Downloads/23andme_raw.txt $GENOME_VAULT_ROOT/data/raw/
+
+# 2. Import your data
+# In Claude Code:
+/genome-import
+
+# 3. Set up your vault with health goals
+/genome-onboard
+
+# 4. Open your vault in Obsidian and start exploring
+```
+
+## Skills
+
+| Skill | Trigger | Purpose |
+|-------|---------|---------|
+| **genome-import** | `/genome-import` | Import raw data, prepare imputation, import imputed VCFs |
+| **genome-onboard** | `/genome-onboard` | Goal-driven vault setup (first run) |
+| **genome-create** | `/new-gene X` | Create gene/system/phenotype notes from SQLite data |
+| **genome-analytics** | `/genome-analytics` | PRS, enrichment, vault audit, PubMed monitoring |
+| **genome-report** | `/biomarker`, `/wallet-card` | Lab import, Wallet Card, PGx Card, Prescriber Summary |
+| **genome-validate** | `/genome-validate` | Multi-agent fact-checking (Codex + NotebookLM + PubMed) |
+
+## Supported Providers
+
+| Provider | Format | Detected By |
+|----------|--------|-------------|
+| 23andMe v4/v5 | TSV | "23andMe" in file header |
+| AncestryDNA | TSV (5 cols) | allele1/allele2 column pattern |
+| MyHeritage | CSV | "RSID,CHROMOSOME,POSITION,RESULT" header |
+| Nebula Genomics | VCF | "source=Nebula" in VCF header |
+| Generic VCF | VCF | `##fileformat=VCF` header |
+
+## Evidence System
+
+Every claim in the vault has an evidence tier:
+
+- **E1** (clinical-grade): CPIC/DPWG guidelines, multiple studies — act on these
+- **E2** (well-replicated): Multiple GWAS, OR > 1.5 — likely reliable
+- **E3** (supported): 2-5 studies, plausible mechanism — interpret cautiously
+- **E4** (suggestive): Single study — hypothesis, not diagnosis
+- **E5** (speculative): Preliminary or N=1 — for curiosity only
+
+## Multi-Agent Validation
+
+Genome Toolkit uses multiple AI agents to validate claims:
+
+- **Claude Code** — primary agent for note creation and analysis
+- **Codex CLI** (gpt-5-codex) — cross-model validation of evidence tiers and drug interactions
+- **NotebookLM** — source-grounded fact-checking of prescriber documents
+- **PubMed subagents** — literature verification and retraction monitoring
+- **Tavily/Firecrawl** — web search for recent publications and safety alerts
+
+Prescriber-facing reports require **2 agents to agree** before publishing (configurable in `config/agents.yaml`).
+
+## Vault Structure
+
+```
+your-genome-vault/
+  Dashboard.md                 # Decision-tree home page
+  Question Index.md            # Search by concern, not by gene
+  Genetic Determinism...md     # Epistemic guardrails
+  Genes/                       # One note per gene (BDNF.md, CYP2D6.md, ...)
+  Systems/                     # Biological systems (Dopamine, HPA Axis, ...)
+  Phenotypes/                  # Genetics -> lived experience
+  Protocols/                   # Actionable intervention protocols
+  Reports/                     # Prescriber-facing documents
+  Biomarkers/                  # Lab results with genetic comparison
+  Research/                    # Literature reviews and findings
+  Meta/                        # Dashboards and audit reports
+  Guides/                      # Getting Started, Imputation Guide
+  data/
+    raw/                       # Your genome file (gitignored)
+    genome.db                  # SQLite database (gitignored)
+```
+
+## Imputation
+
+Expand from ~600K SNPs to ~3-40M variants:
+
+1. `/genome-import` prepare for imputation (VCF export + QC)
+2. Upload to Michigan Imputation Server (free, 2-12 hours)
+3. `/genome-import` import imputed data
+
+See `Guides/Imputation Guide.md` for full walkthrough.
+
+Requires: `bcftools`, `bgzip` (`brew install bcftools htslib`)
+
+## Configuration
+
+All config in `config/`:
+- `default.yaml` — paths, rate limits, cache TTL
+- `goal_map.yaml` — health goals -> systems -> genes mapping
+- `evidence_tiers.yaml` — E1-E5 definitions
+- `provider_formats.yaml` — file format detection signatures
+- `agents.yaml` — multi-agent validation pipeline
+
+Override paths via environment variables: `GENOME_VAULT_ROOT`, `GENOME_DB_PATH`.
+
+## Privacy
+
+- Raw genome data stays local (gitignored, never uploaded)
+- SQLite database is gitignored
+- No data leaves your machine unless you explicitly use imputation servers or API enrichment
+- Imputation servers (Michigan/TOPMed) encrypt data and delete after 7 days
+- Reports reference rsIDs, not bulk genotype dumps
+
+## Philosophy
+
+> "Normal willpower, different hardware. Fully rewirable."
+
+- Genetics explains WHY, not what's wrong
+- Every gene note ends with "What Changes This" (the exit ramp)
+- E1 claims are reliable. E3-E5 claims are hypotheses, not diagnoses.
+- 40-70% of outcomes are environment, behavior, and choice
+
+## License
+
+MIT

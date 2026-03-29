@@ -1,0 +1,80 @@
+# Provider Format Detection Signatures
+# Used by genome_init.py to auto-detect input file format
+
+providers:
+  23andme:
+    name: "23andMe"
+    versions:
+      v4:
+        description: "23andMe v4 chip (~600K SNPs)"
+        snp_count_range: [550000, 650000]
+      v5:
+        description: "23andMe v5 chip (~630K SNPs)"
+        snp_count_range: [600000, 700000]
+    detection:
+      comment_patterns:
+        - "23andMe"
+        - "23andme"
+      header_pattern: "rsid\tchromosome\tposition\tgenotype"
+      delimiter: "\t"
+      columns: 4
+      column_names: ["rsid", "chromosome", "position", "genotype"]
+    assembly: "GRCh37"
+    strand: "plus"
+    file_extensions: [".txt", ".tsv"]
+
+  ancestry:
+    name: "AncestryDNA"
+    detection:
+      comment_patterns:
+        - "AncestryDNA"
+      header_pattern: "rsid\tchromosome\tposition\tallele1\tallele2"
+      delimiter: "\t"
+      columns: 5
+      column_names: ["rsid", "chromosome", "position", "allele1", "allele2"]
+    assembly: "GRCh37"
+    strand: "plus"
+    file_extensions: [".txt", ".tsv"]
+    notes: "allele1 + allele2 must be concatenated into genotype"
+
+  myheritage:
+    name: "MyHeritage"
+    detection:
+      comment_patterns:
+        - "MyHeritage"
+      header_pattern: "RSID,CHROMOSOME,POSITION,RESULT"
+      alternate_header: "RSID\tCHROMOSOME\tPOSITION\tRESULT"
+      delimiter: ","
+      alternate_delimiter: "\t"
+      columns: 4
+      column_names: ["RSID", "CHROMOSOME", "POSITION", "RESULT"]
+    assembly: "GRCh37"
+    strand: "plus"
+    file_extensions: [".csv", ".txt"]
+
+  nebula:
+    name: "Nebula Genomics"
+    detection:
+      comment_patterns:
+        - "##source=Nebula"
+        - "##source=nebula"
+      is_vcf: true
+    assembly: "from_header"
+    file_extensions: [".vcf", ".vcf.gz"]
+
+  vcf:
+    name: "Generic VCF"
+    detection:
+      header_pattern: "##fileformat=VCF"
+      is_vcf: true
+    assembly: "from_header"
+    file_extensions: [".vcf", ".vcf.gz"]
+    notes: "Fallback for any VCF not matching other providers"
+
+# Detection priority (check in this order)
+detection_order:
+  - "23andme"
+  - "ancestry"
+  - "myheritage"
+  - "nebula"
+  - "vcf"

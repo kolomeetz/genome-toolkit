@@ -1,0 +1,34 @@
+# Sensitive genetic data — NEVER version control
+vault-template/data/raw/
+vault-template/data/genome.db
+vault-template/data/genome.db-journal
+vault-template/data/genome.db-wal
+vault-template/data/genome.db-shm
+vault-template/data/cache/
+vault-template/data/clinvar/
+vault-template/data/output/imputed/
+
+# API keys
+.env
+
+# Python
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# Obsidian internals (user-specific)
+vault-template/.obsidian/workspace.json
+vault-template/.obsidian/graph.json
+
+# Logs
+*.log
+vault-template/data/cron.log
+
+# Enzyme (Obsidian plugin cache)
+.enzyme/
+.enzyme-embeddings/

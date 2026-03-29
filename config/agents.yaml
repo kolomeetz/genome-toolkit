@@ -1,0 +1,106 @@
+# Multi-Agent Validation Pipeline Configuration
+# Controls which agents participate in claim validation and fact-checking
+
+agents:
+  codex:
+    enabled: true
+    model: "gpt-5-codex"
+    reasoning_effort: "high"
+    sandbox: "read-only"
+    use_for:
+      - evidence_tier_review       # verify E1-E5 assignments match published data
+      - drug_interaction_check     # cross-check drug safety claims
+      - architecture_review        # schema and structure decisions
+      - cross_model_validation     # second opinion on complex claims
+    prompts:
+      evidence_review: |
+        Review this gene note for evidence tier accuracy. For each claim:
+        1. Is the evidence tier (E1-E5) appropriate for the cited evidence?
+        2. Are effect sizes consistent with published meta-analyses?
+        3. Are drug interactions complete and current with CPIC/DPWG?
+        Flag any discrepancies with specific corrections.
+      report_review: |
+        Check this prescriber-facing report for:
+        1. Drug contraindications against current CPIC guidelines
+        2. Metabolizer phenotype accuracy
+        3. Missing safety-critical interactions
+        Zero tolerance for drug safety errors.
+
+  notebooklm:
+    enabled: true
+    skill: "notebooklm"
+    requires_manual_upload: true
+    use_for:
+      - prescriber_doc_factcheck   # verify reports against source papers
+      - source_grounded_validation # check claims have proper citations
+      - contradiction_detection    # find inconsistencies across vault notes
+    prompts:
+      factcheck: |
+        Given the uploaded source papers, does this note accurately represent
+        the findings? Flag any claims that are not supported by the sources,
+        or that overstate the evidence.
+
+  subagents:
+    explore:
+      use_for:
+        - pubmed_search            # find new publications on vault genes
+        - codebase_analysis        # trace claims through vault structure
+    plan:
+      use_for:
+        - architecture_design
+        - implementation_planning
+
+  tavily:
+    enabled: true
+    skill: "tavily-search"
+    use_for:
+      - retraction_check           # check if cited papers have been retracted
+      - recent_publication_search  # find new evidence since last review
+      - drug_safety_alerts         # FDA alerts, EMA updates
+    queries:
+      retraction: "{paper_title} retraction OR correction OR erratum"
+      safety_alert: "{drug_name} FDA safety alert OR warning {year}"
+
+  firecrawl:
+    enabled: true
+    skill: "firecrawl-research"
+    use_for:
+      - deep_web_research          # full article scraping when needed
+      - guideline_updates          # CPIC/DPWG guideline changes
+
+# Validation gates — minimum requirements for publishing
+gates:
+  gene_note:
+    required_agents: 1
+    timeout_minutes: 10
+    block_on:
+      - effect_size_mismatch       # effect size differs >20% from published
+      - wrong_evidence_tier        # tier differs by >1 from evidence
+      - missing_drug_interaction   # known CPIC drug interaction absent
+    warn_on:
+      - stale_sources              # sources >2 years old without recheck
+      - single_study_claim         # E3+ claim based on single study
+
+  prescriber_report:
+    required_agents: 2             # safety-critical: need 2 agents to agree
+    timeout_minutes: 15
+    block_on:
+      - drug_contraindication_error
+      - dosing_error
+      - missing_safety_warning
+      - wrong_metabolizer_phenotype
+    warn_on:
+      - incomplete_drug_list
+      - missing_monitoring_recommendation
+
+  vault_audit:
+    required_agents: 1
+    timeout_minutes: 30
+    block_on: []                   # audit is advisory, never blocks
+
+# Consensus rules
+consensus:
+  effect_size_tolerance: 0.2       # 20% tolerance before flagging
+  evidence_tier_tolerance: 1       # max 1 tier difference
+  drug_interaction_strict: true    # zero tolerance on safety claims
+  require_human_for_blocks: true   # blocked items need human override

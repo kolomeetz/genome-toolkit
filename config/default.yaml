@@ -1,0 +1,56 @@
+# Genome Toolkit Configuration
+# Override paths via environment variables: GENOME_VAULT_ROOT, GENOME_DB_PATH
+
+# Rate limits (seconds between requests)
+rate_limits:
+  snpedia: 1.0
+  clinvar_eutils: 0.11      # 10/sec with API key
+  pharmgkb: 1.0
+  gwas_catalog: 0.5
+  myvariant: 0.1
+  dbsnp: 0.1
+
+# Cache TTL (days)
+cache_ttl:
+  snpedia: 180
+  clinvar: 90
+  pharmgkb: 180
+  gwas_catalog: 90
+  dbsnp: 365
+  myvariant: 90
+
+# Imputation defaults
+imputation:
+  min_r2: 0.3                # minimum imputation quality for import
+  default_panel: "HRC r1.1"  # recommended for EUR ancestry
+  default_population: "EUR"
+  servers:
+    michigan:
+      url: "https://imputationserver.sph.umich.edu"
+      panels: ["TOPMed r3", "HRC r1.1", "1000G Phase 3"]
+    topmed:
+      url: "https://imputation.biodatacatalyst.nhlbi.nih.gov"
+      panels: ["TOPMed r3"]
+    sanger:
+      url: "https://imputation.sanger.ac.uk"
+      panels: ["HRC", "1000G", "UK10K"]
+
+# Quality thresholds for imputed variants
+quality_tiers:
+  high: 0.9      # suitable for Gene notes and Reports
+  good: 0.8      # suitable for analysis
+  moderate: 0.5  # PRS only
+  low: 0.3       # exploratory
+
+# Vault directories (relative to vault root)
+vault_dirs:
+  genes: "Genes"
+  systems: "Systems"
+  phenotypes: "Phenotypes"
+  protocols: "Protocols"
+  reports: "Reports"
+  research: "Research"
+  meta: "Meta"
+  biomarkers: "Biomarkers"
+  templates: "Templates"
+  guides: "Guides"

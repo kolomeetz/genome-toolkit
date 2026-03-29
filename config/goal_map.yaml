@@ -1,0 +1,91 @@
+# Goal-Driven Onboarding Configuration
+# Maps health goals to target systems, seed genes, and first outputs
+
+goals:
+  medication_safety:
+    display: "I want to know if my medications are safe"
+    target_systems: ["Drug Metabolism", "Liver and Metabolism"]
+    seed_genes: ["CYP2D6", "CYP2C19", "CYP2C9", "CYP1A2", "CYP3A4", "NAT2", "SLCO1B1", "DPYD", "TPMT", "PNPLA3", "HFE"]
+    first_reports: ["Wallet Card", "Pharmacogenomics Card", "Prescriber Summary"]
+    first_tests: ["Clinical PGx panel", "ALT/AST/GGT", "Ferritin + transferrin saturation"]
+    first_protocols: ["Liver Monitoring Protocol"]
+    priority: 1
+
+  mental_health:
+    display: "I want to understand my anxiety/mood patterns"
+    target_systems: ["Dopamine System", "Serotonin System", "HPA Axis", "GABA System"]
+    seed_genes: ["COMT", "SLC6A4", "FKBP5", "DRD2", "BDNF", "HTR2A", "MAOA", "CRHR1", "OPRM1", "NPY"]
+    first_reports: ["SSRI Response Profile", "Anxiety Genetic Profile"]
+    first_tests: ["CRP baseline"]
+    first_protocols: ["GAD Protocol", "Exercise Protocol"]
+    priority: 2
+
+  addiction_recovery:
+    display: "I'm in recovery and want to understand my biology"
+    target_systems: ["Opioid and Reward", "Dopamine System", "Endocannabinoid System"]
+    seed_genes: ["DRD2", "OPRM1", "CNR1", "FAAH", "ANKK1", "COMT", "DAT1", "CHRNA5", "ADH1B", "ALDH2"]
+    first_reports: ["Pain Management Corridor"]
+    first_tests: []
+    first_protocols: ["Pain Management Protocol"]
+    priority: 3
+
+  liver_health:
+    display: "I'm worried about my liver"
+    target_systems: ["Liver and Metabolism", "Lipid Metabolism"]
+    seed_genes: ["PNPLA3", "HFE", "CYP2E1", "UGT1A1", "GSTM1", "NAT2", "FADS1", "FADS2", "APOE"]
+    first_reports: ["Liver Vulnerability"]
+    first_tests: ["ALT/AST/GGT panel", "Ferritin + transferrin saturation", "FibroScan"]
+    first_protocols: ["Liver Monitoring Protocol"]
+    priority: 4
+
+  gut_health:
+    display: "I have gut issues or autoimmune concerns"
+    target_systems: ["Immune and Inflammatory", "Gut-Brain Axis"]
+    seed_genes: ["ATG16L1", "FUT2", "IL1B", "PTPN22", "NOD2", "TNF", "IL6", "HLA-B"]
+    first_reports: []
+    first_tests: ["CRP", "Fecal calprotectin", "HLA-B27 serology", "ESR"]
+    first_protocols: ["Inflammation Tracking Protocol"]
+    priority: 5
+
+  sleep_optimization:
+    display: "I want better sleep"
+    target_systems: ["Circadian Rhythm"]
+    seed_genes: ["CLOCK", "PER2", "PER3", "ADORA2A", "CYP1A2", "MTNR1B"]
+    first_reports: ["Sleep Vulnerability", "Caffeine Sensitivity"]
+    first_tests: []
+    first_protocols: ["Caffeine Protocol"]
+    priority: 6
+
+  cardiovascular:
+    display: "I want to understand my heart/metabolic risk"
+    target_systems: ["Lipid Metabolism", "Cardiovascular"]
+    seed_genes: ["APOE", "PCSK9", "LPA", "FTO", "TCF7L2", "MTHFR", "FADS1", "FADS2", "SH2B3"]
+    first_reports: []
+    first_tests: ["Lipid panel", "HbA1c", "Homocysteine", "Lp(a)"]
+    first_protocols: []
+    priority: 7
+
+  comprehensive:
+    display: "I want the full picture"
+    target_systems: "all"
+    seed_genes: "top_scored"
+    first_reports: ["Wallet Card", "Pharmacogenomics Card"]
+    first_tests: ["CRP", "Clinical PGx panel", "HLA-B27"]
+    first_protocols: []
+    priority: 8
+
+# Gene scoring weights for prioritization
+scoring:
+  medication_match: 8     # gene is CPIC pharmacogene + user takes the drug
+  goal_match: 6           # gene in seed_genes for selected goal
+  severe_finding: 5       # non-reference variant with clinical significance
+  protocol_exists: 4      # an actionable protocol references this gene
+  biomarker_link: 3       # a measurable biomarker validates this gene's effect
+  evidence_weight: 2      # E1=6, E2=4, E3=2, E4=1, E5=0
+
+# Initial generation limits
+limits:
+  max_genes: 12
+  min_genes: 8
+  max_systems: 4
+  max_protocols: 3
