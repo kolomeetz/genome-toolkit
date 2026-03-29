@@ -38,7 +38,7 @@ SORT evidence_tier ASC
 
 ## Related Notes
 ```dataview
-LIST FROM [[]]
+LIST FROM outgoing([[]])
 WHERE file.name != this.file.name
 SORT file.mtime DESC
 LIMIT 10

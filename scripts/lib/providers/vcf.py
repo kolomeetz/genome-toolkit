@@ -76,7 +76,10 @@ class GenericVCF(GenomeProvider):
         for pattern in [r"R2=([\d.]+)", r"DR2=([\d.]+)", r"AR2=([\d.]+)"]:
             m = re.search(pattern, info_field)
             if m:
-                return float(m.group(1))
+                try:
+                    return float(m.group(1))
+                except ValueError:
+                    return None
         return None
 
     def _parse_iter(self, filepath: Path, stats: QcStats) -> Iterator[SnpRecord]:
@@ -95,11 +98,17 @@ class GenericVCF(GenomeProvider):
                 rsid = parts[2]
                 ref = parts[3]
                 alt = parts[4]
+                filt = parts[6]
                 info = parts[7]
                 format_field = parts[8]
                 sample = parts[9]  # First sample only
 
                 stats.total_input += 1
+
+                # Skip hard-filtered sites
+                if filt not in ("PASS", ".", ""):
+                    stats.details["filtered_sites"] = stats.details.get("filtered_sites", 0) + 1
+                    continue
 
                 # Skip multiallelic
                 if "," in alt:

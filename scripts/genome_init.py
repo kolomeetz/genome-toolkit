@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sqlite3
 import sys
 import uuid
 from datetime import datetime
@@ -130,6 +131,7 @@ def main():
     imported = 0
     skipped_dup = 0
     skipped_r2 = 0
+    errors = 0
 
     conn.execute("BEGIN")
     for rec in records:
@@ -150,8 +152,12 @@ def main():
                  datetime.now().strftime("%Y-%m-%d"), rec.quality, import_id),
             )
             imported += 1
-        except Exception:
+        except sqlite3.IntegrityError:
             skipped_dup += 1
+        except (sqlite3.Error, ValueError) as e:
+            errors += 1
+            if errors <= 5:
+                print(f"  Warning: Failed to insert {rec.source_id}: {e}")
     conn.commit()
 
     # Step 7: Finalize
