@@ -20,10 +20,14 @@ import os
 import sys
 from collections import defaultdict
 from itertools import combinations
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lib.config import DB_PATH as _CONFIG_DB_PATH
 
 # ── Configuration ──────────────────────────────────────────────────────────
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "genome.db")
+DB_PATH = str(_CONFIG_DB_PATH)
 LD_DISTANCE_THRESHOLD = 500_000  # 500kb
 
 # ── Known LD relationships from literature (EUR population) ────────────────

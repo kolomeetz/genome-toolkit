@@ -23,9 +23,12 @@ import sqlite3
 import sys
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 
-VAULT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DB_PATH = os.path.join(VAULT_ROOT, "data", "genome.db")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.config import VAULT_ROOT, DB_PATH as _CONFIG_DB_PATH
+
+DB_PATH = str(_CONFIG_DB_PATH)
 
 
 def open_vcf(filepath):

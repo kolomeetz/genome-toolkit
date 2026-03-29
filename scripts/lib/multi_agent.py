@@ -141,6 +141,67 @@ def compute_consensus(
     )
 
 
+def check_available_agents(config: dict) -> dict[str, bool]:
+    """Check which configured agents are actually available.
+
+    Returns dict of agent_name -> is_available. An agent is available if:
+    - It's enabled in config
+    - Its required skill/binary exists (checked by name convention)
+
+    External skills (notebooklm, tavily-search, firecrawl-research) are
+    checked by looking for their skill directories in ~/.claude/skills/.
+    Codex CLI is checked by looking for the `codex` binary.
+    Subagents (Claude) are always available.
+    """
+    import shutil
+
+    agents = config.get("agents", {})
+    available = {}
+    skills_dir = Path.home() / ".claude" / "skills"
+
+    for name, agent_config in agents.items():
+        if not agent_config.get("enabled", True):
+            available[name] = False
+            continue
+
+        if name == "codex":
+            available[name] = shutil.which("codex") is not None
+        elif name == "subagents":
+            available[name] = True  # Claude subagents always available
+        elif "skill" in agent_config:
+            skill_name = agent_config["skill"]
+            available[name] = (skills_dir / skill_name).is_dir()
+        else:
+            available[name] = True  # no external dependency
+
+    return available
+
+
+def adjust_gate_for_available_agents(
+    gate: dict,
+    available: dict[str, bool],
+) -> dict:
+    """Adjust gate requirements based on which agents are actually available.
+
+    If fewer agents are available than required_agents, lower the requirement
+    to the number of available agents (minimum 1). This allows validation to
+    proceed with degraded confidence rather than blocking entirely.
+    """
+    num_available = sum(1 for v in available.values() if v)
+    adjusted = dict(gate)
+
+    original_required = gate.get("required_agents", 1)
+    if num_available < original_required:
+        adjusted["required_agents"] = max(1, num_available)
+        adjusted["_degraded"] = True
+        adjusted["_original_required"] = original_required
+        adjusted["_available_agents"] = num_available
+    else:
+        adjusted["_degraded"] = False
+
+    return adjusted
+
+
 def format_validation_report(result: ValidationResult) -> str:
     """Format a validation result as a markdown report."""
     lines = [

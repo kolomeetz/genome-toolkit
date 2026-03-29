@@ -213,3 +213,74 @@ class TestMultiAgentConsensus:
 
         assert consensus.passed is True
         assert consensus.agent_agreement == 1.0  # 1/1 non-skipped passed
+
+
+class TestGracefulDegradation:
+    """Test graceful fallback when external agents are unavailable."""
+
+    def test_adjust_gate_when_fewer_agents(self):
+        from lib.multi_agent import adjust_gate_for_available_agents
+
+        gate = {"required_agents": 2, "block_on": ["drug_error"]}
+        available = {"codex": True, "notebooklm": False, "tavily": False}
+
+        adjusted = adjust_gate_for_available_agents(gate, available)
+        assert adjusted["required_agents"] == 1  # lowered from 2
+        assert adjusted["_degraded"] is True
+        assert adjusted["_original_required"] == 2
+
+    def test_no_adjustment_when_enough_agents(self):
+        from lib.multi_agent import adjust_gate_for_available_agents
+
+        gate = {"required_agents": 1, "block_on": []}
+        available = {"codex": True, "notebooklm": True}
+
+        adjusted = adjust_gate_for_available_agents(gate, available)
+        assert adjusted["required_agents"] == 1
+        assert adjusted["_degraded"] is False
+
+    def test_minimum_one_agent(self):
+        from lib.multi_agent import adjust_gate_for_available_agents
+
+        gate = {"required_agents": 3, "block_on": []}
+        available = {"codex": False, "notebooklm": False, "tavily": False}
+
+        adjusted = adjust_gate_for_available_agents(gate, available)
+        assert adjusted["required_agents"] == 1  # never go below 1
+        assert adjusted["_degraded"] is True
+
+    def test_check_available_agents_subagents_always_available(self):
+        from lib.multi_agent import check_available_agents
+
+        config = {
+            "agents": {
+                "subagents": {"enabled": True, "explore": {}},
+            }
+        }
+        available = check_available_agents(config)
+        assert available["subagents"] is True
+
+    def test_check_available_agents_disabled_agent(self):
+        from lib.multi_agent import check_available_agents
+
+        config = {
+            "agents": {
+                "codex": {"enabled": False},
+            }
+        }
+        available = check_available_agents(config)
+        assert available["codex"] is False
+
+    def test_degraded_consensus_still_works(self):
+        """Even with degraded gate, consensus logic should function."""
+        from lib.multi_agent import compute_consensus, adjust_gate_for_available_agents, AgentResult
+
+        gate = {"required_agents": 2, "block_on": []}
+        available = {"codex": True, "notebooklm": False}
+        adjusted = adjust_gate_for_available_agents(gate, available)
+
+        results = {
+            "codex": AgentResult(agent="codex", status="pass"),
+        }
+        consensus = compute_consensus(results, adjusted, {})
+        assert consensus.passed is True  # 1 pass meets adjusted requirement of 1

@@ -14,10 +14,8 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-VAULT_ROOT = Path(__file__).resolve().parent.parent.parent
-BIOMARKERS_DIR = VAULT_ROOT / "Biomarkers"
-OUTPUT_DIR = VAULT_ROOT / "data" / "output"
-RESEARCH_DIR = VAULT_ROOT / "Research"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lib.config import VAULT_ROOT, BIOMARKERS_DIR, OUTPUT_DIR, RESEARCH_DIR
 
 # Genetic predictions based on personal genotype.
 # Each prediction links a gene/genotype to an expected biomarker direction.

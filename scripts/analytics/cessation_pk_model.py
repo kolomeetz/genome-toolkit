@@ -17,6 +17,7 @@ Author: Generated for Gleb Kalinin's genomics vault
 Date: 2026-03-23
 """
 
+import sys
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -24,10 +25,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import json
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lib.config import OUTPUT_DIR
+
 # ============================================================================
 # OUTPUT DIRECTORY
 # ============================================================================
-OUTPUT_DIR = Path(__file__).parent.parent / "output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================================

@@ -17,12 +17,12 @@ Usage:
 import os
 import re
 import math
+import sys
 from collections import defaultdict, Counter
 from pathlib import Path
 
-VAULT_ROOT = Path(__file__).resolve().parent.parent.parent
-GENES_DIR = VAULT_ROOT / "Genes"
-SYSTEMS_DIR = VAULT_ROOT / "Systems"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lib.config import VAULT_ROOT, GENES_DIR, SYSTEMS_DIR
 
 # ---------------------------------------------------------------------------
 # Manual pathway mapping: gene -> list of (pathway_id, pathway_name)

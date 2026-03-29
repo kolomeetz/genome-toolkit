@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 """
-Convert 23andMe v4 raw data to VCF format for imputation servers.
+Export genotyped SNPs from SQLite to VCF format for imputation servers.
 
-Input:  data/raw/23andme_v4.txt (23andMe v4 format, GRCh37/hg19)
-Output: data/output/23andme_for_imputation.vcf
+Input:  SQLite database (genome.db) — provider-agnostic, works with any imported data
+Output: data/output/for_imputation.vcf
 
 QC steps applied:
   - Remove no-calls (-- genotype)
   - Remove indels (D/I alleles)
-  - Remove non-rsid variants (internal 23andMe IDs)
+  - Remove non-rsid variants (internal provider IDs)
   - Remove mitochondrial (MT) and Y chromosome variants
   - Remove monomorphic calls that can't be represented as biallelic SNPs
   - Sort by chromosome and position
   - Generate valid VCF 4.1 with proper headers
 """
 
+import argparse
 import os
 import sys
 from collections import defaultdict
 from datetime import date
+from pathlib import Path
 
-# Paths relative to the vault root
-VAULT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-INPUT_FILE = os.path.join(VAULT_ROOT, "data", "raw", "23andme_v4.txt")
-OUTPUT_DIR = os.path.join(VAULT_ROOT, "data", "output")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "23andme_for_imputation.vcf")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.config import DB_PATH, OUTPUT_DIR
+from lib.db import get_connection
 
 # Valid nucleotides for SNPs
 VALID_ALLELES = set("ACGT")
@@ -34,76 +34,65 @@ CHROM_ORDER = {str(i): i for i in range(1, 23)}
 CHROM_ORDER["X"] = 23
 
 
-def parse_23andme(filepath):
-    """Parse 23andMe v4 raw data file.
+def query_genotyped_snps(db_path, profile_id="default"):
+    """Query genotyped SNPs from SQLite database.
 
-    Returns list of (chrom, pos, rsid, genotype) tuples.
+    Returns list of (chrom, pos, rsid, genotype) tuples and QC stats.
+    The profile_id parameter is reserved for future multi-profile support.
     """
     variants = []
     stats = defaultdict(int)
 
-    with open(filepath, "r") as f:
-        for line in f:
-            line = line.strip()
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "SELECT rsid, chromosome, position, genotype FROM snps WHERE source = 'genotyped'"
+    )
 
-            # Skip comments and empty lines
-            if not line or line.startswith("#"):
-                continue
+    for row in cursor:
+        rsid, chrom, pos, genotype = row["rsid"], row["chromosome"], row["position"], row["genotype"]
+        stats["total_input"] += 1
 
-            parts = line.split("\t")
-            if len(parts) != 4:
-                stats["malformed_lines"] += 1
-                continue
+        # Skip non-rsid variants (internal provider IDs like i6019299)
+        if not rsid.startswith("rs"):
+            stats["skipped_non_rsid"] += 1
+            continue
 
-            rsid, chrom, pos, genotype = parts
-            stats["total_input"] += 1
+        # Skip no-calls
+        if genotype == "--" or not genotype:
+            stats["skipped_nocall"] += 1
+            continue
 
-            # Skip non-rsid variants (23andMe internal IDs like i6019299)
-            if not rsid.startswith("rs"):
-                stats["skipped_non_rsid"] += 1
-                continue
+        # Skip MT and Y chromosomes (not imputable)
+        if chrom in ("MT", "Y"):
+            stats[f"skipped_{chrom}"] += 1
+            continue
 
-            # Skip no-calls
-            if genotype == "--" or not genotype:
-                stats["skipped_nocall"] += 1
-                continue
+        # Skip indels (D = deletion, I = insertion)
+        if "D" in genotype or "I" in genotype:
+            stats["skipped_indel"] += 1
+            continue
 
-            # Skip MT and Y chromosomes (not imputable)
-            if chrom in ("MT", "Y"):
-                stats[f"skipped_{chrom}"] += 1
-                continue
+        # Validate alleles are standard nucleotides
+        if not all(a in VALID_ALLELES for a in genotype):
+            stats["skipped_invalid_allele"] += 1
+            continue
 
-            # Skip indels (D = deletion, I = insertion)
-            if "D" in genotype or "I" in genotype:
-                stats["skipped_indel"] += 1
-                continue
+        # Skip if chromosome not in expected set
+        if chrom not in CHROM_ORDER:
+            stats["skipped_unknown_chrom"] += 1
+            continue
 
-            # Validate alleles are standard nucleotides
-            if not all(a in VALID_ALLELES for a in genotype):
-                stats["skipped_invalid_allele"] += 1
-                continue
+        variants.append((chrom, pos, rsid, genotype))
+        stats["passed_qc"] += 1
 
-            # Skip if chromosome not in expected set
-            if chrom not in CHROM_ORDER:
-                stats["skipped_unknown_chrom"] += 1
-                continue
-
-            try:
-                pos_int = int(pos)
-            except ValueError:
-                stats["skipped_bad_position"] += 1
-                continue
-
-            variants.append((chrom, pos_int, rsid, genotype))
-            stats["passed_qc"] += 1
-
+    conn.close()
     return variants, stats
 
 
 def genotype_to_vcf_fields(genotype):
-    """Convert 23andMe genotype string to VCF REF, ALT, GT fields.
+    """Convert genotype string to VCF REF, ALT, GT fields.
 
-    23andMe reports genotypes on the plus strand.
+    Genotypes are stored on the plus strand in the database.
     For homozygous calls (AA), REF=A, ALT=., GT=0/0 — but imputation servers
     need a concrete ALT. We use REF=first allele, ALT=second if different.
 
@@ -146,7 +135,7 @@ def write_vcf(variants, output_path):
         # VCF header
         f.write("##fileformat=VCFv4.1\n")
         f.write(f"##fileDate={date.today().strftime('%Y%m%d')}\n")
-        f.write("##source=23andMe_v4_to_VCF_converter\n")
+        f.write("##source=genome_toolkit_prepare_for_imputation\n")
         f.write("##reference=GRCh37\n")
         f.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
 
@@ -173,35 +162,64 @@ def write_vcf(variants, output_path):
     return written, skipped_conversion
 
 
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Export genotyped SNPs from SQLite to VCF for imputation servers."
+    )
+    parser.add_argument(
+        "--profile",
+        default="default",
+        help="Profile ID to export (default: 'default'). Reserved for future multi-profile support.",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help=f"Output VCF path (default: {OUTPUT_DIR / 'for_imputation.vcf'})",
+    )
+    parser.add_argument(
+        "--db",
+        default=None,
+        help=f"Path to SQLite database (default: {DB_PATH})",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
+    db_path = Path(args.db) if args.db else DB_PATH
+    output_file = args.output if args.output else str(OUTPUT_DIR / "for_imputation.vcf")
+
     print("=" * 60)
-    print("23andMe v4 → VCF Conversion for Imputation")
+    print("Genotyped SNPs → VCF Conversion for Imputation")
     print("=" * 60)
     print()
 
-    # Check input file exists
-    if not os.path.exists(INPUT_FILE):
-        print(f"ERROR: Input file not found: {INPUT_FILE}")
+    # Check database exists
+    if not db_path.exists():
+        print(f"ERROR: Database not found: {db_path}")
         sys.exit(1)
 
-    print(f"Input:  {INPUT_FILE}")
-    print(f"Output: {OUTPUT_FILE}")
+    print(f"Database: {db_path}")
+    print(f"Profile:  {args.profile}")
+    print(f"Output:   {output_file}")
     print()
 
-    # Parse
-    print("Parsing 23andMe data...")
-    variants, stats = parse_23andme(INPUT_FILE)
+    # Query genotyped SNPs
+    print("Querying genotyped SNPs from database...")
+    variants, stats = query_genotyped_snps(db_path, profile_id=args.profile)
 
     # Write VCF
     print("Writing VCF...")
-    written, skipped_conversion = write_vcf(variants, OUTPUT_FILE)
+    written, skipped_conversion = write_vcf(variants, output_file)
 
     # Report
     print()
     print("=" * 60)
     print("QC Summary")
     print("=" * 60)
-    print(f"  Total input lines:          {stats['total_input']:>10,}")
+    print(f"  Total genotyped SNPs:       {stats['total_input']:>10,}")
     print(f"  Passed QC:                  {stats['passed_qc']:>10,}")
     print(f"  Written to VCF:             {written:>10,}")
     print()
@@ -213,22 +231,19 @@ def main():
     print(f"    Y chromosome:             {stats['skipped_Y']:>10,}")
     print(f"    Invalid alleles:          {stats['skipped_invalid_allele']:>10,}")
     print(f"    Unknown chromosome:       {stats['skipped_unknown_chrom']:>10,}")
-    print(f"    Bad position:             {stats['skipped_bad_position']:>10,}")
     print(f"    Conversion errors:        {skipped_conversion:>10,}")
-    if stats["malformed_lines"]:
-        print(f"    Malformed lines:          {stats['malformed_lines']:>10,}")
     print()
 
     # File size
-    size_mb = os.path.getsize(OUTPUT_FILE) / (1024 * 1024)
+    size_mb = os.path.getsize(output_file) / (1024 * 1024)
     print(f"  Output file size: {size_mb:.1f} MB")
     print()
 
     # Next steps
     print("Next steps:")
-    print("  1. Optionally compress: bgzip data/output/23andme_for_imputation.vcf")
+    print("  1. Optionally compress: bgzip " + output_file)
     print("  2. Upload to Michigan Imputation Server: https://imputationserver.sph.umich.edu")
-    print("  3. Select TOPMed r3 reference panel, EUR population")
+    print("  3. Select TOPMed r3 reference panel, appropriate population")
     print("  4. See Research/20260323-genome-imputation-guide.md for full instructions")
 
 

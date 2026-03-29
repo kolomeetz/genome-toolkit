@@ -8,6 +8,10 @@ import os
 import re
 import sys
 from collections import defaultdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from lib.config import VAULT_ROOT, OUTPUT_DIR
 
 # Known interventions with aliases (case-insensitive matching)
 INTERVENTIONS = {
@@ -160,8 +164,7 @@ def format_output(scan_results, matrix, ranked, uncovered):
 
 
 def main():
-    vault_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-    vault_path = os.path.normpath(vault_path)
+    vault_path = str(VAULT_ROOT)
 
     print(f"Scanning vault: {vault_path}")
     print()
@@ -175,7 +178,7 @@ def main():
     print(output)
 
     # Write to file
-    output_dir = os.path.join(vault_path, "data", "output")
+    output_dir = str(OUTPUT_DIR)
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "intervention_matrix.txt")
     with open(output_path, "w", encoding="utf-8") as f:

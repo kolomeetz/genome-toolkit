@@ -301,12 +301,12 @@ def main():
     parser = argparse.ArgumentParser(description="Gene note claim density analyzer")
     parser.add_argument(
         "--genes-dir",
-        default=os.path.join(os.path.dirname(__file__), "..", "..", "Genes"),
+        default=str(GENES_DIR),
         help="Path to Genes/ directory",
     )
     parser.add_argument(
         "--output",
-        default=os.path.join(os.path.dirname(__file__), "..", "output", "claim_density_report.txt"),
+        default=str(OUTPUT_DIR / "claim_density_report.txt"),
         help="Output file path",
     )
     args = parser.parse_args()
