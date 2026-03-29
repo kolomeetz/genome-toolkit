@@ -160,6 +160,56 @@ Override paths via environment variables: `GENOME_VAULT_ROOT`, `GENOME_DB_PATH`.
 - E1 claims are reliable. E3-E5 claims are hypotheses, not diagnoses.
 - 40-70% of outcomes are environment, behavior, and choice
 
+## Development
+
+### Running Tests
+
+```bash
+pip install -e ".[dev]"
+python -m pytest tests/ -v
+```
+
+98 tests covering providers, vault parser, database migrations, goal engine, and multi-agent consensus logic.
+
+### Project Structure
+
+```
+genome-toolkit/
+  config/           # YAML configuration (goals, evidence tiers, providers, agents)
+  scripts/          # Python pipeline (import, parsing, analysis)
+    lib/            # Core library (config, db, vault_parser, providers, multi_agent)
+    analytics/      # Analysis scripts (PRS, enrichment, audit) [WIP: migrating]
+    data/migrations/ # Versioned SQL migrations
+  skills/           # Claude Code skill definitions (6 skills)
+  vault-template/   # Obsidian vault starter (Dashboard, templates, guides)
+  tests/            # pytest test suite with fixtures
+```
+
+### Architecture
+
+The toolkit follows a **separation of concerns**:
+
+- **Data layer**: SQLite with versioned migrations, multi-profile support (`scripts/lib/db.py`)
+- **Import layer**: Provider-agnostic parsing with auto-detection (`scripts/lib/providers/`)
+- **Knowledge layer**: Obsidian markdown with Dataview queries (`vault-template/`)
+- **Validation layer**: Multi-agent consensus pipeline (`scripts/lib/multi_agent.py`)
+- **Skill layer**: Claude Code skills that orchestrate everything (`skills/`)
+
+### Roadmap
+
+- [ ] Migrate remaining analysis scripts from prototype vault
+- [ ] Add skill reference files (gene templates, genetic predictions)
+- [ ] Implement individual validator wrappers (codex_validator.py, etc.)
+- [ ] Add existing vault migration script
+- [ ] GRCh38 liftover support in import pipeline
+- [ ] Web-based QC report viewer
+
+## Disclaimer
+
+This toolkit is for **research and educational purposes only**. It is not a medical device. Genetic information should be interpreted by qualified healthcare professionals. Always consult your doctor before making medical decisions based on genetic data.
+
+The evidence tier system (E1-E5) reflects the state of published research, not clinical recommendations. Drug interaction information is derived from CPIC/DPWG guidelines but may not reflect the most current updates.
+
 ## License
 
 MIT
