@@ -221,7 +221,7 @@ def main(
 
     if interactive:
         from genome_toolkit.triage.presentation.tui.app import TriageApp
-        app = TriageApp()
+        app = TriageApp(vault_path=vault)
         app.run()
         return
 
