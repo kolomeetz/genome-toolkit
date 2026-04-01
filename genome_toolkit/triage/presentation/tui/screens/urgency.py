@@ -6,7 +6,7 @@ from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 
-from genome_toolkit.triage.presentation.tui.stub_data import make_sample_items
+from genome_toolkit.triage.presentation.tui.stub_data import make_sample_items, ScoredItemStub
 from genome_toolkit.triage.presentation.tui.widgets.item_card import ItemCard
 
 
@@ -20,9 +20,12 @@ class UrgencyScreen(Widget):
     }
     """
 
+    def __init__(self, items: list[ScoredItemStub] | None = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._items = items or make_sample_items()
+
     def compose(self) -> ComposeResult:
-        items = make_sample_items()
-        items.sort(key=lambda i: i.score, reverse=True)
+        items = sorted(self._items, key=lambda i: i.score, reverse=True)
         with VerticalScroll():
             for item in items:
                 yield ItemCard(item)

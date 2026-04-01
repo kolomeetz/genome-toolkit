@@ -51,10 +51,13 @@ class ContextScreen(Widget):
     }
     """
 
+    def __init__(self, items: list[ScoredItemStub] | None = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._items = items or make_sample_items()
+
     def compose(self) -> ComposeResult:
-        items = make_sample_items()
         grouped: dict[str, list[ScoredItemStub]] = {}
-        for item in items:
+        for item in self._items:
             grouped.setdefault(item.context, []).append(item)
 
         with VerticalScroll():

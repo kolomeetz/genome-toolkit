@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from textual.widget import Widget
 from textual.widgets import Static, DataTable
 from textual.app import ComposeResult
@@ -101,8 +103,68 @@ class HistoryScreen(Widget):
     }
     """
 
+    def __init__(self, vault_path: Path | None = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._vault_path = vault_path
+        self._sessions: list[TriageSessionStub] | None = None
+
+        if vault_path is not None:
+            self._load_real_sessions()
+
+    def _load_real_sessions(self) -> None:
+        """Load real session history from MarkdownSessionRepository."""
+        try:
+            from genome_toolkit.triage.infrastructure.persistence.session_store import (
+                MarkdownSessionRepository,
+            )
+
+            repo = MarkdownSessionRepository(self._vault_path)
+            domain_sessions = repo.get_recent(limit=10)
+
+            self._sessions = []
+            for ds in domain_sessions:
+                decisions = []
+                for d in ds.decisions:
+                    decisions.append({
+                        "action": d.action.value.lower(),
+                        "item": d.item_id.value,
+                        "score": "",
+                        "from": self._snapshot_str(d.previous),
+                        "to": self._snapshot_str(d.new),
+                        "note": d.note or "",
+                    })
+                action_counts: dict[str, int] = {}
+                for dec in decisions:
+                    action_counts[dec["action"]] = action_counts.get(dec["action"], 0) + 1
+                parts = [f"{v} {k}" for k, v in sorted(action_counts.items())]
+                summary = f"{len(decisions)} actions ({', '.join(parts)})."
+
+                self._sessions.append(TriageSessionStub(
+                    timestamp=ds.timestamp.strftime("%Y-%m-%d %H:%M"),
+                    decisions=decisions,
+                    summary=summary,
+                ))
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Failed to load session history")
+            self._sessions = None
+
+    @staticmethod
+    def _snapshot_str(snap) -> str:
+        """Format a state snapshot for display."""
+        parts: list[str] = []
+        if snap.priority is not None:
+            parts.append(snap.priority.name.lower())
+        if snap.context is not None:
+            parts.append(snap.context.name.lower().replace("_", "-"))
+        if snap.due is not None:
+            parts.append(f"due:{snap.due.isoformat()}")
+        if snap.completed:
+            parts.append("completed")
+        return "/".join(parts) if parts else "\u2014"
+
     def compose(self) -> ComposeResult:
-        sessions = make_sample_history()
+        sessions = self._sessions if self._sessions is not None else make_sample_history()
         with VerticalScroll():
             header_text = Text(
                 f"Triage History ({len(sessions)} sessions)",

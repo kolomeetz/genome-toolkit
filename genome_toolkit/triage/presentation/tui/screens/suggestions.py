@@ -86,6 +86,11 @@ class SuggestionCard(Widget):
             yield Button("Approve", variant="success", id=f"approve-{id(self.item)}")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.button.label = "Approved"
+        event.button.variant = "default"
+        event.button.disabled = True
+        title_widget = self.query_one(".suggestion-text", Static)
+        title_widget.update(Text(self.item.text, style="dim strike"))
         self.post_message(self.Approved(self.item))
 
 
@@ -106,13 +111,16 @@ class SuggestionsScreen(Widget):
     }
     """
 
+    def __init__(self, suggestions: list[ScoredItemStub] | None = None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._suggestions = suggestions or make_sample_suggestions()
+
     def compose(self) -> ComposeResult:
-        suggestions = make_sample_suggestions()
         with VerticalScroll():
             header_text = Text(
-                f"Suggested Actions ({len(suggestions)})",
+                f"Suggested Actions ({len(self._suggestions)})",
                 style="bold #3182CE",
             )
             yield Static(header_text, classes="suggestions-header")
-            for item in suggestions:
+            for item in self._suggestions:
                 yield SuggestionCard(item)
