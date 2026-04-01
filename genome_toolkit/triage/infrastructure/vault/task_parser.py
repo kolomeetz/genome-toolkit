@@ -152,6 +152,10 @@ class VaultTaskRepository(TaskRepository):
             # Extract inline fields
             fields = dict(_INLINE_FIELD_RE.findall(raw_text))
 
+            # Only include tasks with at least one triage inline field
+            if not any(k in fields for k in ("priority", "context", "due")):
+                continue
+
             # Extract block id
             block_id_match = _BLOCK_ID_RE.search(raw_text)
             block_id = block_id_match.group(1) if block_id_match else None
