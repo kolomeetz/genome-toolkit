@@ -89,9 +89,28 @@ class ItemCard(Widget, can_focus=True):
         border: double $accent;
     }
 
+    ItemCard .card-header-row {
+        width: 1fr;
+        height: auto;
+        layout: horizontal;
+    }
+
     ItemCard .card-title {
         width: 1fr;
         height: auto;
+    }
+
+    ItemCard .card-source {
+        width: 1fr;
+        height: 1;
+        color: $text-muted;
+    }
+
+    ItemCard .card-desc {
+        width: 1fr;
+        height: auto;
+        color: $text;
+        margin: 0 0 0 0;
     }
 
     ItemCard .card-meta {
@@ -121,7 +140,7 @@ class ItemCard(Widget, can_focus=True):
         width: 1fr;
         height: auto;
         layout: horizontal;
-        margin: 1 0 2 0;
+        margin: 1 0 1 0;
     }
 
     ItemCard .card-actions Button {
@@ -205,8 +224,11 @@ class ItemCard(Widget, can_focus=True):
         if self.item.clinically_validated:
             parts.append("validated")
         text.append(" \u00b7 ".join(parts), style="dim")
-        if self.item.source_file:
-            text.append(f"  \u2190 {self.item.source_file}", style="dim italic")
+        # Automation badge
+        if self.item.automation_level:
+            level = self.item.automation_level
+            style = {"auto": "bold green", "semi": "bold yellow", "manual": "dim"}.get(level, "dim")
+            text.append(f"  [{level.upper()}]", style=style)
         return text
 
     def _render_links(self) -> Text:
@@ -242,14 +264,28 @@ class ItemCard(Widget, can_focus=True):
         """Rebuild widget content using mount (not compose context managers)."""
         self.remove_children()
 
-        # Header row
-        header_row = Horizontal()
+        # Header: score + title (single line)
+        header_row = Horizontal(classes="card-header-row")
         self.mount(header_row)
         header_row.mount(ScoreBadge(score=self.item.score, bucket=self.item.bucket))
         header_row.mount(Static(self._render_title(), classes="card-title"))
 
-        # Meta
+        # Source file
+        if self.item.source_file:
+            self.mount(Static(
+                Text(f"\u2190 {self.item.source_file}", style="dim italic"),
+                classes="card-source",
+            ))
+
+        # Meta line: priority · context · due · evidence · automation level
         self.mount(Static(self._render_meta(), classes="card-meta"))
+
+        # Description / context (always show if available)
+        if self.item.description:
+            self.mount(Static(
+                Text(self.item.description, style=""),
+                classes="card-desc",
+            ))
 
         # Action feedback
         if self._action_label:

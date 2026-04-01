@@ -22,6 +22,8 @@ class ScoredItemStub:
     clinically_validated: bool = False
     blocked_by: list[str] = field(default_factory=list)
     source_file: str = ""
+    description: str = ""  # context from source note / rationale
+    automation_level: str = ""  # "auto", "semi", "manual"
 
 
 PRIORITY_ORDER = ["critical", "high", "medium", "low"]
