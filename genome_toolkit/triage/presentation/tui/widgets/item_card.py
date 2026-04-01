@@ -6,7 +6,7 @@ import re
 
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.widgets import Static
+from textual.widgets import Static, Button
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.message import Message
@@ -117,6 +117,19 @@ class ItemCard(Widget, can_focus=True):
     ItemCard .breakdown-row {
         width: 1fr;
         height: 1;
+    }
+
+    ItemCard .card-actions {
+        width: 1fr;
+        height: 3;
+        layout: horizontal;
+        margin: 1 0 0 0;
+    }
+
+    ItemCard .card-actions Button {
+        min-width: 12;
+        height: 3;
+        margin: 0 1 0 0;
     }
 
     ItemCard.-prescriber {
@@ -241,6 +254,22 @@ class ItemCard(Widget, can_focus=True):
             links_text = self._render_links()
             if links_text.plain:
                 self.mount(Static(links_text, classes="card-links"))
+            # Action buttons
+            actions = Horizontal(classes="card-actions")
+            self.mount(actions)
+            actions.mount(Button("Approve", variant="success", id=f"btn-approve-{id(self)}"))
+            actions.mount(Button("Defer +7d", variant="warning", id=f"btn-defer-{id(self)}"))
+            actions.mount(Button("Drop", variant="error", id=f"btn-drop-{id(self)}"))
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle action button clicks."""
+        btn_id = event.button.id or ""
+        if "approve" in btn_id:
+            self.key_a()
+        elif "defer" in btn_id:
+            self.key_d()
+        elif "drop" in btn_id:
+            self.key_x()
 
     def key_enter(self) -> None:
         """Toggle expand/collapse."""
