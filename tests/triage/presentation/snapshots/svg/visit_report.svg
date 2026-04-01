@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 210"
+     width="800" height="210"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .title { font-size: 18px; fill: #1A202C; font-weight: bold; }
+    .subtitle { font-size: 12px; fill: #718096; }
+    .item-title { font-size: 13px; fill: #1A202C; font-weight: bold; }
+    .item-meta { font-size: 11px; fill: #718096; }
+    .item-score { font-size: 14px; font-weight: bold; }
+    .empty-msg { font-size: 13px; fill: #718096; font-style: italic; }
+  </style>
+
+  <rect width="800" height="210" fill="#FFFFFF" />
+
+  <text x="20" y="32" class="title">Doctor Visit Report</text>
+  <text x="20" y="52" class="subtitle">Prescriber items with E1-E2 evidence only</text>
+
+  
+  
+  <rect x="16" y="70" width="768" height="52"
+        fill="#FFFFFF" rx="4" stroke="#E2E8F0" stroke-width="1" />
+  <rect x="16" y="70" width="4" height="52"
+        fill="#E53E3E" rx="2" />
+  <text x="30" y="90" class="item-title">Request CRP blood test</text>
+  <text x="30" y="108" class="item-meta">critical · E1 · due 2026-04-15</text>
+  <text x="740" y="94" class="item-score" fill="#E53E3E">82</text>
+  
+  <rect x="16" y="130" width="768" height="52"
+        fill="#FFFFFF" rx="4" stroke="#E2E8F0" stroke-width="1" />
+  <rect x="16" y="130" width="4" height="52"
+        fill="#E53E3E" rx="2" />
+  <text x="30" y="150" class="item-title">Discuss nortriptyline with prescriber</text>
+  <text x="30" y="168" class="item-meta">high · E2 · due 2026-04-10</text>
+  <text x="740" y="154" class="item-score" fill="#E53E3E">71</text>
+  
+  
+</svg>

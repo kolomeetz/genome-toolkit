@@ -17,13 +17,22 @@ dev = [
     "pytest>=7.0",
     "pytest-cov",
 ]
+triage = [
+    "textual>=0.80.0",
+    "rich>=13.0",
+    "click>=8.0",
+    "jinja2>=3.1.0",
+]
 
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
+[project.scripts]
+genome-triage = "genome_toolkit.triage.presentation.cli:main"
+
 [tool.setuptools]
-packages = []
+packages = ["genome_toolkit", "genome_toolkit.triage", "genome_toolkit.triage.domain", "genome_toolkit.triage.domain.services", "genome_toolkit.triage.domain.ports", "genome_toolkit.triage.application", "genome_toolkit.triage.infrastructure", "genome_toolkit.triage.infrastructure.vault", "genome_toolkit.triage.infrastructure.scripts", "genome_toolkit.triage.infrastructure.persistence", "genome_toolkit.triage.presentation", "genome_toolkit.triage.presentation.svg", "genome_toolkit.triage.presentation.tui", "genome_toolkit.triage.presentation.tui.screens", "genome_toolkit.triage.presentation.tui.widgets", "genome_toolkit.triage.presentation.skill"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

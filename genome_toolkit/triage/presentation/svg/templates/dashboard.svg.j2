@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ width }} {{ height }}"
+     width="{{ width }}" height="{{ height }}"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .title { font-size: 18px; fill: #1A202C; font-weight: bold; }
+    .subtitle { font-size: 14px; fill: #1A202C; font-weight: bold; }
+    .stat-label { font-size: 12px; fill: #718096; }
+    .stat-value { font-size: 20px; fill: #1A202C; font-weight: bold; }
+    .item-text { font-size: 12px; fill: #1A202C; }
+    .item-score { font-size: 12px; font-weight: bold; }
+  </style>
+
+  <rect width="{{ width }}" height="{{ height }}" fill="#FFFFFF" />
+
+  <text x="20" y="32" class="title">Triage Dashboard</text>
+
+  <!-- Bucket distribution -->
+  <text x="20" y="68" class="subtitle">Bucket Distribution</text>
+  {% for bucket in buckets %}
+  <rect x="{{ bucket.x }}" y="78" width="{{ bucket.bar_width }}" height="24" fill="{{ bucket.color }}" rx="3" />
+  <text x="{{ bucket.x }}" y="120" class="stat-label">{{ bucket.label }}</text>
+  <text x="{{ bucket.x }}" y="138" class="stat-value">{{ bucket.count }}</text>
+  {% endfor %}
+
+  <!-- Suggestions count -->
+  <text x="{{ suggestions_x }}" y="120" class="stat-label">Suggestions</text>
+  <text x="{{ suggestions_x }}" y="138" class="stat-value">{{ suggestions_count }}</text>
+
+  <!-- Top items -->
+  <text x="20" y="172" class="subtitle">Top Items</text>
+  {% for item in top_items %}
+  <rect x="20" y="{{ item.y }}" width="8" height="18" fill="{{ item.color }}" rx="2" />
+  <text x="36" y="{{ item.y + 14 }}" class="item-text">{{ item.text }}</text>
+  <text x="{{ width - 60 }}" y="{{ item.y + 14 }}" class="item-score" fill="{{ item.color }}">{{ item.score }}</text>
+  {% endfor %}
+</svg>

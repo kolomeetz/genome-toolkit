@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 272"
+     width="800" height="272"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .card-title { font-size: 14px; fill: #1A202C; font-weight: bold; }
+    .card-meta { font-size: 11px; fill: #718096; }
+    .bar-label { font-size: 11px; fill: #1A202C; }
+    .bar-value { font-size: 11px; fill: #1A202C; }
+    .score-big { font-size: 24px; fill: #1A202C; font-weight: bold; }
+    .bucket-label { font-size: 12px; font-weight: bold; }
+  </style>
+
+  <rect width="800" height="272" fill="#FFFFFF" rx="6"
+        stroke="#E2E8F0" stroke-width="1" />
+
+  <!-- Header bar -->
+  <rect x="0" y="0" width="800" height="44" fill="#E53E3E" rx="6" />
+  <rect x="0" y="22" width="800" height="22" fill="#E53E3E" />
+  <text x="16" y="28" class="bucket-label" fill="#FFFFFF">Do Now</text>
+  <text x="750" y="30" class="score-big" fill="#FFFFFF">82</text>
+
+  <!-- Item text -->
+  <text x="16" y="68" class="card-title">Request CRP blood test</text>
+
+  <!-- Metadata -->
+  <text x="16" y="90" class="card-meta">critical · prescriber · due 2026-04-15 · E1</text>
+
+  <!-- Score breakdown bars -->
+  
+  <text x="16" y="120" class="bar-label">priority</text>
+  <rect x="120" y="110" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="110" width="200.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="120" class="bar-value">25.0</text>
+  
+  <text x="16" y="142" class="bar-label">overdue</text>
+  <rect x="120" y="132" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="132" width="136.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="142" class="bar-value">17.0</text>
+  
+  <text x="16" y="164" class="bar-label">evidence</text>
+  <rect x="120" y="154" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="154" width="120.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="164" class="bar-value">15.0</text>
+  
+  <text x="16" y="186" class="bar-label">lab_signal</text>
+  <rect x="120" y="176" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="176" width="96.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="186" class="bar-value">12.0</text>
+  
+  <text x="16" y="208" class="bar-label">context</text>
+  <rect x="120" y="198" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="198" width="80.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="208" class="bar-value">10.0</text>
+  
+  <text x="16" y="230" class="bar-label">severity</text>
+  <rect x="120" y="220" width="200" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="120" y="220" width="24.0" height="12"
+        fill="#E53E3E" rx="2" />
+  <text x="326" y="230" class="bar-value">3.0</text>
+  
+</svg>

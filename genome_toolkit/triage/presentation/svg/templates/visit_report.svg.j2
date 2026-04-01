@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ width }} {{ height }}"
+     width="{{ width }}" height="{{ height }}"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .title { font-size: 18px; fill: #1A202C; font-weight: bold; }
+    .subtitle { font-size: 12px; fill: #718096; }
+    .item-title { font-size: 13px; fill: #1A202C; font-weight: bold; }
+    .item-meta { font-size: 11px; fill: #718096; }
+    .item-score { font-size: 14px; font-weight: bold; }
+    .empty-msg { font-size: 13px; fill: #718096; font-style: italic; }
+  </style>
+
+  <rect width="{{ width }}" height="{{ height }}" fill="#FFFFFF" />
+
+  <text x="20" y="32" class="title">Doctor Visit Report</text>
+  <text x="20" y="52" class="subtitle">Prescriber items with E1-E2 evidence only</text>
+
+  {% if items %}
+  {% for item in items %}
+  <rect x="16" y="{{ item.y }}" width="{{ width - 32 }}" height="{{ item.card_height }}"
+        fill="#FFFFFF" rx="4" stroke="#E2E8F0" stroke-width="1" />
+  <rect x="16" y="{{ item.y }}" width="4" height="{{ item.card_height }}"
+        fill="{{ item.color }}" rx="2" />
+  <text x="30" y="{{ item.y + 20 }}" class="item-title">{{ item.text }}</text>
+  <text x="30" y="{{ item.y + 38 }}" class="item-meta">{{ item.priority }} · {{ item.evidence_tier }}{% if item.due %} · due {{ item.due }}{% endif %}</text>
+  <text x="{{ width - 60 }}" y="{{ item.y + 24 }}" class="item-score" fill="{{ item.color }}">{{ item.score }}</text>
+  {% endfor %}
+  {% else %}
+  <text x="20" y="80" class="empty-msg">No prescriber items with E1-E2 evidence.</text>
+  {% endif %}
+</svg>

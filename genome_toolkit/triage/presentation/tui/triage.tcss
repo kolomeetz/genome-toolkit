@@ -1,0 +1,59 @@
+Screen {
+    background: $background;
+}
+
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    padding: 1 2;
+}
+
+ItemCard {
+    width: 1fr;
+    height: auto;
+    margin: 0 0 1 0;
+    padding: 1 2;
+    border: solid $secondary;
+    background: $surface;
+}
+
+ItemCard:focus {
+    border: double $accent;
+}
+
+ItemCard.-prescriber {
+    border-left: thick #E53E3E;
+}
+
+ItemCard.-testing {
+    border-left: thick #DD6B20;
+}
+
+ItemCard.-monitoring {
+    border-left: thick #38A169;
+}
+
+ItemCard.-research {
+    border-left: thick #3182CE;
+}
+
+ItemCard.-vault-maintenance {
+    border-left: thick #718096;
+}
+
+BatchBar {
+    width: 1fr;
+    height: 3;
+    dock: bottom;
+    padding: 0 2;
+    background: $surface;
+    border-top: solid $secondary;
+}
+
+ScoreBadge {
+    width: auto;
+    height: 1;
+    min-width: 6;
+}

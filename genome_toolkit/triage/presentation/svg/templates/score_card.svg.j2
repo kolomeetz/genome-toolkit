@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ width }} {{ height }}"
+     width="{{ width }}" height="{{ height }}"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .card-title { font-size: 14px; fill: #1A202C; font-weight: bold; }
+    .card-meta { font-size: 11px; fill: #718096; }
+    .bar-label { font-size: 11px; fill: #1A202C; }
+    .bar-value { font-size: 11px; fill: #1A202C; }
+    .score-big { font-size: 24px; fill: #1A202C; font-weight: bold; }
+    .bucket-label { font-size: 12px; font-weight: bold; }
+  </style>
+
+  <rect width="{{ width }}" height="{{ height }}" fill="#FFFFFF" rx="6"
+        stroke="#E2E8F0" stroke-width="1" />
+
+  <!-- Header bar -->
+  <rect x="0" y="0" width="{{ width }}" height="44" fill="{{ bucket_color }}" rx="6" />
+  <rect x="0" y="22" width="{{ width }}" height="22" fill="{{ bucket_color }}" />
+  <text x="16" y="28" class="bucket-label" fill="#FFFFFF">{{ bucket }}</text>
+  <text x="{{ width - 50 }}" y="30" class="score-big" fill="#FFFFFF">{{ score }}</text>
+
+  <!-- Item text -->
+  <text x="16" y="68" class="card-title">{{ title_tspans }}</text>
+
+  <!-- Metadata -->
+  <text x="16" y="{{ meta_y }}" class="card-meta">{{ priority }} · {{ context }}{% if due %} · due {{ due }}{% endif %}{% if evidence_tier %} · {{ evidence_tier }}{% endif %}</text>
+
+  <!-- Score breakdown bars -->
+  {% for bar in bars %}
+  <text x="16" y="{{ bar.y }}" class="bar-label">{{ bar.label }}</text>
+  <rect x="{{ bar.bar_x }}" y="{{ bar.y - 10 }}" width="{{ bar.bg_width }}" height="12"
+        fill="#E2E8F0" rx="2" />
+  <rect x="{{ bar.bar_x }}" y="{{ bar.y - 10 }}" width="{{ bar.fill_width }}" height="12"
+        fill="{{ bucket_color }}" rx="2" />
+  <text x="{{ bar.bar_x + bar.bg_width + 6 }}" y="{{ bar.y }}" class="bar-value">{{ bar.value_label }}</text>
+  {% endfor %}
+</svg>

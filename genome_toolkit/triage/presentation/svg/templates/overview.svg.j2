@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ width }} {{ height }}"
+     width="{{ width }}" height="{{ height }}"
+     font-family="'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Consolas', monospace">
+  <style>
+    .title { font-size: 18px; fill: #1A202C; font-weight: bold; }
+    .group-label { font-size: 14px; fill: #1A202C; font-weight: bold; }
+    .item-label { font-size: 11px; fill: #1A202C; }
+    .score-label { font-size: 11px; fill: #1A202C; font-weight: bold; }
+  </style>
+
+  <rect width="{{ width }}" height="{{ height }}" fill="#FFFFFF" />
+
+  <text x="20" y="32" class="title">Triage Overview</text>
+
+  {% for group in groups %}
+  <text x="20" y="{{ group.label_y }}" class="group-label">{{ group.context }}</text>
+  {% for bar in group.bars %}
+  <text class="item-label">{{ bar.tspans }}</text>
+  <rect x="{{ bar.bar_x }}" y="{{ bar.bar_y }}" width="{{ bar.bar_width }}" height="{{ bar.bar_height }}"
+        fill="{{ bar.color }}" rx="3" />
+  <text x="{{ bar.score_x }}" y="{{ bar.score_y }}" class="score-label" fill="{{ bar.color }}">{{ bar.score }}</text>
+  {% endfor %}
+  {% endfor %}
+</svg>
