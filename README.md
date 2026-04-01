@@ -63,7 +63,7 @@ cp ~/Downloads/23andme_raw.txt $GENOME_VAULT_ROOT/data/raw/
 | Skill | Trigger | Purpose |
 |-------|---------|---------|
 | **genome-import** | `/genome-import` | Import raw data, prepare imputation, import imputed VCFs |
-| **genome-onboard** | `/genome-onboard` | Goal-driven vault setup (first run) |
+| **genome-onboard** | `/genome-onboard` | Goal-driven vault setup. `--quick` (4 questions) or `--full` (22 questions with GAD-7/PHQ-2/PSS-4) |
 | **genome-create** | `/new-gene X` | Create gene/system/phenotype notes from SQLite data |
 | **genome-analytics** | `/genome-analytics` | PRS, enrichment, vault audit, PubMed monitoring |
 | **genome-report** | `/biomarker`, `/wallet-card` | Lab import, Wallet Card, PGx Card, Prescriber Summary |
@@ -119,6 +119,41 @@ python3 scripts/vault_query.py --stats
 ```
 
 Supports: `=`, `!=`, `~` (contains), `>`, `<`, `>=`, `<=`, `AND`/`OR`/`NOT` logic, `--sort`, `--group`, `--json`, `--count`, `--stats`, `--schema`. See `skills/genome-query/SKILL.md` for full reference.
+
+## Health Triage System
+
+Interactive triage for vault action items with DDD architecture:
+
+```bash
+# CLI
+cd genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --classify
+
+# TUI (Textual terminal UI)
+genome-triage
+```
+
+Features:
+- Score and bucket action items (DO_NOW / SCHEDULE / DELEGATE / DROP)
+- SVG renderings: dashboard, score cards, visit reports
+- Session persistence (SQLite) with approval/deferral history
+- Suggestion engine based on assessment scores + genetic signals
+- 98 tests across domain, application, infrastructure, presentation layers
+
+## Onboarding Modes
+
+**Quick** (`/genome-onboard`): 4 questions → 8-12 gene notes + Wallet Card (2 min)
+
+**Full** (`/genome-onboard --full`): 22-question interview across 4 phases (12 min):
+- Phase 1: Demographics, medications, diagnoses, goals
+- Phase 2: Sleep, exercise, caffeine, GI symptoms, pain, morning stiffness
+- Phase 3: GAD-7, PHQ-2, PSS-4 (validated instruments)
+- Phase 4: Family history, ancestry, concerns
+
+Generates Profile Card + personalized Action Plan with assessment-weighted gene priorities.
+
+## Related Projects
+
+- [evidence-check](https://github.com/glebis/evidence-check) — Modular scientific claim verification (PubMed, genomics, psychiatry). Used by genome-validate for structured fact-checking.
 
 ## Vault Structure
 
