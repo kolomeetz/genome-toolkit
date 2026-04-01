@@ -116,9 +116,8 @@ def _to_svg_report(report: TriageReport) -> SvgTriageReport:
 
 def _print_console_report(report: TriageReport) -> None:
     """Print a rich console table."""
-    table = Table(title="Genome Triage", show_lines=False, pad_edge=True, expand=True, width=160)
+    table = Table(title="Genome Triage", show_lines=False, pad_edge=True, expand=True)
     table.add_column("Score", justify="right", width=5, no_wrap=True)
-    table.add_column("Bkt", width=6, no_wrap=True)
     table.add_column("Item", ratio=1, no_wrap=True, overflow="ellipsis")
     table.add_column("Pri", width=6, no_wrap=True)
     table.add_column("Ctx", width=12, no_wrap=True)
@@ -132,7 +131,6 @@ def _print_console_report(report: TriageReport) -> None:
 
         table.add_row(
             score_text,
-            bucket_text,
             Text(si.item.text, style=style),
             si.item.priority.name.lower() if si.item.priority else "—",
             si.item.context.name.lower().replace("_", "-") if si.item.context else "—",
