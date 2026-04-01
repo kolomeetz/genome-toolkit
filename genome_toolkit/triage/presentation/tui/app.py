@@ -97,22 +97,53 @@ class TriageApp(App):
         yield Footer()
 
     def on_item_card_action_performed(self, event: ItemCard.ActionPerformed) -> None:
-        """Handle actions from item cards and update the batch bar."""
+        """Handle actions from item cards — build command and queue."""
+        from genome_toolkit.triage.presentation.tui.action_handlers import (
+            find_domain_item, build_command_for_action,
+        )
+        domain_item = find_domain_item(self._report, event.card.item.text)
+        if domain_item:
+            cmd = build_command_for_action(
+                domain_item, event.action,
+                new_priority=event.card.item.priority if event.action == "priority_change" else None,
+            )
+            if cmd:
+                self._pending_actions.append((domain_item, cmd))
+                self.notify(f"{event.action}: {domain_item.text[:40]}")
         batch_bar = self.query_one(BatchBar)
         batch_bar.increment()
 
+    def on_suggestion_card_approved(self, event) -> None:
+        """Create a vault task from an approved suggestion."""
+        if not self._vault_path:
+            return
+        from genome_toolkit.triage.presentation.tui.action_handlers import build_create_command
+        cmd, dummy_item = build_create_command(
+            self._vault_path, event.item.text, event.item.priority, event.item.context,
+        )
+        self._pending_actions.append((dummy_item, cmd))
+        self.query_one(BatchBar).increment()
+        self.notify(f"Suggestion approved: {event.item.text[:40]}")
+
     def on_batch_bar_apply_requested(self, event: BatchBar.ApplyRequested) -> None:
-        """Apply all pending changes."""
-        batch_bar = self.query_one(BatchBar)
-        # In the future, this will call the application layer
-        self.notify(f"Applied {batch_bar.pending_count} changes")
-        batch_bar.reset()
+        """Apply all pending changes to vault."""
+        if not self._pending_actions:
+            self.notify("Nothing to apply", severity="warning")
+            return
+        from genome_toolkit.triage.presentation.tui.action_handlers import apply_pending_actions
+        try:
+            count = apply_pending_actions(self._vault_path, self._pending_actions)
+            self.notify(f"Applied {count} changes to vault", severity="information")
+            self._pending_actions.clear()
+            self.query_one(BatchBar).reset()
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
 
     def on_batch_bar_discard_requested(self, event: BatchBar.DiscardRequested) -> None:
         """Discard all pending changes."""
-        batch_bar = self.query_one(BatchBar)
+        self._pending_actions.clear()
+        self.query_one(BatchBar).reset()
         self.notify("Discarded all pending changes")
-        batch_bar.reset()
 
     def action_quit_app(self) -> None:
         """Quit the app, prompting if there are pending changes."""
