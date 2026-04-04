@@ -30,18 +30,21 @@ async def chat(req: ChatRequest):
     await users_db.save_message(req.session_id, "user", req.message)
     await users_db.touch_session(req.session_id)
 
-    # Get or create agent client for this session
-    client = _active_clients.get(req.session_id)
-    is_new = client is None
+    async def get_or_create_client(session_id: str):
+        """Get existing client or create new one. Handles stale connections."""
+        client = _active_clients.get(session_id)
+        if client is not None:
+            return client
 
-    if is_new:
         client, _ = await create_agent_session()
         await client.connect()
-        _active_clients[req.session_id] = client
+        _active_clients[session_id] = client
+        return client
 
     async def event_stream():
         text_parts = []
         try:
+            client = await get_or_create_client(req.session_id)
             async for event in stream_agent_response(client, req.message):
                 if event["event"] == "text_delta":
                     text_parts.append(event["data"]["content"])
@@ -55,6 +58,8 @@ async def chat(req: ChatRequest):
                     "data": json.dumps(event["data"]),
                 }
         except Exception as e:
+            # Remove stale client on connection errors
+            _active_clients.pop(req.session_id, None)
             yield {
                 "event": "error",
                 "data": json.dumps({"message": str(e)}),

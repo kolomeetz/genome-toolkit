@@ -42,12 +42,15 @@ def get_genome_mcp():
     return _genome_mcp
 
 
-async def create_agent_session(cwd: str = ".") -> tuple[ClaudeSDKClient, str | None]:
+async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient, str | None]:
     """Create a new Agent SDK client with genome tools.
 
     Returns (client, session_id).
     """
+    from pathlib import Path
+
     mcp = get_genome_mcp()
+    resolved_cwd = cwd or str(Path(__file__).resolve().parents[3])
 
     options = ClaudeAgentOptions(
         system_prompt=SYSTEM_PROMPT,
@@ -60,7 +63,7 @@ async def create_agent_session(cwd: str = ".") -> tuple[ClaudeSDKClient, str | N
         ],
         permission_mode="bypassPermissions",
         max_turns=10,
-        cwd=cwd,
+        cwd=resolved_cwd,
     )
 
     client = ClaudeSDKClient(options=options)
@@ -108,9 +111,10 @@ async def stream_agent_response(
             }
 
         elif isinstance(msg, SystemMessage) and msg.subtype == "init":
+            agent_sid = msg.data.get("session_id") if isinstance(msg.data, dict) else None
             yield {
                 "event": "session_init",
-                "data": {"agent_session_id": msg.data.get("session_id")},
+                "data": {"agent_session_id": agent_sid},
             }
 
     yield {"event": "done", "data": {}}
