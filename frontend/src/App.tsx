@@ -33,11 +33,25 @@ function App() {
 
   const handleUIAction = useCallback((action: UIAction) => {
     if (action.action === 'filter_table') {
-      updateFilters({
-        search: action.params.search || '',
-        chromosome: action.params.chromosome || '',
-        source: action.params.source || '',
-      })
+      const p = action.params
+      const update: Record<string, string | boolean> = {}
+
+      // Apply all filter fields the agent sends
+      if ('search' in p) { update.search = p.search || ''; setSearchText(p.search || '') }
+      if ('chromosome' in p) update.chromosome = p.chromosome || ''
+      if ('source' in p) update.source = p.source || ''
+      if ('gene' in p) { update.gene = p.gene || ''; setGeneText('') }
+      if ('condition' in p) { update.condition = p.condition || ''; setConditionText(p.condition || '') }
+      if ('significance' in p) update.significance = p.significance || ''
+      if ('zygosity' in p) update.zygosity = p.zygosity || ''
+
+      // When agent explicitly clears restrictive filters to show results
+      if (String(p.clear_restrictive_filters) === 'true') {
+        update.clinical = false
+        update.significance = ''
+      }
+
+      updateFilters(update)
     }
   }, [updateFilters])
 

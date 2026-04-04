@@ -85,12 +85,20 @@ async def get_genome_stats(args: dict[str, Any]) -> dict[str, Any]:
 
 @tool(
     "update_table_view",
-    "Update the SNP browser table in the user's UI. Use this to filter, search, or highlight specific variants in response to the user's questions. The frontend will apply these filters.",
+    """Update the SNP browser table in the user's UI. Sets filters and the frontend applies them.
+IMPORTANT: By default the UI has an ACTIONABLE filter ON that hides benign/not-provided variants.
+When you search for specific variants, genes, or conditions, set clear_restrictive_filters=true
+to disable ACTIONABLE and significance filters so results are not hidden.
+Only keep ACTIONABLE on when the user explicitly asks for actionable/clinically relevant variants.""",
     {
         "search": str,
         "chromosome": str,
         "source": str,
-        "highlight_rsid": str,
+        "gene": str,
+        "condition": str,
+        "significance": str,
+        "zygosity": str,
+        "clear_restrictive_filters": bool,
     },
 )
 async def update_table_view(args: dict[str, Any]) -> dict[str, Any]:

@@ -30,7 +30,8 @@ Guidelines:
 - Explain significance in plain language
 - Note when data is imputed (lower confidence) vs genotyped (directly measured)
 - Format responses with markdown for readability
-- ALWAYS call suggest_responses at the end of every response with 2-4 short follow-up options the user might want to explore next. Make them specific to the current conversation context."""
+- ALWAYS call suggest_responses at the end of every response with 2-4 short follow-up options the user might want to explore next. Make them specific to the current conversation context.
+- When using update_table_view to show specific variants, genes, or conditions, set clear_restrictive_filters=true so the ACTIONABLE filter doesn't hide results. Only keep ACTIONABLE on when the user asks for actionable/clinically relevant variants specifically."""
 
 # MCP server config — created once, shared across sessions
 _genome_mcp = None
