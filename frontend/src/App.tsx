@@ -19,7 +19,7 @@ function App() {
     }
   }, [updateFilters])
 
-  const { messages, streaming, streamingText, send } = useChat(handleUIAction)
+  const { messages, streaming, streamingText, status, send } = useChat(handleUIAction)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -129,7 +129,7 @@ function App() {
         justifyContent: 'space-between',
       }}>
         <span className="label">
-          SIGNAL_PHASE: {loading ? 'SCANNING' : streaming ? 'AI_PROCESSING' : 'IDLE'}
+          SIGNAL_PHASE: {loading ? 'SCANNING' : streaming ? (status || 'AI_PROCESSING') : 'IDLE'}
         </span>
         <span className="label">GENOME_TOOLKIT // V0.1.0</span>
       </footer>
@@ -141,6 +141,7 @@ function App() {
         messages={messages}
         streaming={streaming}
         streamingText={streamingText}
+        status={status}
         onSend={send}
       />
     </div>

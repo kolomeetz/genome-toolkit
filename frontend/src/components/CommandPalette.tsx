@@ -9,10 +9,11 @@ interface Props {
   messages: ChatMessage[]
   streaming: boolean
   streamingText: string
+  status: string
   onSend: (text: string) => void
 }
 
-export function CommandPalette({ open, onClose, messages, streaming, streamingText, onSend }: Props) {
+export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, onSend }: Props) {
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -132,8 +133,9 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
             disabled={streaming}
           />
           {streaming && (
-            <span className="label" style={{ animation: 'blink 1s infinite', color: 'var(--primary)' }}>
-              PROCESSING
+            <span className="label" style={{ color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+              <span style={{ animation: 'blink 1s infinite' }}>{'// '}</span>
+              {status || 'PROCESSING'}
             </span>
           )}
         </form>
