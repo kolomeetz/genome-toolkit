@@ -62,9 +62,13 @@ function App() {
   const { messages, streaming, streamingText, status, suggestions, send: rawSend } = useChat(handleUIAction)
 
   // Wrap send to prefix [VOICE] when voice mode active
+  // The prefix tells the agent to call voice_summary but is stripped from display
   const send = useCallback((text: string) => {
-    const prefix = voice.voiceEnabled ? '[VOICE] ' : ''
-    rawSend(prefix + text)
+    if (voice.voiceEnabled) {
+      rawSend('[VOICE] ' + text)
+    } else {
+      rawSend(text)
+    }
   }, [rawSend, voice.voiceEnabled])
 
   useEffect(() => {

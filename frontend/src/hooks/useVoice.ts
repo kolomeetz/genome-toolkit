@@ -53,14 +53,22 @@ export function useVoice() {
     recognition.interimResults = false
     recognition.lang = 'en-US'
 
+    let handled = false
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
-      const text = event.results[0][0].transcript
+      if (handled) return
+      // Only use final results
+      const result = event.results[event.results.length - 1]
+      if (!result.isFinal) return
+      handled = true
+      const text = result[0].transcript
       setListening(false)
+      recognition.stop()
       onResult(text)
     }
 
-    recognition.onerror = () => setListening(false)
+    recognition.onerror = () => { setListening(false); handled = true }
     recognition.onend = () => setListening(false)
 
     recognitionRef.current = recognition

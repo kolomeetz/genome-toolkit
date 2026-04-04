@@ -186,7 +186,7 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
                      className={msg.role === 'assistant' ? 'chat-markdown' : undefined}>
                   {msg.role === 'assistant'
                     ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-                    : msg.content}
+                    : (msg.content.startsWith('[VOICE] ') ? msg.content.slice(8) : msg.content)}
                 </div>
               </div>
             ))}

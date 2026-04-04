@@ -99,14 +99,21 @@ async def stream_agent_response(
     """
     await client.query(message)
 
+    emitted_text_len = 0  # Track how much text we've already sent
+
     async for msg in client.receive_response():
         if isinstance(msg, AssistantMessage):
             for block in msg.content:
                 if isinstance(block, TextBlock):
-                    yield {
-                        "event": "text_delta",
-                        "data": {"content": block.text},
-                    }
+                    text = block.text
+                    # Only emit new text (Agent SDK may re-send earlier text in multi-turn)
+                    if len(text) > emitted_text_len:
+                        new_text = text[emitted_text_len:]
+                        emitted_text_len = len(text)
+                        yield {
+                            "event": "text_delta",
+                            "data": {"content": new_text},
+                        }
                 elif isinstance(block, ToolUseBlock):
                     yield {
                         "event": "tool_call",
