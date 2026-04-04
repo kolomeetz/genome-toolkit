@@ -47,7 +47,15 @@ class GenomeDB:
             params.append(source)
 
         if clinically_relevant:
-            conditions.append("e.rsid IS NOT NULL")
+            conditions.append("""
+                e.rsid IS NOT NULL
+                AND json_extract(e.data, '$.clinical_significance') NOT IN (
+                    'Benign', 'Likely benign', 'Benign/Likely benign',
+                    'not provided', 'no classification for the single variant',
+                    'no classifications from unflagged records'
+                )
+                AND json_extract(e.data, '$.disease_name') NOT IN ('not provided', 'not specified', '')
+            """)
 
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 

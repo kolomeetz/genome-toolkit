@@ -118,7 +118,7 @@ function App() {
           style={{ fontSize: 'var(--font-size-xs)', whiteSpace: 'nowrap' }}
           onClick={() => updateFilters({ clinical: !filters.clinical })}
         >
-          CLINICAL_ONLY
+          ACTIONABLE
         </button>
         {(filters.search || filters.chromosome || filters.source || filters.clinical) && (
           <button
