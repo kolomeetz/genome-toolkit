@@ -21,6 +21,7 @@ export async function* streamChat(
   const reader = resp.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
+  let currentEvent = ''
 
   while (true) {
     const { done, value } = await reader.read()
@@ -30,16 +31,20 @@ export async function* streamChat(
     const lines = buffer.split('\n')
     buffer = lines.pop() || ''
 
-    let currentEvent = ''
     for (const line of lines) {
+      // Skip SSE comments (ping lines like ": ping - ...")
+      if (line.startsWith(':') || line.trim() === '') {
+        continue
+      }
+
       if (line.startsWith('event: ')) {
-        currentEvent = line.slice(7)
+        currentEvent = line.slice(7).trim()
       } else if (line.startsWith('data: ') && currentEvent) {
         try {
           const data = JSON.parse(line.slice(6))
           yield { event: currentEvent, data }
         } catch {
-          // skip malformed
+          // skip malformed JSON
         }
         currentEvent = ''
       }
