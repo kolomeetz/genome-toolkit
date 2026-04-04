@@ -39,6 +39,19 @@ async def get_snp(rsid: str):
     return snp
 
 
+@router.get("/snps/{rsid}/guidance")
+async def get_variant_guidance(rsid: str):
+    guidance = await genome_db.get_variant_guidance(rsid)
+    if not guidance:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    return guidance
+
+
+@router.get("/insights")
+async def get_insights():
+    return await genome_db.get_insights()
+
+
 @router.get("/stats")
 async def get_stats():
     return await genome_db.get_stats()
