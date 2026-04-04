@@ -9,6 +9,29 @@ import type { SNP, SNPResult } from '../hooks/useSNPs'
 
 const col = createColumnHelper<SNP>()
 
+// Standard nucleotide colors (Shapely/RasMol convention adapted for light bg)
+const NUCLEOTIDE_COLORS: Record<string, string> = {
+  A: '#2a9d3e', // green
+  T: '#c4424e', // red
+  G: '#c49a1e', // amber
+  C: '#3a6fa8', // blue
+}
+
+function ColoredGenotype({ genotype }: { genotype: string }) {
+  if (!genotype || genotype === '--') {
+    return <span style={{ color: 'var(--text-tertiary)' }}>--</span>
+  }
+  return (
+    <span style={{ fontWeight: 600, letterSpacing: '0.1em', fontSize: 'var(--font-size-md)' }}>
+      {genotype.split('').map((base, i) => (
+        <span key={i} style={{ color: NUCLEOTIDE_COLORS[base] || 'var(--text)' }}>
+          {base}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 function SignificanceBadge({ value }: { value: string | null }) {
   if (!value) return <span style={{ color: 'var(--text-tertiary)' }}>--</span>
   const lower = value.toLowerCase()
@@ -44,7 +67,7 @@ const columns: ColumnDef<SNP, any>[] = [
   }),
   col.accessor('genotype', {
     header: 'GENOTYPE',
-    cell: info => <span style={{ fontWeight: 500 }}>{info.getValue()}</span>,
+    cell: info => <ColoredGenotype genotype={info.getValue() as string} />,
   }),
   col.accessor('significance', {
     header: 'CLINICAL',
