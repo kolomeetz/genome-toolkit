@@ -1,4 +1,4 @@
-import { type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 
 export interface InsightData {
   total_variants: number
@@ -137,6 +137,7 @@ export function InsightPanel({
   onSearchChange, onGeneChange, onConditionChange,
   onFilterChange, onClearAll,
 }: Props) {
+  const [conditionFocused, setConditionFocused] = useState(false)
   return (
     <div style={{
       padding: 'var(--space-sm) var(--space-lg)',
@@ -216,48 +217,6 @@ export function InsightPanel({
           </div>
         ))}
 
-        {/* Top conditions — single card with list */}
-        {data && data.top_conditions && (
-          <div style={{ ...cardBase, minWidth: 220, cursor: 'default', gridColumn: 'span 2' }}>
-            <span style={labelStyle}>TOP_CONDITIONS</span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {data.top_conditions.slice(0, 10).map(c => {
-                const isActive = filters.condition === c.condition
-                const shortName = c.condition.length > 28 ? c.condition.slice(0, 26) + '..' : c.condition
-                return (
-                  <span
-                    key={c.condition}
-                    onClick={() => {
-                      if (isActive) {
-                        onConditionChange('')
-                        onFilterChange({ condition: '' })
-                      } else {
-                        onConditionChange(c.condition)
-                        onFilterChange({ condition: c.condition })
-                      }
-                    }}
-                    style={{
-                      fontSize: 'var(--font-size-sm)',
-                      cursor: 'pointer',
-                      color: isActive ? 'var(--sig-risk)' : 'var(--text)',
-                      fontWeight: isActive ? 600 : 400,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '1px 0',
-                      transition: 'color 0.15s',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLSpanElement).style.color = 'var(--sig-risk)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLSpanElement).style.color = isActive ? 'var(--sig-risk)' : 'var(--text)' }}
-                    title={c.condition}
-                  >
-                    <span>{shortName}</span>
-                    <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>{c.count}</span>
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Row 2: Text inputs + dropdowns */}
@@ -291,7 +250,16 @@ export function InsightPanel({
           </datalist>
         </div>
 
-        <div style={{ ...inputCard, flex: '1 1 160px' }}>
+        <div
+          style={{ ...inputCard, flex: '1 1 160px', position: 'relative' }}
+          onFocus={() => setConditionFocused(true)}
+          onBlur={(e) => {
+            // Delay to allow click on suggestion
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setTimeout(() => setConditionFocused(false), 150)
+            }
+          }}
+        >
           <span style={{ ...labelStyle, fontSize: '8px', marginBottom: -2 }}>CONDITION</span>
           <input
             style={inputStyle}
@@ -299,6 +267,60 @@ export function InsightPanel({
             value={conditionText}
             onChange={e => onConditionChange(e.target.value)}
           />
+          {/* Suggest dropdown */}
+          {conditionFocused && data?.top_conditions && data.top_conditions.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: -1,
+              right: -1,
+              background: 'var(--bg-raised)',
+              border: '1px solid var(--primary)',
+              borderTop: 'none',
+              zIndex: 100,
+              maxHeight: 280,
+              overflowY: 'auto',
+            }}>
+              {data.top_conditions
+                .filter(c => !conditionText || c.condition.toLowerCase().includes(conditionText.toLowerCase()))
+                .slice(0, 10)
+                .map(c => {
+                  const isActive = filters.condition === c.condition
+                  return (
+                    <div
+                      key={c.condition}
+                      tabIndex={-1}
+                      onClick={() => {
+                        onConditionChange(c.condition)
+                        onFilterChange({ condition: c.condition })
+                        setConditionFocused(false)
+                      }}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '5px 8px',
+                        fontSize: 'var(--font-size-sm)',
+                        cursor: 'pointer',
+                        background: isActive ? 'var(--bg-inset)' : 'transparent',
+                        color: isActive ? 'var(--sig-risk)' : 'var(--text)',
+                        fontWeight: isActive ? 600 : 400,
+                        borderBottom: '1px solid var(--border)',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-inset)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'var(--bg-inset)' : 'transparent' }}
+                    >
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>
+                        {c.condition}
+                      </span>
+                      <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--font-size-xs)', flexShrink: 0 }}>
+                        {c.count}
+                      </span>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
         </div>
 
         <div style={{ ...inputCard, flex: '0 1 110px' }}>
