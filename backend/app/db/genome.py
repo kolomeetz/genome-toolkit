@@ -30,6 +30,9 @@ class GenomeDB:
         chromosome: str | None = None,
         source: str | None = None,
         clinically_relevant: bool = False,
+        significance: str | None = None,
+        gene: str | None = None,
+        zygosity: str | None = None,
     ) -> dict:
         conditions = []
         params: list = []
@@ -48,21 +51,37 @@ class GenomeDB:
 
         if clinically_relevant:
             conditions.append("""
-                e.rsid IS NOT NULL
-                AND json_extract(e.data, '$.clinical_significance') NOT IN (
+                e_cv.rsid IS NOT NULL
+                AND json_extract(e_cv.data, '$.clinical_significance') NOT IN (
                     'Benign', 'Likely benign', 'Benign/Likely benign',
                     'not provided', 'no classification for the single variant',
                     'no classifications from unflagged records'
                 )
-                AND json_extract(e.data, '$.disease_name') NOT IN ('not provided', 'not specified', '')
+                AND json_extract(e_cv.data, '$.disease_name') NOT IN ('not provided', 'not specified', '')
             """)
+
+        if significance:
+            conditions.append("json_extract(e_cv.data, '$.clinical_significance') LIKE ?")
+            params.append(f"%{significance}%")
+
+        if gene:
+            conditions.append("json_extract(e_mv.data, '$.gene_symbol') = ?")
+            params.append(gene.upper())
+
+        if zygosity == "homozygous":
+            conditions.append("length(s.genotype) = 2 AND substr(s.genotype, 1, 1) = substr(s.genotype, 2, 1)")
+        elif zygosity == "heterozygous":
+            conditions.append("length(s.genotype) = 2 AND substr(s.genotype, 1, 1) != substr(s.genotype, 2, 1)")
 
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
-        # Count with enrichment join
+        # Need myvariant join when gene filter is used
+        mv_join = "LEFT JOIN enrichments e_mv ON s.rsid = e_mv.rsid AND e_mv.source = 'myvariant'"
+
         count_sql = f"""
             SELECT COUNT(*) FROM snps s
-            LEFT JOIN enrichments e ON s.rsid = e.rsid AND e.source = 'clinvar'
+            LEFT JOIN enrichments e_cv ON s.rsid = e_cv.rsid AND e_cv.source = 'clinvar'
+            {mv_join}
             {where}
         """
         async with self._conn.execute(count_sql, params) as cursor:
@@ -72,10 +91,12 @@ class GenomeDB:
         data_sql = f"""
             SELECT s.rsid, s.chromosome, s.position, s.genotype, s.is_rsid,
                    s.source, s.r2_quality,
-                   json_extract(e.data, '$.clinical_significance') as significance,
-                   json_extract(e.data, '$.disease_name') as disease
+                   json_extract(e_cv.data, '$.clinical_significance') as significance,
+                   json_extract(e_cv.data, '$.disease_name') as disease,
+                   json_extract(e_mv.data, '$.gene_symbol') as gene_symbol
             FROM snps s
-            LEFT JOIN enrichments e ON s.rsid = e.rsid AND e.source = 'clinvar'
+            LEFT JOIN enrichments e_cv ON s.rsid = e_cv.rsid AND e_cv.source = 'clinvar'
+            {mv_join}
             {where}
             ORDER BY s.chromosome, s.position
             LIMIT ? OFFSET ?
@@ -85,6 +106,17 @@ class GenomeDB:
             items = [dict(row) for row in rows]
 
         return {"items": items, "total": total, "page": page, "limit": limit}
+
+    async def list_genes(self) -> list[str]:
+        """Return all gene symbols from myvariant enrichments."""
+        sql = """
+            SELECT DISTINCT json_extract(data, '$.gene_symbol') as gene
+            FROM enrichments WHERE source = 'myvariant'
+            AND gene IS NOT NULL
+            ORDER BY gene
+        """
+        async with self._conn.execute(sql) as cursor:
+            return [row[0] for row in await cursor.fetchall()]
 
     async def get_snp(self, rsid: str) -> dict | None:
         sql = """

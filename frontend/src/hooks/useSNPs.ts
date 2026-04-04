@@ -10,6 +10,7 @@ export interface SNP {
   r2_quality: number | null
   significance: string | null
   disease: string | null
+  gene_symbol: string | null
 }
 
 export interface SNPFilters {
@@ -17,6 +18,9 @@ export interface SNPFilters {
   chromosome: string
   source: string
   clinical: boolean
+  significance: string
+  gene: string
+  zygosity: string
   page: number
   limit: number
 }
@@ -33,6 +37,9 @@ const DEFAULT_FILTERS: SNPFilters = {
   chromosome: '',
   source: '',
   clinical: false,
+  significance: '',
+  gene: '',
+  zygosity: '',
   page: 1,
   limit: 100,
 }
@@ -51,6 +58,9 @@ export function useSNPs() {
     if (f.chromosome) params.set('chr', f.chromosome)
     if (f.source) params.set('source', f.source)
     if (f.clinical) params.set('clinical', 'true')
+    if (f.significance) params.set('significance', f.significance)
+    if (f.gene) params.set('gene', f.gene)
+    if (f.zygosity) params.set('zygosity', f.zygosity)
 
     try {
       const resp = await fetch(`/api/snps?${params}`)

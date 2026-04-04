@@ -10,6 +10,17 @@ function App() {
   const { result, filters, loading, updateFilters, setPage } = useSNPs()
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
+  const [genes, setGenes] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch('/api/genes').then(r => r.json()).then(setGenes).catch(() => {})
+  }, [])
+
+  const hasActiveFilters = !!(filters.search || filters.chromosome || filters.source ||
+    filters.clinical || filters.significance || filters.gene || filters.zygosity)
+  const activeFilterCount = [filters.search, filters.chromosome, filters.source,
+    filters.clinical, filters.significance, filters.gene, filters.zygosity]
+    .filter(Boolean).length
 
   const handleUIAction = useCallback((action: UIAction) => {
     if (action.action === 'filter_table') {
@@ -74,24 +85,35 @@ function App() {
         </button>
       </header>
 
-      {/* Filter bar */}
+      {/* Filter bar — row 1 */}
       <div style={{
         display: 'flex',
         gap: 'var(--space-sm)',
-        padding: 'var(--space-sm) var(--space-lg)',
-        borderBottom: '1px dashed var(--border-dashed)',
+        padding: 'var(--space-sm) var(--space-lg) 0',
         alignItems: 'center',
+        flexWrap: 'wrap',
       }}>
         <input
           className="input"
-          placeholder="SEARCH // RSID, GENE, POSITION..."
-          style={{ maxWidth: 400 }}
+          placeholder="SEARCH // RSID, POSITION..."
+          style={{ maxWidth: 280 }}
           value={filters.search}
           onChange={e => updateFilters({ search: e.target.value })}
         />
+        <input
+          className="input"
+          placeholder="GENE // CYP2D6, MTHFR..."
+          style={{ maxWidth: 180 }}
+          value={filters.gene}
+          onChange={e => updateFilters({ gene: e.target.value })}
+          list="gene-list"
+        />
+        <datalist id="gene-list">
+          {genes.map(g => <option key={g} value={g} />)}
+        </datalist>
         <select
           className="input"
-          style={{ maxWidth: 140 }}
+          style={{ maxWidth: 130 }}
           value={filters.chromosome}
           onChange={e => updateFilters({ chromosome: e.target.value })}
         >
@@ -103,6 +125,41 @@ function App() {
           <option value="Y">CHR_Y</option>
           <option value="MT">CHR_MT</option>
         </select>
+        <select
+          className="input"
+          style={{ maxWidth: 180 }}
+          value={filters.significance}
+          onChange={e => updateFilters({ significance: e.target.value })}
+        >
+          <option value="">ALL_SIGNIFICANCE</option>
+          <option value="Pathogenic">PATHOGENIC</option>
+          <option value="Likely pathogenic">LIKELY_PATHOGENIC</option>
+          <option value="drug response">DRUG_RESPONSE</option>
+          <option value="risk factor">RISK_FACTOR</option>
+          <option value="protective">PROTECTIVE</option>
+          <option value="Uncertain significance">UNCERTAIN</option>
+          <option value="Conflicting">CONFLICTING</option>
+        </select>
+        <select
+          className="input"
+          style={{ maxWidth: 160 }}
+          value={filters.zygosity}
+          onChange={e => updateFilters({ zygosity: e.target.value })}
+        >
+          <option value="">ALL_ZYGOSITY</option>
+          <option value="homozygous">HOMOZYGOUS</option>
+          <option value="heterozygous">HETEROZYGOUS</option>
+        </select>
+      </div>
+      {/* Filter bar — row 2: toggles */}
+      <div style={{
+        display: 'flex',
+        gap: 'var(--space-sm)',
+        padding: '0 var(--space-lg) var(--space-sm)',
+        borderBottom: '1px dashed var(--border-dashed)',
+        alignItems: 'center',
+        marginTop: 'var(--space-xs)',
+      }}>
         <select
           className="input"
           style={{ maxWidth: 140 }}
@@ -120,15 +177,21 @@ function App() {
         >
           ACTIONABLE
         </button>
-        {(filters.search || filters.chromosome || filters.source || filters.clinical) && (
+        {hasActiveFilters && (
           <button
             className="btn"
             style={{ fontSize: 'var(--font-size-xs)' }}
-            onClick={() => updateFilters({ search: '', chromosome: '', source: '', clinical: false })}
+            onClick={() => updateFilters({
+              search: '', chromosome: '', source: '', clinical: false,
+              significance: '', gene: '', zygosity: '',
+            })}
           >
-            CLEAR
+            CLEAR_ALL
           </button>
         )}
+        <span className="label" style={{ marginLeft: 'auto' }}>
+          {activeFilterCount > 0 ? `${activeFilterCount} FILTERS_ACTIVE` : ''}
+        </span>
       </div>
 
       {/* Table */}

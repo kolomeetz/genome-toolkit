@@ -29,6 +29,14 @@ const columns: ColumnDef<SNP, any>[] = [
       </span>
     ),
   }),
+  col.accessor('gene_symbol', {
+    header: 'GENE',
+    cell: info => {
+      const gene = info.getValue() as string | null
+      if (!gene) return <span style={{ color: 'var(--text-tertiary)' }}>--</span>
+      return <span style={{ color: 'var(--accent)', fontWeight: 500, fontSize: 'var(--font-size-xs)' }}>{gene}</span>
+    },
+  }),
   col.accessor('chromosome', { header: 'CHR' }),
   col.accessor('position', {
     header: 'POSITION',
