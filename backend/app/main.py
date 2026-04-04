@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.app.db.genome import GenomeDB
 from backend.app.db.users import UsersDB
-from backend.app.agent.tools import set_genome_db
+from backend.app.agent.tools import set_genome_db, set_vault_path
 
 DATA_DIR = Path(os.environ.get("GENOME_DATA_DIR", "./data"))
 GENOME_DB_PATH = Path(os.environ.get("GENOME_DB_PATH", str(DATA_DIR / "genome.db")))
@@ -29,6 +29,8 @@ async def lifespan(app: FastAPI):
     await users_db.connect()
     await users_db.init_schema()
     set_genome_db(genome_db)
+    vault = os.environ.get("GENOME_VAULT_PATH", os.path.expanduser("~/Brains/genome"))
+    set_vault_path(vault)
     yield
     await genome_db.close()
     await users_db.close()

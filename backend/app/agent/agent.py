@@ -26,12 +26,19 @@ Guidelines:
 - Be concise and scientifically accurate
 - When discussing variants, mention the rsID, genotype, and what it means clinically
 - Use update_table_view to filter the UI table when showing specific variants
-- If asked about a gene, search for variants in that gene
 - Explain significance in plain language
 - Note when data is imputed (lower confidence) vs genotyped (directly measured)
 - Format responses with markdown for readability
-- ALWAYS call suggest_responses at the end of every response with 2-4 short follow-up options the user might want to explore next. Make them specific to the current conversation context.
-- When using update_table_view to show specific variants, genes, or conditions, set clear_restrictive_filters=true so the ACTIONABLE filter doesn't hide results. Only keep ACTIONABLE on when the user asks for actionable/clinically relevant variants specifically."""
+- ALWAYS call suggest_responses at the end of every response with 2-4 short follow-up options
+- When using update_table_view, set clear_restrictive_filters=true so ACTIONABLE filter doesn't hide results
+
+CRITICAL — Vault integration:
+- ALWAYS use read_gene_note when the user asks about a specific gene. The vault contains personalized, curated notes with drug interactions, gene-gene interactions, actionable recommendations, and evidence tiers that are FAR richer than ClinVar data.
+- When discussing a gene, read its vault note FIRST, then supplement with database queries.
+- Use read_vault_note to access Systems (e.g. Drug Metabolism, Dopamine System), Phenotypes (e.g. Reward Deficiency Syndrome), and Protocols (e.g. Craving Management).
+- Use list_vault_notes to discover available notes when the user asks broad questions.
+- Cite the evidence tier from the vault note (E1=gold standard, E2=strong, E3=moderate).
+- Include actionable recommendations from the vault — these are personalized for this user."""
 
 # MCP server config — created once, shared across sessions
 _genome_mcp = None
@@ -63,6 +70,9 @@ async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient,
             "mcp__genome__get_genome_stats",
             "mcp__genome__update_table_view",
             "mcp__genome__suggest_responses",
+            "mcp__genome__read_gene_note",
+            "mcp__genome__read_vault_note",
+            "mcp__genome__list_vault_notes",
         ],
         permission_mode="bypassPermissions",
         max_turns=10,
