@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import './styles/theme.css'
 import { useSNPs, type SNP } from './hooks/useSNPs'
 import { useChat, type UIAction } from './hooks/useChat'
+import { useVoice } from './hooks/useVoice'
 import { SNPTable } from './components/SNPTable'
 import { CommandPalette } from './components/CommandPalette'
 import { VariantDrawer } from './components/VariantDrawer'
@@ -9,6 +10,7 @@ import { InsightPanel, type InsightData } from './components/InsightPanel'
 
 function App() {
   const { result, filters, loading, updateFilters, debouncedUpdateFilters, setPage, resetFilters, activeFilterCount } = useSNPs()
+  const voice = useVoice()
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
   const [genes, setGenes] = useState<{ gene: string; count: number }[]>([])
@@ -52,10 +54,18 @@ function App() {
       }
 
       updateFilters(update)
+    } else if (action.action === 'speak') {
+      voice.speak((action.params as unknown as { text: string }).text)
     }
-  }, [updateFilters])
+  }, [updateFilters, voice])
 
-  const { messages, streaming, streamingText, status, suggestions, send } = useChat(handleUIAction)
+  const { messages, streaming, streamingText, status, suggestions, send: rawSend } = useChat(handleUIAction)
+
+  // Wrap send to prefix [VOICE] when voice mode active
+  const send = useCallback((text: string) => {
+    const prefix = voice.voiceEnabled ? '[VOICE] ' : ''
+    rawSend(prefix + text)
+  }, [rawSend, voice.voiceEnabled])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -111,13 +121,60 @@ function App() {
               : 'AWAITING_DATA'}
           </span>
         </div>
-        <button
-          className="btn btn--accent"
-          style={{ fontSize: 'var(--font-size-xs)' }}
-          onClick={() => setCmdkOpen(true)}
-        >
-          ASK_AI // CMD+K
-        </button>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+          {voice.supported && (
+            <>
+              <button
+                className={`btn ${voice.voiceEnabled ? 'btn--active' : ''}`}
+                style={{ fontSize: 'var(--font-size-xs)', padding: '4px 8px' }}
+                onClick={voice.toggleVoice}
+                title={voice.voiceEnabled ? 'Voice mode ON — responses will be spoken' : 'Enable voice mode'}
+              >
+                {voice.voiceEnabled ? 'VOICE_ON' : 'VOICE'}
+              </button>
+              {voice.voiceEnabled && (
+                <button
+                  className={`btn ${voice.listening ? 'btn--active' : ''}`}
+                  style={{
+                    fontSize: 'var(--font-size-xs)',
+                    padding: '4px 8px',
+                    color: voice.listening ? 'var(--sig-risk)' : undefined,
+                    borderColor: voice.listening ? 'var(--sig-risk)' : undefined,
+                  }}
+                  onClick={() => {
+                    if (voice.listening) {
+                      voice.stopListening()
+                    } else {
+                      setCmdkOpen(true)
+                      voice.startListening((text) => {
+                        send(text)
+                      })
+                    }
+                  }}
+                  title={voice.listening ? 'Listening...' : 'Push to talk'}
+                >
+                  {voice.listening ? 'LISTENING...' : 'MIC'}
+                </button>
+              )}
+              {voice.speaking && (
+                <button
+                  className="btn"
+                  style={{ fontSize: 'var(--font-size-xs)', padding: '4px 8px', color: 'var(--primary)' }}
+                  onClick={voice.stopSpeaking}
+                >
+                  STOP
+                </button>
+              )}
+            </>
+          )}
+          <button
+            className="btn btn--accent"
+            style={{ fontSize: 'var(--font-size-xs)' }}
+            onClick={() => setCmdkOpen(true)}
+          >
+            ASK_AI // CMD+K
+          </button>
+        </div>
       </header>
 
       {/* Unified filter panel */}

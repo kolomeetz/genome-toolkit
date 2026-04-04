@@ -128,6 +128,23 @@ async def suggest_responses(args: dict[str, Any]) -> dict[str, Any]:
 
 
 @tool(
+    "voice_summary",
+    """Provide a short 1-3 sentence spoken summary of your response for text-to-speech.
+ONLY call this when voice mode is active (indicated in the conversation context).
+Rules for voice output:
+- Spell gene names letter by letter with dashes: CYP2D6 → C-Y-P-2-D-6
+- Spell rsIDs: rs4680 → r-s-4-6-8-0
+- No markdown, no tables, no lists
+- Conversational, warm tone
+- Focus on what matters most and what to do about it
+- Keep under 30 seconds of speech (roughly 60-80 words)""",
+    {"text": str},
+)
+async def voice_summary(args: dict[str, Any]) -> dict[str, Any]:
+    return {"content": [{"type": "text", "text": "Voice summary delivered."}]}
+
+
+@tool(
     "read_gene_note",
     """Read the detailed gene note from the personal genomics vault. Returns the FULL note including:
 - Gene description and what it does
@@ -229,7 +246,7 @@ def create_genome_mcp_server():
         version="1.0.0",
         tools=[
             query_snps, get_snp_detail, get_genome_stats,
-            update_table_view, suggest_responses,
+            update_table_view, suggest_responses, voice_summary,
             read_gene_note, read_vault_note, list_vault_notes,
         ],
     )

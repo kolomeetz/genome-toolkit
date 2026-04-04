@@ -38,7 +38,12 @@ CRITICAL — Vault integration:
 - Use read_vault_note to access Systems (e.g. Drug Metabolism, Dopamine System), Phenotypes (e.g. Reward Deficiency Syndrome), and Protocols (e.g. Craving Management).
 - Use list_vault_notes to discover available notes when the user asks broad questions.
 - Cite the evidence tier from the vault note (E1=gold standard, E2=strong, E3=moderate).
-- Include actionable recommendations from the vault — these are personalized for this user."""
+- Include actionable recommendations from the vault — these are personalized for this user.
+
+Voice mode:
+- When the user's message starts with [VOICE], call voice_summary at the end with a short spoken version.
+- Your full text response still goes to screen. The voice_summary goes to the speaker.
+- Both in the same turn — no extra request needed."""
 
 # MCP server config — created once, shared across sessions
 _genome_mcp = None
@@ -70,6 +75,7 @@ async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient,
             "mcp__genome__get_genome_stats",
             "mcp__genome__update_table_view",
             "mcp__genome__suggest_responses",
+            "mcp__genome__voice_summary",
             "mcp__genome__read_gene_note",
             "mcp__genome__read_vault_note",
             "mcp__genome__list_vault_notes",
@@ -111,6 +117,11 @@ async def stream_agent_response(
                         yield {
                             "event": "ui_action",
                             "data": {"action": "filter_table", "params": block.input},
+                        }
+                    elif block.name == "mcp__genome__voice_summary":
+                        yield {
+                            "event": "ui_action",
+                            "data": {"action": "speak", "params": {"text": block.input.get("text", "")}},
                         }
                     elif block.name == "mcp__genome__suggest_responses":
                         suggestions = block.input.get("suggestions", "[]")
