@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NarrativeBlock } from '../mental-health/NarrativeBlock'
 import { GeneCard } from '../mental-health/GeneCard'
 import type { PathwaySection, GeneData } from '../../types/genomics'
@@ -310,7 +311,7 @@ const ACTIONABLE_COUNT = PATHWAYS.reduce(
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function SubstanceCardItem({ substance }: { substance: SubstanceCard }) {
+function SubstanceCardItem({ substance, added, onAdd }: { substance: SubstanceCard; added?: boolean; onAdd?: () => void }) {
   return (
     <div style={{
       background: 'var(--bg-raised)',
@@ -352,8 +353,31 @@ function SubstanceCardItem({ substance }: { substance: SubstanceCard }) {
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
           fontFamily: 'var(--font-mono)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}>
-          {substance.harmTitle}
+          <span>{substance.harmTitle}</span>
+          {onAdd && (
+            <button
+              className="btn"
+              style={{
+                fontSize: '9px',
+                padding: '1px 6px',
+                flexShrink: 0,
+                opacity: added ? 0.4 : 0.6,
+                color: added ? 'var(--sig-benefit)' : 'var(--primary)',
+                borderColor: added ? 'var(--sig-benefit)' : 'var(--border)',
+                cursor: added ? 'default' : 'pointer',
+              }}
+              disabled={added}
+              onClick={(e) => { e.stopPropagation(); onAdd(); }}
+              onMouseEnter={e => { if (!added) e.currentTarget.style.opacity = '1' }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = added ? '0.4' : '0.6' }}
+            >
+              {added ? 'ADDED' : '+'}
+            </button>
+          )}
         </div>
         <div style={{ fontSize: 10, lineHeight: 1.6, fontFamily: 'var(--font-mono)' }}>
           {substance.harmText}
@@ -365,7 +389,12 @@ function SubstanceCardItem({ substance }: { substance: SubstanceCard }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function AddictionProfile() {
+interface AddictionProfileProps {
+  onAddToChecklist?: (title: string, gene: string) => void
+}
+
+export function AddictionProfile({ onAddToChecklist }: AddictionProfileProps) {
+  const [addedSubstances, setAddedSubstances] = useState<Set<string>>(new Set())
   const handleGeneClick = (_gene: GeneData) => {
     // no-op for now — could open a drawer in a future iteration
   }
@@ -497,9 +526,20 @@ export function AddictionProfile() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-          {SUBSTANCES.map(substance => (
-            <SubstanceCardItem key={substance.name} substance={substance} />
-          ))}
+          {SUBSTANCES.map(substance => {
+            const firstGene = substance.genes.match(/(\w+)/)?.[1] || 'custom'
+            return (
+              <SubstanceCardItem
+                key={substance.name}
+                substance={substance}
+                added={addedSubstances.has(substance.name)}
+                onAdd={onAddToChecklist ? () => {
+                  setAddedSubstances(prev => new Set(prev).add(substance.name))
+                  onAddToChecklist(`${substance.name}: ${substance.harmTitle}`, firstGene)
+                } : undefined}
+              />
+            )
+          })}
         </div>
 
       </div>

@@ -351,7 +351,7 @@ function GeneMiniCard({ gene }: { gene: GeneMini }) {
   )
 }
 
-function ActionMiniCard({ action }: { action: ActionMini }) {
+function ActionMiniCard({ action, added, onAdd }: { action: ActionMini; added?: boolean; onAdd?: () => void }) {
   const borderColor = ACTION_TYPE_COLORS[action.type]
   return (
     <div
@@ -360,8 +360,32 @@ function ActionMiniCard({ action }: { action: ActionMini }) {
         borderLeft: `3px solid ${borderColor}`,
         borderRadius: '0 6px 6px 0',
         padding: '10px 14px',
+        position: 'relative',
       }}
     >
+      {onAdd && (
+        <button
+          className="btn"
+          style={{
+            fontSize: '9px',
+            padding: '1px 6px',
+            flexShrink: 0,
+            opacity: added ? 0.4 : 0.6,
+            color: added ? 'var(--sig-benefit)' : 'var(--primary)',
+            borderColor: added ? 'var(--sig-benefit)' : 'var(--border)',
+            cursor: added ? 'default' : 'pointer',
+            position: 'absolute',
+            top: 10,
+            right: 10,
+          }}
+          disabled={added}
+          onClick={(e) => { e.stopPropagation(); onAdd(); }}
+          onMouseEnter={e => { if (!added) e.currentTarget.style.opacity = '1' }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = added ? '0.4' : '0.6' }}
+        >
+          {added ? 'ADDED' : '+'}
+        </button>
+      )}
       <div
         style={{
           fontSize: 'var(--font-size-xs)',
@@ -386,7 +410,7 @@ function ActionMiniCard({ action }: { action: ActionMini }) {
   )
 }
 
-function ExpandedDetail({ cause }: { cause: MortalityCause }) {
+function ExpandedDetail({ cause, addedSet, onAddToChecklist }: { cause: MortalityCause; addedSet?: Set<string>; onAddToChecklist?: (title: string, causeName: string) => void }) {
   return (
     <div
       style={{
@@ -431,9 +455,17 @@ function ExpandedDetail({ cause }: { cause: MortalityCause }) {
 
       {cause.actions && cause.actions.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {cause.actions.map((action, idx) => (
-            <ActionMiniCard key={idx} action={action} />
-          ))}
+          {cause.actions.map((action, idx) => {
+            const key = cause.cause + action.text
+            return (
+              <ActionMiniCard
+                key={idx}
+                action={action}
+                added={addedSet?.has(key)}
+                onAdd={onAddToChecklist ? () => onAddToChecklist(action.text, cause.cause) : undefined}
+              />
+            )
+          })}
         </div>
       )}
     </div>
@@ -460,10 +492,14 @@ function MortalityRow({
   cause,
   isExpanded,
   onToggle,
+  addedSet,
+  onAddToChecklist,
 }: {
   cause: MortalityCause
   isExpanded: boolean
   onToggle: () => void
+  addedSet?: Set<string>
+  onAddToChecklist?: (title: string, causeName: string) => void
 }) {
   const hasDetail = !!(cause.narrative || (cause.genes && cause.genes.length > 0))
   const statusColor = STATUS_COLORS[cause.status]
@@ -572,7 +608,7 @@ function MortalityRow({
         </div>
       </div>
 
-      {isExpanded && hasDetail && <ExpandedDetail cause={cause} />}
+      {isExpanded && hasDetail && <ExpandedDetail cause={cause} addedSet={addedSet} onAddToChecklist={onAddToChecklist} />}
     </>
   )
 }
@@ -625,10 +661,18 @@ function BarLegend() {
 
 interface RiskLandscapeProps {
   onExport?: (format: 'pdf' | 'md' | 'doctor') => void
+  onAddToChecklist?: (title: string, cause: string) => void
 }
 
-export function RiskLandscape({ onExport }: RiskLandscapeProps) {
+export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps) {
   const [expandedRank, setExpandedRank] = useState<number | null>(1)
+  const [addedActions, setAddedActions] = useState<Set<string>>(new Set())
+
+  const handleAddToChecklist = onAddToChecklist ? (title: string, cause: string) => {
+    const key = cause + title
+    setAddedActions(prev => new Set(prev).add(key))
+    onAddToChecklist(title, cause)
+  } : undefined
   const stats = getSummaryStats(CAUSES)
 
   function handleToggle(rank: number) {
@@ -743,6 +787,8 @@ export function RiskLandscape({ onExport }: RiskLandscapeProps) {
               cause={cause}
               isExpanded={expandedRank === cause.rank}
               onToggle={() => handleToggle(cause.rank)}
+              addedSet={addedActions}
+              onAddToChecklist={handleAddToChecklist}
             />
           ))}
         </div>

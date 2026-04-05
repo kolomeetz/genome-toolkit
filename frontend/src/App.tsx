@@ -368,15 +368,27 @@ function App() {
         </>
       ) : view === 'pgx' ? (
         <main>
-          <PGxPanel />
+          <PGxPanel onAddToChecklist={(title, gene) => {
+            checklist.addItem(title, gene || 'custom', 'consider')
+            setChecklistHighlight(true)
+            setTimeout(() => setChecklistHighlight(false), 1500)
+          }} />
         </main>
       ) : view === 'addiction' ? (
         <main>
-          <AddictionProfile />
+          <AddictionProfile onAddToChecklist={(title, gene) => {
+            checklist.addItem(title, gene || 'custom', 'consider')
+            setChecklistHighlight(true)
+            setTimeout(() => setChecklistHighlight(false), 1500)
+          }} />
         </main>
       ) : view === 'risk' ? (
         <main>
-          <RiskLandscape />
+          <RiskLandscape onAddToChecklist={(title, cause) => {
+            checklist.addItem(title, 'custom', 'consider', '', cause)
+            setChecklistHighlight(true)
+            setTimeout(() => setChecklistHighlight(false), 1500)
+          }} />
         </main>
       ) : (
         <main>

@@ -9,9 +9,11 @@ const IMPACT_STYLES: Record<string, { borderColor: string; statusColor: string; 
 
 interface DrugCardProps {
   drug: DrugCardData
+  onAddToChecklist?: (title: string) => void
+  added?: boolean
 }
 
-export function DrugCard({ drug }: DrugCardProps) {
+export function DrugCard({ drug, onAddToChecklist, added }: DrugCardProps) {
   const style = IMPACT_STYLES[drug.impact] || IMPACT_STYLES.ok
 
   return (
@@ -38,8 +40,32 @@ export function DrugCard({ drug }: DrugCardProps) {
           marginTop: 10, padding: '10px 14px',
           background: '#faf5f5', border: '1px solid #d4a0a0', borderRadius: 4,
         }}>
-          <div style={{ fontSize: 9, fontWeight: 600, color: '#b84a4a', marginBottom: 4 }}>
-            {drug.category === 'substance' ? 'Interaction warning' : 'Discuss with prescriber'}
+          <div style={{ fontSize: 9, fontWeight: 600, color: '#b84a4a', marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{drug.category === 'substance' ? 'Interaction warning' : 'Discuss with prescriber'}</span>
+            {onAddToChecklist && (
+              <button
+                className="btn"
+                style={{
+                  fontSize: '9px',
+                  padding: '1px 6px',
+                  flexShrink: 0,
+                  opacity: added ? 0.4 : 0.6,
+                  color: added ? 'var(--sig-benefit)' : 'var(--primary)',
+                  borderColor: added ? 'var(--sig-benefit)' : 'var(--border)',
+                  cursor: added ? 'default' : 'pointer',
+                }}
+                disabled={added}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const noteSnippet = drug.dangerNote!.length > 60 ? drug.dangerNote!.slice(0, 60) + '...' : drug.dangerNote!
+                  onAddToChecklist(`${drug.drugClass}: ${noteSnippet}`)
+                }}
+                onMouseEnter={e => { if (!added) e.currentTarget.style.opacity = '1' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = added ? '0.4' : '0.6' }}
+              >
+                {added ? 'ADDED' : '+'}
+              </button>
+            )}
           </div>
           <div style={{ fontSize: 9, color: 'var(--text)', lineHeight: 1.6 }}>
             {drug.dangerNote}
