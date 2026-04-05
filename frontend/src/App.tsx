@@ -10,17 +10,32 @@ import { InsightPanel, type InsightData } from './components/InsightPanel'
 import { VoiceButton } from './components/VoiceButton'
 import { MentalHealthDashboard } from './components/mental-health/MentalHealthDashboard'
 import { useMentalHealthData } from './hooks/useMentalHealthData'
+import { useChecklist } from './hooks/useChecklist'
+import { ChecklistSidebar } from './components/mental-health/ChecklistSidebar'
 
 function App() {
   const { result, filters, loading, updateFilters, debouncedUpdateFilters, setPage, resetFilters, activeFilterCount } = useSNPs()
   const voice = useVoice()
-  const [view, setView] = useState<'snps' | 'mental-health'>('snps')
+  const [view, setView] = useState<'snps' | 'mental-health'>(() => {
+    return window.location.hash === '#/mental-health' ? 'mental-health' : 'snps'
+  })
   const mentalHealth = useMentalHealthData()
-  const [actionStates, setActionStates] = useState<Record<string, boolean>>({})
+  const checklist = useChecklist()
+  const [checklistOpen, setChecklistOpen] = useState(false)
 
-  const handleToggleAction = useCallback((id: string) => {
-    setActionStates(prev => ({ ...prev, [id]: !prev[id] }))
+  const navigate = useCallback((v: 'snps' | 'mental-health') => {
+    setView(v)
+    window.location.hash = v === 'mental-health' ? '#/mental-health' : '#/'
   }, [])
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setView(window.location.hash === '#/mental-health' ? 'mental-health' : 'snps')
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
   const [genes, setGenes] = useState<{ gene: string; count: number }[]>([])
@@ -82,6 +97,11 @@ function App() {
     }
   }, [rawSend, voice.voiceEnabled])
 
+  const handleDiscuss = useCallback((context: string) => {
+    setCmdkOpen(true)
+    setTimeout(() => send(context), 150)
+  }, [send])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -122,12 +142,16 @@ function App() {
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          <span style={{
-            fontSize: 'var(--font-size-xl)',
-            fontWeight: 600,
-            color: 'var(--accent)',
-            letterSpacing: 'var(--tracking-wide)',
-          }}>
+          <span
+            style={{
+              fontSize: 'var(--font-size-xl)',
+              fontWeight: 600,
+              color: 'var(--accent)',
+              letterSpacing: 'var(--tracking-wide)',
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('snps')}
+          >
             GENOME_TOOLKIT
           </span>
           <span className="label" style={{ color: 'var(--text-tertiary)' }}>
@@ -145,7 +169,7 @@ function App() {
               borderColor: view === 'snps' ? 'var(--primary)' : 'var(--border)',
               color: view === 'snps' ? 'var(--primary)' : 'var(--text-secondary)',
             }}
-            onClick={() => setView('snps')}
+            onClick={() => navigate('snps')}
           >
             SNP_BROWSER
           </button>
@@ -157,9 +181,31 @@ function App() {
               borderColor: view === 'mental-health' ? 'var(--primary)' : 'var(--border)',
               color: view === 'mental-health' ? 'var(--primary)' : 'var(--text-secondary)',
             }}
-            onClick={() => setView('mental-health')}
+            onClick={() => navigate('mental-health')}
           >
             MENTAL_HEALTH
+          </button>
+          <button
+            className="btn"
+            style={{
+              fontSize: 'var(--font-size-xs)',
+              position: 'relative',
+              borderColor: checklistOpen ? 'var(--primary)' : 'var(--border)',
+              color: checklistOpen ? 'var(--primary)' : undefined,
+            }}
+            onClick={() => setChecklistOpen(prev => !prev)}
+          >
+            CHECKLIST
+            {checklist.pendingCount > 0 && (
+              <span style={{
+                position: 'absolute', top: -4, right: -4,
+                background: 'var(--accent)', color: 'var(--bg-raised)',
+                fontSize: 8, fontWeight: 600, padding: '1px 5px',
+                borderRadius: 10, minWidth: 16, textAlign: 'center',
+              }}>
+                {checklist.pendingCount}
+              </span>
+            )}
           </button>
           {voice.supported && (
             <VoiceButton
@@ -229,7 +275,8 @@ function App() {
             onExport={(format) => console.log('export', format)}
             onGeneClick={(gene) => console.log('gene click', gene.symbol)}
             actions={mentalHealth.actions}
-            onToggleAction={handleToggleAction}
+            onToggleAction={checklist.toggleDone}
+            onDiscuss={handleDiscuss}
           />
         </main>
       )}
@@ -265,6 +312,33 @@ function App() {
         suggestions={suggestions}
         onSend={send}
       />
+
+      {/* Checklist Sidebar */}
+      {checklistOpen && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.1)', zIndex: 99 }}
+            onClick={() => setChecklistOpen(false)}
+          />
+          <ChecklistSidebar
+            grouped={checklist.grouped}
+            groupBy={checklist.groupBy}
+            filterStatus={checklist.filterStatus}
+            pendingCount={checklist.pendingCount}
+            doneCount={checklist.doneCount}
+            totalCount={checklist.items.length}
+            uniqueGenes={checklist.uniqueGenes}
+            onSetGroupBy={checklist.setGroupBy}
+            onSetFilterStatus={checklist.setFilterStatus}
+            onToggleDone={checklist.toggleDone}
+            onDelete={checklist.deleteItem}
+            onAdd={(title) => checklist.addItem(title)}
+            onClose={() => setChecklistOpen(false)}
+            onExport={(format) => console.log('export', format)}
+            onResearchPrompt={() => console.log('research prompt')}
+          />
+        </>
+      )}
     </div>
   )
 }
