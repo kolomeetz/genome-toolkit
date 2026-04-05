@@ -40,6 +40,8 @@ interface MentalHealthDashboardProps {
   actions: Record<string, ActionData[]>
   onToggleAction: (id: string) => void
   onDiscuss?: (context: string) => void
+  checklistIds?: Set<string>
+  onAddToChecklist?: (action: ActionData) => void
 }
 
 const LEGEND_ITEMS: { status: GeneStatus; label: string }[] = [
@@ -59,6 +61,8 @@ export function MentalHealthDashboard({
   actions,
   onToggleAction,
   onDiscuss,
+  checklistIds = new Set(),
+  onAddToChecklist,
 }: MentalHealthDashboardProps) {
   const [expandedGene, setExpandedGene] = useState<GeneData | null>(null)
   const { activeCategory, activeActionType, setCategory, setActionType, clearAll, matchesGene, matchesAction } =
@@ -307,6 +311,8 @@ export function MentalHealthDashboard({
                       onClose={() => setExpandedGene(null)}
                       onToggleAction={onToggleAction}
                       onDiscuss={onDiscuss}
+                      checklistIds={checklistIds}
+                      onAddToChecklist={onAddToChecklist}
                     />
                   </div>
                 )}

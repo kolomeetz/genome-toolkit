@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { ActionData } from '../../types/genomics'
 import { ACTION_TYPE_COLORS, ACTION_TYPE_LABELS } from '../../types/genomics'
 
 interface ActionCardProps {
   action: ActionData
   onToggleDone: (id: string) => void
+  /** Whether this action is already in the checklist */
+  inChecklist?: boolean
+  /** Add this action to the checklist */
+  onAddToChecklist?: (action: ActionData) => void
 }
 
-export function ActionCard({ action, onToggleDone }: ActionCardProps) {
+export function ActionCard({ action, onToggleDone, inChecklist, onAddToChecklist }: ActionCardProps) {
   const [expanded, setExpanded] = useState(false)
   const borderColor = ACTION_TYPE_COLORS[action.type]
 
@@ -95,30 +99,41 @@ export function ActionCard({ action, onToggleDone }: ActionCardProps) {
           </div>
         </div>
 
-        {/* Checkbox */}
-        <div
-          onClick={() => onToggleDone(action.id)}
-          title={action.done ? 'Completed' : 'Mark as done'}
+        {/* Add to checklist button */}
+        <button
+          onClick={() => {
+            if (inChecklist) {
+              onToggleDone(action.id)
+            } else if (onAddToChecklist) {
+              onAddToChecklist(action)
+            }
+          }}
+          title={inChecklist ? (action.done ? 'In checklist (done)' : 'In checklist (click to toggle done)') : 'Add to checklist'}
           style={{
-            width: 20,
-            height: 20,
-            border: `1.5px solid ${action.done ? 'var(--sig-benefit)' : 'var(--border)'}`,
-            borderRadius: 4,
+            fontFamily: 'var(--font-mono)',
+            fontSize: 8,
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            padding: inChecklist ? '4px 8px' : '4px 10px',
+            border: `1px solid ${inChecklist ? (action.done ? 'var(--sig-benefit)' : 'var(--primary)') : 'var(--border)'}`,
+            borderRadius: 3,
+            background: inChecklist
+              ? (action.done ? 'var(--sig-benefit)' : 'transparent')
+              : 'transparent',
+            color: inChecklist
+              ? (action.done ? 'var(--bg-raised)' : 'var(--primary)')
+              : 'var(--text-tertiary)',
             cursor: 'pointer',
             flexShrink: 0,
             marginLeft: 12,
             marginTop: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: action.done ? 'var(--sig-benefit)' : 'transparent',
-            color: 'var(--bg-raised)',
-            fontSize: 12,
-            fontWeight: 700,
+            whiteSpace: 'nowrap',
+            transition: 'all 0.15s',
           }}
         >
-          {action.done ? '\u2713' : ''}
-        </div>
+          {inChecklist ? (action.done ? '\u2713 Done' : 'In list') : '+ Add'}
+        </button>
       </div>
     </div>
   )

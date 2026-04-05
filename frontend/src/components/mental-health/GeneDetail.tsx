@@ -10,6 +10,8 @@ interface GeneDetailProps {
   interactions?: { genes: string; description: string }[]
   onClose: () => void
   onToggleAction: (actionId: string) => void
+  checklistIds?: Set<string>
+  onAddToChecklist?: (action: ActionData) => void
 }
 
 export function GeneDetail({
@@ -20,6 +22,8 @@ export function GeneDetail({
   interactions,
   onClose,
   onToggleAction,
+  checklistIds = new Set(),
+  onAddToChecklist,
 }: GeneDetailProps) {
   return (
     <div style={{
@@ -195,7 +199,13 @@ export function GeneDetail({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {actions.map(action => (
-              <ActionCard key={action.id} action={action} onToggleDone={onToggleAction} />
+              <ActionCard
+                key={action.id}
+                action={action}
+                onToggleDone={onToggleAction}
+                inChecklist={checklistIds.has(action.id)}
+                onAddToChecklist={onAddToChecklist}
+              />
             ))}
           </div>
         </div>

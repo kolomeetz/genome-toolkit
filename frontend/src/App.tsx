@@ -389,6 +389,18 @@ function App() {
             actions={mentalHealth.actions}
             onToggleAction={checklist.toggleDone}
             onDiscuss={handleDiscuss}
+            checklistIds={new Set(checklist.items.map(i => i.id))}
+            onAddToChecklist={(action) => {
+              checklist.addItem(
+                action.title,
+                action.geneSymbol,
+                action.type,
+                action.tags[0] || '',
+                'mental_health'
+              )
+              setChecklistHighlight(true)
+              setTimeout(() => setChecklistHighlight(false), 1500)
+            }}
           />
         </main>
       )}
