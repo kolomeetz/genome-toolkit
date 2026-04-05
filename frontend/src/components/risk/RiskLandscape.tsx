@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useRiskData } from '../../hooks/useRiskData'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -58,217 +59,6 @@ const ACTION_TYPE_LABELS: Record<'consider' | 'monitor' | 'discuss', string> = {
   monitor: 'Monitor',
   discuss: 'Discuss',
 }
-
-// ── Mock data ──────────────────────────────────────────────────────────────
-
-const CAUSES: MortalityCause[] = [
-  {
-    rank: 1,
-    cause: 'Cardiovascular Disease',
-    pct: 31,
-    populationBarPct: 62,
-    personalBarPct: 35,
-    status: 'actionable',
-    genesText: 'MTHFR (homocysteine), APOE, LPA',
-    statusText: 'Actionable — 3 genes, 3 actions',
-    narrative:
-      'You carry MTHFR C677T T/T, which can elevate homocysteine — a known cardiovascular risk factor. You also have one APOE e4 allele, associated with higher LDL cholesterol. These are among the most actionable cardiovascular genetics findings because effective interventions exist for both.',
-    genes: [
-      {
-        symbol: 'MTHFR C677T',
-        variant: 'T/T',
-        evidenceTier: 'E2 STRONG',
-        status: 'actionable',
-        description:
-          'Elevated homocysteine risk. Directly actionable with methylfolate supplementation and monitoring.',
-      },
-      {
-        symbol: 'APOE',
-        variant: 'e3/e4',
-        evidenceTier: 'E1 GOLD',
-        status: 'actionable',
-        description:
-          'One risk allele. Associated with higher LDL and cardiovascular risk. Responsive to diet and statin therapy.',
-      },
-      {
-        symbol: 'LPA',
-        variant: 'rs10455872',
-        evidenceTier: 'E2 STRONG',
-        status: 'monitor',
-        description:
-          'Slightly elevated Lp(a). Independent risk factor, not modifiable by lifestyle. Monitor with blood test.',
-      },
-    ],
-    actions: [
-      {
-        type: 'consider',
-        text: 'Methylfolate supplementation (400–800 mcg/day) to support homocysteine metabolism',
-      },
-      {
-        type: 'monitor',
-        text: 'Test homocysteine, lipid panel (LDL, Lp(a)), and ApoB annually',
-      },
-      {
-        type: 'discuss',
-        text: 'Ask your doctor about APOE e4 status and whether early statin therapy is appropriate for you',
-      },
-    ],
-  },
-  {
-    rank: 2,
-    cause: 'Cancer',
-    pct: 24,
-    populationBarPct: 48,
-    personalBarPct: 10,
-    status: 'optimal',
-    genesText: 'No high-risk variants detected (BRCA1/2, CHEK2, APC normal)',
-    statusText: 'Optimal — standard screening applies',
-  },
-  {
-    rank: 3,
-    cause: 'Accidents & Substance-Related',
-    pct: 12,
-    populationBarPct: 24,
-    personalBarPct: 28,
-    status: 'actionable',
-    genesText: 'DRD2 (reward), GABRA2 (sedative sensitivity), CYP2D6 (metabolism)',
-    statusText: 'Actionable — see Addiction Profile',
-    narrative:
-      'DRD2 Taq1A and GABRA2 variants point to elevated reward-seeking and sedative sensitivity respectively. CYP2D6 poor metabolizer status affects how many substances are processed, increasing toxicity risk at standard doses.',
-    genes: [
-      {
-        symbol: 'DRD2',
-        variant: 'Taq1A A1/A2',
-        evidenceTier: 'E2 STRONG',
-        status: 'actionable',
-        description: 'Reduced dopamine receptor density — associated with reward deficit and higher addiction susceptibility.',
-      },
-      {
-        symbol: 'GABRA2',
-        variant: 'rs279858',
-        evidenceTier: 'E2 STRONG',
-        status: 'actionable',
-        description: 'Increased sedative sensitivity, linked to elevated risk for alcohol use disorder.',
-      },
-      {
-        symbol: 'CYP2D6',
-        variant: 'Poor metabolizer',
-        evidenceTier: 'E1 GOLD',
-        status: 'monitor',
-        description: 'Reduced metabolism of opioids, many antidepressants. Standard doses may have stronger-than-expected effects.',
-      },
-    ],
-    actions: [
-      {
-        type: 'consider',
-        text: 'Review CYP2D6 status with prescribing physicians — dosing adjustments may be warranted',
-      },
-      {
-        type: 'monitor',
-        text: 'Be aware of heightened reward sensitivity when evaluating recreational substance use',
-      },
-      {
-        type: 'discuss',
-        text: 'Discuss full pharmacogenomic implications with a clinical pharmacist',
-      },
-    ],
-  },
-  {
-    rank: 4,
-    cause: 'Cerebrovascular Disease (Stroke)',
-    pct: 6,
-    populationBarPct: 12,
-    personalBarPct: 18,
-    status: 'monitor',
-    genesText: 'MTHFR (homocysteine), APOE',
-    statusText: 'Monitor — homocysteine levels',
-  },
-  {
-    rank: 5,
-    cause: 'Suicide',
-    pct: 5,
-    populationBarPct: 10,
-    personalBarPct: 5,
-    status: 'optimal',
-    genesText: 'SLC6A4 (optimal), COMT (monitor), BDNF (optimal)',
-    statusText: 'Protective serotonin/neuroplasticity factors',
-  },
-  {
-    rank: 6,
-    cause: 'Diabetes (Type 2)',
-    pct: 4,
-    populationBarPct: 8,
-    personalBarPct: 12,
-    status: 'monitor',
-    genesText: 'TCF7L2 (risk allele), FTO (obesity-associated)',
-    statusText: 'Monitor — consider HbA1c testing',
-  },
-  {
-    rank: 7,
-    cause: 'Liver Disease',
-    pct: 3,
-    populationBarPct: 6,
-    personalBarPct: 4,
-    status: 'optimal',
-    genesText: 'ALDH2 (normal), PNPLA3 (normal), HFE (normal)',
-    statusText: 'Optimal — no elevated risk variants',
-  },
-  {
-    rank: 8,
-    cause: "Alzheimer's / Dementia",
-    pct: 3,
-    populationBarPct: 6,
-    personalBarPct: 15,
-    status: 'actionable',
-    genesText: 'APOE e3/e4 (one risk allele)',
-    statusText: 'Actionable — lifestyle interventions strongly modify risk',
-    narrative:
-      'One APOE e4 allele approximately doubles lifetime risk relative to e3/e3. Critically, risk is substantially modifiable: aerobic exercise, sleep quality, cardiovascular health, and cognitive engagement all have strong evidence for risk reduction in e4 carriers.',
-    genes: [
-      {
-        symbol: 'APOE',
-        variant: 'e3/e4',
-        evidenceTier: 'E1 GOLD',
-        status: 'actionable',
-        description: 'Heterozygous e4 carrier. ~2× relative risk increase. Highly responsive to lifestyle interventions; risk is not destiny.',
-      },
-    ],
-    actions: [
-      {
-        type: 'consider',
-        text: 'Regular aerobic exercise (150 min/week) — strongest single modifiable risk factor for APOE e4 carriers',
-      },
-      {
-        type: 'monitor',
-        text: 'Track sleep quality and treat any obstructive sleep apnea — sleep clears amyloid via glymphatic system',
-      },
-      {
-        type: 'discuss',
-        text: "Ask your doctor about APOE e4 status and whether periodic cognitive screening is appropriate",
-      },
-    ],
-  },
-  {
-    rank: 9,
-    cause: 'Chronic Respiratory Disease',
-    pct: 2,
-    populationBarPct: 4,
-    personalBarPct: 4,
-    status: 'nodata',
-    genesText: 'SERPINA1 not genotyped',
-    statusText: 'No genetic data available',
-  },
-  {
-    rank: 10,
-    cause: 'Kidney Disease',
-    pct: 2,
-    populationBarPct: 4,
-    personalBarPct: 3,
-    status: 'optimal',
-    genesText: 'APOL1 (normal for EUR ancestry)',
-    statusText: 'Optimal',
-  },
-]
 
 // ── Summary stats ──────────────────────────────────────────────────────────
 
@@ -665,6 +455,7 @@ interface RiskLandscapeProps {
 }
 
 export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps) {
+  const { causes: CAUSES, loading } = useRiskData()
   const [expandedRank, setExpandedRank] = useState<number | null>(1)
   const [addedActions, setAddedActions] = useState<Set<string>>(new Set())
 
@@ -673,6 +464,9 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
     setAddedActions(prev => new Set(prev).add(key))
     onAddToChecklist(title, cause)
   } : undefined
+
+  if (loading) return <div className="label">LOADING_DATA...</div>
+
   const stats = getSummaryStats(CAUSES)
 
   function handleToggle(rank: number) {
@@ -700,10 +494,11 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
             fontSize: 28,
             fontWeight: 600,
             letterSpacing: '0.08em',
+            fontFamily: 'var(--font-mono)',
             marginBottom: 10,
           }}
         >
-          Mortality & Risk Landscape
+          Mortality &amp; Risk Landscape
         </div>
         <div
           style={{
@@ -711,6 +506,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
             color: 'var(--text-secondary)',
             lineHeight: 1.7,
             maxWidth: 720,
+            fontFamily: 'var(--font-mono)',
           }}
         >
           The top causes of mortality for your demographic, overlaid with your personal genetic factors.
@@ -726,7 +522,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
             { value: stats.nodata, label: 'No data', color: 'var(--text-tertiary)' },
           ].map(({ value, label, color }) => (
             <div key={label}>
-              <div style={{ fontSize: 20, fontWeight: 600, color }}>{value}</div>
+              <div style={{ fontSize: 20, fontWeight: 600, color, fontFamily: 'var(--font-mono)' }}>{value}</div>
               <div
                 style={{
                   fontSize: 'var(--font-size-xs)',
@@ -734,6 +530,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
                   letterSpacing: '0.12em',
                   color: 'var(--text-secondary)',
                   marginTop: 2,
+                  fontFamily: 'var(--font-mono)',
                 }}
               >
                 {label}
@@ -751,7 +548,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
             background: 'var(--bg-raised)',
             border: '1.5px solid var(--primary)',
             borderRadius: 6,
-            padding: '14px 16px',
+            padding: '16px 18px',
             marginBottom: 28,
             display: 'flex',
             alignItems: 'flex-start',
@@ -764,11 +561,12 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
               color: 'var(--primary)',
               flexShrink: 0,
               fontWeight: 600,
+              fontFamily: 'var(--font-mono)',
             }}
           >
             i
           </span>
-          <div style={{ fontSize: 'var(--font-size-xs)', lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11, lineHeight: 1.7, fontFamily: 'var(--font-mono)' }}>
             Population bars show how common each cause of death is for{' '}
             <strong>males, 30–44, European ancestry</strong> (based on your profile). Your personal
             bar shows where you have relevant genetic variants. Having variants does not predict

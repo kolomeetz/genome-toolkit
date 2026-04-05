@@ -1,0 +1,46 @@
+demographic:
+  sex: male
+  age_range: "30-44"
+  ancestry: european
+
+causes:
+  - cause: Cardiovascular Disease
+    pct: 31
+    relevant_genes: [MTHFR, APOE, LPA]
+    relevant_systems: [Methylation Pathway, Lipid Metabolism, Cardiovascular]
+  - cause: Cancer
+    pct: 24
+    relevant_genes: [BRCA1, BRCA2, CHEK2, APC, TP53]
+    relevant_systems: [DNA Repair, Tumor Suppression]
+  - cause: Accidents & Substance-Related
+    pct: 12
+    relevant_genes: [DRD2, GABRA2, CYP2D6, COMT]
+    relevant_systems: [Dopamine System, GABA System, Drug Metabolism]
+  - cause: Cerebrovascular Disease (Stroke)
+    pct: 6
+    relevant_genes: [MTHFR, APOE, F5, F2]
+    relevant_systems: [Methylation Pathway, Coagulation]
+  - cause: Suicide
+    pct: 5
+    relevant_genes: [SLC6A4, COMT, BDNF, TPH2, HTR2A]
+    relevant_systems: [Serotonin System, Neuroplasticity]
+  - cause: Diabetes (Type 2)
+    pct: 4
+    relevant_genes: [TCF7L2, FTO, PPARG]
+    relevant_systems: [Glucose Metabolism, Metabolic]
+  - cause: Liver Disease
+    pct: 3
+    relevant_genes: [ALDH2, PNPLA3, HFE]
+    relevant_systems: [Alcohol Metabolism, Liver Function]
+  - cause: "Alzheimer's / Dementia"
+    pct: 3
+    relevant_genes: [APOE, CLU, PICALM]
+    relevant_systems: [Lipid Metabolism, Neurodegeneration]
+  - cause: Chronic Respiratory Disease
+    pct: 2
+    relevant_genes: [SERPINA1]
+    relevant_systems: [Immune System]
+  - cause: Kidney Disease
+    pct: 2
+    relevant_genes: [APOL1, UMOD]
+    relevant_systems: [Renal Function]

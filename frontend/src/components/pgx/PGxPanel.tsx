@@ -3,74 +3,7 @@ import type { PGxEnzymeSection } from '../../types/pgx'
 import { MetabolizerBar } from './MetabolizerBar'
 import { DrugCard } from './DrugCard'
 import { GenomeGlyph } from '../GenomeGlyph'
-
-const MOCK_PGX: PGxEnzymeSection[] = [
-  {
-    enzyme: {
-      symbol: 'CYP2D6', alleles: '*1/*4', status: 'intermediate', position: 25,
-      description: 'One reduced-function allele (*4). You process CYP2D6 substrates more slowly than average. This affects how your body handles certain antidepressants, pain medications, and recreational substances.',
-      guideline: 'CPIC',
-    },
-    drugs: [
-      {
-        drugClass: 'SSRIs', impact: 'adjust', statusText: 'May need dose adjustment',
-        description: 'Fluoxetine and paroxetine are primarily metabolized by CYP2D6. With intermediate metabolism, standard doses may produce higher-than-expected blood levels. Your prescriber may start with a lower dose.',
-        drugList: 'fluoxetine, paroxetine, fluvoxamine', category: 'prescription',
-      },
-      {
-        drugClass: 'SNRIs', impact: 'ok', statusText: 'Standard dosing',
-        description: 'Venlafaxine uses CYP2D6 as a secondary pathway. Your intermediate status has minimal impact on efficacy at standard doses.',
-        drugList: 'venlafaxine, duloxetine', category: 'prescription',
-      },
-      {
-        drugClass: 'Codeine & prodrug opioids', impact: 'danger', statusText: 'Discuss with prescriber',
-        description: 'Codeine requires CYP2D6 to convert to morphine (the active form). With intermediate metabolism, you convert less — codeine may provide inadequate pain relief. Discuss alternative pain medications.',
-        drugList: 'tramadol, hydrocodone, oxycodone (partial)', category: 'prescription',
-      },
-      {
-        drugClass: 'MDMA / Ecstasy', impact: 'warn', statusText: 'Slower clearance — higher sensitivity',
-        description: 'MDMA is primarily metabolized by CYP2D6. As an intermediate metabolizer, MDMA stays in your system longer. Standard recreational doses may produce stronger and longer effects. Redosing carries higher risk.',
-        drugList: 'MDA, amphetamine (partial)', category: 'substance',
-        dangerNote: 'If you take an SSRI and use MDMA, the combination creates dual serotonin load. With your slower CYP2D6, both substances clear more slowly, increasing serotonin syndrome risk.',
-      },
-      {
-        drugClass: 'Psilocybin / Mushrooms', impact: 'adjust', statusText: 'Moderate impact',
-        description: 'Psilocin (active metabolite) is partially processed by CYP2D6. Effects may last somewhat longer. Start with lower doses if exploring for the first time.',
-        drugList: 'Note: MAO-A status also affects psychedelic metabolism', category: 'substance',
-      },
-    ],
-  },
-  {
-    enzyme: {
-      symbol: 'CYP3A4', alleles: '*1/*1', status: 'normal', position: 62,
-      description: 'Both alleles are functional. CYP3A4 metabolizes roughly 50% of all medications. Standard dosing is expected to work for CYP3A4 substrates.',
-      guideline: 'CPIC',
-    },
-    drugs: [
-      {
-        drugClass: 'Benzodiazepines (Xanax, Klonopin)', impact: 'ok', statusText: 'Standard metabolism',
-        description: 'Alprazolam, clonazepam, and midazolam are metabolized by CYP3A4. Your normal status means expected clearance rates at standard doses.',
-        drugList: 'alprazolam, clonazepam, midazolam, triazolam', category: 'prescription',
-      },
-      {
-        drugClass: 'Cocaine', impact: 'ok', statusText: 'Normal metabolism',
-        description: 'Cocaine is partially metabolized by CYP3A4. Your normal CYP3A4 means standard clearance. Note: cocaine is a potent CYP2D6 inhibitor — if used alongside CYP2D6 substrates (SSRIs, MDMA), it temporarily makes you a poorer metabolizer.',
-        drugList: 'butyrylcholinesterase (primary)', category: 'substance',
-        dangerNote: 'Your CYP2D6 is already intermediate. Cocaine further inhibits CYP2D6 while active. If you use cocaine alongside MDMA or while on SSRIs, CYP2D6 capacity drops to near-poor metabolizer levels.',
-      },
-      {
-        drugClass: 'Ketamine', impact: 'ok', statusText: 'Normal CYP3A4 metabolism',
-        description: 'Ketamine is metabolized by CYP3A4 and CYP2B6. Your normal CYP3A4 status means standard clearance. Increasingly used therapeutically for treatment-resistant depression.',
-        drugList: 'esketamine (Spravato) — same pathway', category: 'substance',
-      },
-      {
-        drugClass: 'Cannabis', impact: 'ok', statusText: 'Normal THC metabolism',
-        description: 'THC is primarily metabolized by CYP2C9 and CYP3A4. Note: CBD is a CYP3A4 inhibitor — high-CBD products may temporarily slow metabolism of other CYP3A4 substrates (benzodiazepines, ketamine).',
-        drugList: 'THC, CBD (inhibitor)', category: 'substance',
-      },
-    ],
-  },
-]
+import { usePGxData } from '../../hooks/usePGxData'
 
 type DrugFilter = 'all' | 'antidepressants' | 'pain' | 'cardio' | 'substances' | 'safety'
 
@@ -87,10 +20,13 @@ interface PGxPanelProps {
 }
 
 export function PGxPanel({ onAddToChecklist }: PGxPanelProps) {
+  const { sections: MOCK_PGX, loading } = usePGxData()
   const [filter, setFilter] = useState<DrugFilter>('all')
   const [addedDrugs, setAddedDrugs] = useState<Set<string>>(new Set())
 
-  const filterDrugs = (drugs: typeof MOCK_PGX[0]['drugs']) => {
+  if (loading) return <div className="label">LOADING_DATA...</div>
+
+  const filterDrugs = (drugs: PGxEnzymeSection['drugs']) => {
     if (filter === 'all') return drugs
     if (filter === 'substances') return drugs.filter(d => d.category === 'substance')
     if (filter === 'safety') return drugs.filter(d => d.impact === 'danger' || d.dangerNote)

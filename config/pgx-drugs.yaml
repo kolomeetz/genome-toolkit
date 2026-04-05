@@ -1,0 +1,72 @@
+enzymes:
+  - symbol: CYP2D6
+    drug_cards:
+      - class: SSRIs (Fluoxetine, Paroxetine)
+        drugs: "Fluoxetine (Prozac), Paroxetine (Paxil), Fluvoxamine"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Use alternative SSRI (sertraline, citalopram)", description: "These SSRIs are primarily metabolized by CYP2D6. Poor metabolizers may experience significantly elevated plasma levels and increased side effects." }
+          intermediate: { impact: adjust, text: "Consider dose reduction or alternative", description: "Intermediate metabolism may lead to moderately elevated levels. Monitor for side effects and consider 25-50% dose reduction." }
+          normal: { impact: ok, text: "Standard dosing appropriate", description: "Normal CYP2D6 metabolism. Standard SSRI dosing guidelines apply." }
+          ultrarapid: { impact: adjust, text: "May need higher doses", description: "Ultrarapid metabolism may lead to subtherapeutic levels at standard doses." }
+      - class: Opioid Prodrugs (Codeine, Tramadol)
+        drugs: "Codeine, Tramadol, Hydrocodone"
+        category: drug
+        impact_by_status:
+          poor: { impact: danger, text: "AVOID — prodrug conversion severely impaired", description: "CYP2D6 converts codeine to morphine. Poor metabolizers get almost no analgesic effect but still experience side effects.", danger_note: "Do NOT prescribe codeine or tramadol. Use alternative analgesics (morphine, oxycodone, non-opioid options)." }
+          intermediate: { impact: warn, text: "Reduced efficacy — consider alternatives", description: "Reduced conversion to active metabolite. Pain relief may be inadequate at standard doses." }
+          normal: { impact: ok, text: "Standard metabolism", description: "Normal prodrug activation. Standard dosing guidelines apply." }
+          ultrarapid: { impact: danger, text: "DANGER — rapid conversion risk", description: "Ultrarapid conversion to morphine can cause respiratory depression.", danger_note: "Codeine is contraindicated. Use non-prodrug alternatives." }
+      - class: Atomoxetine (ADHD)
+        drugs: "Atomoxetine (Strattera)"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Start at lower dose", description: "Atomoxetine levels significantly elevated in poor metabolizers." }
+          intermediate: { impact: adjust, text: "Monitor for elevated levels", description: "Moderately slower metabolism. Monitor for side effects." }
+          normal: { impact: ok, text: "Standard dosing", description: "Normal metabolism. Standard titration schedule." }
+      - class: Recreational Substances
+        drugs: "MDMA, Dextromethorphan (DXM)"
+        category: substance
+        impact_by_status:
+          poor: { impact: danger, text: "Severely impaired clearance", description: "MDMA and DXM are CYP2D6 substrates. Poor metabolizers experience dramatically prolonged and intensified effects.", danger_note: "MDMA lasts much longer and redosing is extremely dangerous. DXM can reach serotonin-syndrome levels." }
+          intermediate: { impact: warn, text: "Slower clearance — dose carefully", description: "Effects last longer than typical. Start with lower doses and extend intervals." }
+          normal: { impact: ok, text: "Standard metabolism", description: "Normal clearance rates. Standard harm reduction applies." }
+      - class: Beta Blockers (Metoprolol)
+        drugs: "Metoprolol, Carvedilol, Timolol"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Use alternative beta blocker", description: "Significantly elevated metoprolol levels. Risk of bradycardia and hypotension." }
+          intermediate: { impact: adjust, text: "Consider dose reduction", description: "Moderately elevated levels. Monitor heart rate and blood pressure." }
+          normal: { impact: ok, text: "Standard dosing", description: "Normal metabolism. Standard dosing guidelines." }
+  - symbol: CYP3A4
+    drug_cards:
+      - class: Benzodiazepines
+        drugs: "Alprazolam (Xanax), Midazolam, Triazolam"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Prolonged sedation risk", description: "CYP3A4 poor metabolizers clear benzodiazepines much more slowly." }
+          normal: { impact: ok, text: "Standard metabolism", description: "Normal benzodiazepine clearance. Standard dosing." }
+      - class: Statins
+        drugs: "Atorvastatin (Lipitor), Simvastatin, Lovastatin"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Risk of myopathy — use rosuvastatin", description: "Elevated statin levels increase risk of muscle damage." }
+          normal: { impact: ok, text: "Standard dosing", description: "Normal statin metabolism." }
+      - class: Calcium Channel Blockers
+        drugs: "Amlodipine, Nifedipine, Felodipine"
+        category: drug
+        impact_by_status:
+          poor: { impact: adjust, text: "Start at lower dose", description: "Slower metabolism may lead to hypotension." }
+          normal: { impact: ok, text: "Standard dosing", description: "Normal metabolism." }
+      - class: Immunosuppressants
+        drugs: "Tacrolimus, Cyclosporine, Sirolimus"
+        category: drug
+        impact_by_status:
+          poor: { impact: danger, text: "Therapeutic drug monitoring required", description: "Dramatically elevated levels. Toxicity risk.", danger_note: "Mandatory TDM with dose adjustments based on blood levels." }
+          normal: { impact: ok, text: "Standard monitoring", description: "Normal metabolism. Follow standard TDM protocols." }
+      - class: Recreational Substances
+        drugs: "Cocaine, Ketamine, GHB"
+        category: substance
+        impact_by_status:
+          poor: { impact: warn, text: "Slower clearance for some substances", description: "Cocaine and ketamine partially rely on CYP3A4. Effects may be slightly prolonged." }
+          normal: { impact: ok, text: "Standard metabolism", description: "Normal clearance. Standard harm reduction applies." }
