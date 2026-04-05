@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PGxEnzymeSection } from '../../types/pgx'
 import { MetabolizerBar } from './MetabolizerBar'
 import { DrugCard } from './DrugCard'
+import { GenomeGlyph } from '../GenomeGlyph'
 
 const MOCK_PGX: PGxEnzymeSection[] = [
   {
@@ -81,8 +82,13 @@ const FILTERS: { key: DrugFilter; label: string }[] = [
   { key: 'safety', label: 'Safety notes only' },
 ]
 
-export function PGxPanel() {
+interface PGxPanelProps {
+  onAddToChecklist?: (title: string, gene: string) => void
+}
+
+export function PGxPanel({ onAddToChecklist }: PGxPanelProps) {
   const [filter, setFilter] = useState<DrugFilter>('all')
+  const [addedDrugs, setAddedDrugs] = useState<Set<string>>(new Set())
 
   const filterDrugs = (drugs: typeof MOCK_PGX[0]['drugs']) => {
     if (filter === 'all') return drugs
@@ -100,13 +106,20 @@ export function PGxPanel() {
   return (
     <div>
       {/* Hero */}
-      <div style={{ padding: '40px 24px 32px', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ padding: '40px 24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+        <GenomeGlyph
+          genotypes={MOCK_PGX.map(s => s.enzyme.alleles.replace('*', ''))}
+          size={100}
+          label="your enzymes"
+        />
+        <div style={{ flex: 1 }}>
         <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: 8 }}>
           PGx / Drug Metabolism
         </div>
         <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8, maxWidth: 720, fontFamily: 'var(--font-mono)' }}>
           How your enzymes process medications and substances. {MOCK_PGX.length} enzymes analyzed, covering prescription drugs and recreational substances with harm reduction context.
         </div>
+        </div>{/* close flex wrapper */}
       </div>
 
       {/* Filters */}
@@ -197,7 +210,15 @@ export function PGxPanel() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                     {filteredDrugs.filter(d => d.category === 'prescription').map(drug => (
-                      <DrugCard key={drug.drugClass} drug={drug} />
+                      <DrugCard
+                        key={drug.drugClass}
+                        drug={drug}
+                        added={addedDrugs.has(drug.drugClass)}
+                        onAddToChecklist={drug.dangerNote && onAddToChecklist ? (title) => {
+                          setAddedDrugs(prev => new Set(prev).add(drug.drugClass))
+                          onAddToChecklist(title, section.enzyme.symbol)
+                        } : undefined}
+                      />
                     ))}
                   </div>
                 </>
@@ -210,7 +231,15 @@ export function PGxPanel() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                     {filteredDrugs.filter(d => d.category === 'substance').map(drug => (
-                      <DrugCard key={drug.drugClass} drug={drug} />
+                      <DrugCard
+                        key={drug.drugClass}
+                        drug={drug}
+                        added={addedDrugs.has(drug.drugClass)}
+                        onAddToChecklist={drug.dangerNote && onAddToChecklist ? (title) => {
+                          setAddedDrugs(prev => new Set(prev).add(drug.drugClass))
+                          onAddToChecklist(title, section.enzyme.symbol)
+                        } : undefined}
+                      />
                     ))}
                   </div>
                 </>
