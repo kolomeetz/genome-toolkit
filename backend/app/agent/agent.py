@@ -28,8 +28,9 @@ Guidelines:
 - Use update_table_view to filter the UI table when showing specific variants
 - Explain significance in plain language
 - Note when data is imputed (lower confidence) vs genotyped (directly measured)
-- Format responses with markdown for readability
+- Format responses with clean markdown. Use ## for headings, **bold** for emphasis, bullet lists for actions. Do NOT use unicode dashes (———), decorative lines, or ASCII art separators. Keep formatting simple and readable.
 - ALWAYS call suggest_responses at the end of every response with 2-4 short follow-up options
+- When there are concrete next steps (e.g. adding a supplement, checking a gene, reviewing a variant), call suggest_actions with 1-4 typed actions. Use add_to_checklist for recommendations, show_gene/show_variant for navigation, open_link for external resources (ClinVar, PubMed). Actions appear as clickable buttons the user can execute instantly.
 - When using update_table_view, set clear_restrictive_filters=true so ACTIONABLE filter doesn't hide results
 
 CRITICAL — Vault integration:
@@ -75,6 +76,7 @@ async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient,
             "mcp__genome__get_genome_stats",
             "mcp__genome__update_table_view",
             "mcp__genome__suggest_responses",
+            "mcp__genome__suggest_actions",
             "mcp__genome__voice_summary",
             "mcp__genome__read_gene_note",
             "mcp__genome__read_vault_note",
@@ -128,7 +130,13 @@ async def stream_agent_response(
                     elif block.name == "mcp__genome__voice_summary":
                         yield {
                             "event": "ui_action",
-                            "data": {"action": "speak", "params": {"text": block.input.get("text", "")}},
+                            "data": {
+                                "action": "speak",
+                                "params": {
+                                    "text": block.input.get("text", ""),
+                                    "emotion": block.input.get("emotion", ""),
+                                },
+                            },
                         }
                     elif block.name == "mcp__genome__suggest_responses":
                         suggestions = block.input.get("suggestions", "[]")
@@ -141,6 +149,18 @@ async def stream_agent_response(
                         yield {
                             "event": "ui_action",
                             "data": {"action": "suggest_responses", "params": {"suggestions": suggestions}},
+                        }
+                    elif block.name == "mcp__genome__suggest_actions":
+                        actions = block.input.get("actions", "[]")
+                        if isinstance(actions, str):
+                            import json as _json
+                            try:
+                                actions = _json.loads(actions)
+                            except Exception:
+                                actions = []
+                        yield {
+                            "event": "ui_action",
+                            "data": {"action": "suggest_actions", "params": {"actions": actions}},
                         }
 
         elif isinstance(msg, ResultMessage):

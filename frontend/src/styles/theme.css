@@ -140,6 +140,11 @@ body {
   color: var(--accent);
   margin: 12px 0 6px;
 }
+.chat-markdown hr {
+  border: none;
+  border-top: 1px dashed var(--border-dashed);
+  margin: 12px 0;
+}
 .chat-markdown blockquote {
   border-left: 2px solid var(--primary-dim);
   padding-left: 12px;
@@ -174,3 +179,17 @@ body {
 .chat-markdown tr:hover {
   background: var(--bg-inset);
 }
+
+/* Large chat mode — main AI reading interface */
+.chat-markdown--lg p { margin-bottom: 12px; font-size: 14px; line-height: 1.75; }
+.chat-markdown--lg ul, .chat-markdown--lg ol { margin-left: 20px; margin-bottom: 12px; font-size: 14px; }
+.chat-markdown--lg li { margin-bottom: 6px; line-height: 1.7; }
+.chat-markdown--lg h1, .chat-markdown--lg h2, .chat-markdown--lg h3 {
+  font-size: var(--font-size-md);
+  margin: 16px 0 8px;
+}
+.chat-markdown--lg table { font-size: var(--font-size-sm); }
+.chat-markdown--lg th { padding: 8px 14px; }
+.chat-markdown--lg td { padding: 7px 14px; }
+.chat-markdown--lg blockquote { padding-left: 16px; font-size: 14px; }
+.chat-markdown--lg code { font-size: var(--font-size-sm); padding: 2px 6px; }
