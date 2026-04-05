@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { PathwaySection, GeneData, ActionData, GeneStatus } from '../../types/genomics'
 import { STATUS_COLORS } from '../../types/genomics'
 import { useMentalHealthFilters } from '../../hooks/useMentalHealthFilters'
@@ -61,10 +61,19 @@ export function MentalHealthDashboard({
   const { activeCategory, activeActionType, setCategory, setActionType, clearAll, matchesGene, matchesAction } =
     useMentalHealthFilters()
 
+  const geneDetailRef = useRef<HTMLDivElement>(null)
+
   const handleGeneClick = (gene: GeneData) => {
     setExpandedGene(prev => (prev?.rsid === gene.rsid ? null : gene))
     onGeneClick(gene)
   }
+
+  // Scroll GeneDetail into view when expanded
+  useEffect(() => {
+    if (expandedGene && geneDetailRef.current) {
+      geneDetailRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [expandedGene])
 
   const filteredSections = data.filter(section => {
     if (activeCategory === null && activeActionType === null) return true
@@ -242,15 +251,17 @@ export function MentalHealthDashboard({
                   </div>
                 </div>
                 {expandedGene && visibleGenes.some(g => g.rsid === expandedGene.rsid) && (
-                  <GeneDetail
-                    gene={expandedGene}
-                    actions={(actions[expandedGene.symbol] || []).filter(a => matchesAction(a))}
-                    populationInfo={GENE_META[expandedGene.symbol]?.populationInfo}
-                    explanation={GENE_META[expandedGene.symbol]?.explanation}
-                    interactions={GENE_META[expandedGene.symbol]?.interactions}
-                    onClose={() => setExpandedGene(null)}
-                    onToggleAction={onToggleAction}
-                  />
+                  <div ref={geneDetailRef}>
+                    <GeneDetail
+                      gene={expandedGene}
+                      actions={(actions[expandedGene.symbol] || []).filter(a => matchesAction(a))}
+                      populationInfo={GENE_META[expandedGene.symbol]?.populationInfo}
+                      explanation={GENE_META[expandedGene.symbol]?.explanation}
+                      interactions={GENE_META[expandedGene.symbol]?.interactions}
+                      onClose={() => setExpandedGene(null)}
+                      onToggleAction={onToggleAction}
+                    />
+                  </div>
                 )}
               </div>
             )

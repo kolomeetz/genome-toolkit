@@ -112,7 +112,7 @@ function App() {
   }, [send, selectVariant])
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* Top bar */}
       <header style={{
         display: 'flex',
@@ -221,7 +221,7 @@ function App() {
           </main>
         </>
       ) : (
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <main>
           <MentalHealthDashboard
             data={mentalHealth.sections}
             totalGenes={mentalHealth.totalGenes}
