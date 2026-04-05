@@ -26,6 +26,7 @@ FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 async def lifespan(app: FastAPI):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     await genome_db.connect()
+    await genome_db.ensure_schema()
     await users_db.connect()
     await users_db.init_schema()
     set_genome_db(genome_db)
