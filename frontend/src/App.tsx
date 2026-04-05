@@ -14,15 +14,17 @@ import { useChecklist } from './hooks/useChecklist'
 import { ChecklistSidebar } from './components/mental-health/ChecklistSidebar'
 import { PGxPanel } from './components/pgx/PGxPanel'
 import { AddictionProfile } from './components/addiction'
+import { RiskLandscape } from './components/risk'
 
 function App() {
   const { result, filters, loading, updateFilters, debouncedUpdateFilters, setPage, resetFilters, activeFilterCount } = useSNPs()
   const voice = useVoice()
-  const [view, setView] = useState<'snps' | 'mental-health' | 'pgx' | 'addiction'>(() => {
+  const [view, setView] = useState<'snps' | 'mental-health' | 'pgx' | 'addiction' | 'risk'>(() => {
     const hash = window.location.hash
     if (hash === '#/mental-health') return 'mental-health'
     if (hash === '#/pgx') return 'pgx'
     if (hash === '#/addiction') return 'addiction'
+    if (hash === '#/risk') return 'risk'
     return 'snps'
   })
   const mentalHealth = useMentalHealthData()
@@ -30,11 +32,12 @@ function App() {
   const [checklistOpen, setChecklistOpen] = useState(false)
   const [checklistHighlight, setChecklistHighlight] = useState(false)
 
-  const navigate = useCallback((v: 'snps' | 'mental-health' | 'pgx' | 'addiction') => {
+  const navigate = useCallback((v: 'snps' | 'mental-health' | 'pgx' | 'addiction' | 'risk') => {
     setView(v)
     if (v === 'mental-health') window.location.hash = '#/mental-health'
     else if (v === 'pgx') window.location.hash = '#/pgx'
     else if (v === 'addiction') window.location.hash = '#/addiction'
+    else if (v === 'risk') window.location.hash = '#/risk'
     else window.location.hash = '#/'
   }, [])
 
@@ -44,6 +47,7 @@ function App() {
       if (hash === '#/mental-health') setView('mental-health')
       else if (hash === '#/pgx') setView('pgx')
       else if (hash === '#/addiction') setView('addiction')
+      else if (hash === '#/risk') setView('risk')
       else setView('snps')
     }
     window.addEventListener('hashchange', onHashChange)
@@ -257,6 +261,18 @@ function App() {
             className="btn"
             style={{
               fontSize: 'var(--font-size-xs)',
+              background: view === 'risk' ? 'var(--bg-inset)' : 'transparent',
+              borderColor: view === 'risk' ? 'var(--primary)' : 'var(--border)',
+              color: view === 'risk' ? 'var(--primary)' : 'var(--text-secondary)',
+            }}
+            onClick={() => navigate('risk')}
+          >
+            RISK
+          </button>
+          <button
+            className="btn"
+            style={{
+              fontSize: 'var(--font-size-xs)',
               position: 'relative',
               borderColor: checklistHighlight ? 'var(--accent)' : checklistOpen ? 'var(--primary)' : 'var(--border)',
               color: checklistHighlight ? 'var(--accent)' : checklistOpen ? 'var(--primary)' : undefined,
@@ -357,6 +373,10 @@ function App() {
       ) : view === 'addiction' ? (
         <main>
           <AddictionProfile />
+        </main>
+      ) : view === 'risk' ? (
+        <main>
+          <RiskLandscape />
         </main>
       ) : (
         <main>
