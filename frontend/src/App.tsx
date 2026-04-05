@@ -13,19 +13,22 @@ import { useMentalHealthData } from './hooks/useMentalHealthData'
 import { useChecklist } from './hooks/useChecklist'
 import { ChecklistSidebar } from './components/mental-health/ChecklistSidebar'
 import { PGxPanel } from './components/pgx/PGxPanel'
+import { AddictionProfile } from './components/addiction'
 
 function App() {
   const { result, filters, loading, updateFilters, debouncedUpdateFilters, setPage, resetFilters, activeFilterCount } = useSNPs()
   const voice = useVoice()
-  const [view, setView] = useState<'snps' | 'mental-health' | 'pgx'>(() => {
+  const [view, setView] = useState<'snps' | 'mental-health' | 'pgx' | 'addiction'>(() => {
     const hash = window.location.hash
     if (hash === '#/mental-health') return 'mental-health'
     if (hash === '#/pgx') return 'pgx'
+    if (hash === '#/addiction') return 'addiction'
     return 'snps'
   })
   const mentalHealth = useMentalHealthData()
   const checklist = useChecklist()
   const [checklistOpen, setChecklistOpen] = useState(false)
+  const [checklistHighlight, setChecklistHighlight] = useState(false)
 
   const navigate = useCallback((v: 'snps' | 'mental-health' | 'pgx') => {
     setView(v)
@@ -91,8 +94,12 @@ function App() {
     } else if (action.action === 'speak') {
       const p = action.params as unknown as { text: string; emotion?: string }
       voice.speak(p.text, p.emotion)
+    } else if (action.action === 'checklist_added') {
+      checklist.refresh()
+      setChecklistHighlight(true)
+      setTimeout(() => setChecklistHighlight(false), 2000)
     }
-  }, [updateFilters, voice])
+  }, [updateFilters, voice, checklist])
 
   const { messages, streaming, streamingText, status, suggestions, actions, send: rawSend } = useChat(handleUIAction)
 
@@ -237,8 +244,10 @@ function App() {
             style={{
               fontSize: 'var(--font-size-xs)',
               position: 'relative',
-              borderColor: checklistOpen ? 'var(--primary)' : 'var(--border)',
-              color: checklistOpen ? 'var(--primary)' : undefined,
+              borderColor: checklistHighlight ? 'var(--accent)' : checklistOpen ? 'var(--primary)' : 'var(--border)',
+              color: checklistHighlight ? 'var(--accent)' : checklistOpen ? 'var(--primary)' : undefined,
+              boxShadow: checklistHighlight ? '0 0 8px var(--accent), 0 0 16px rgba(var(--accent-rgb, 255,165,0), 0.3)' : 'none',
+              transition: 'box-shadow 0.3s ease, border-color 0.3s ease, color 0.3s ease',
             }}
             onClick={() => setChecklistOpen(prev => !prev)}
           >
@@ -316,6 +325,13 @@ function App() {
                 setGeneText('')
                 setConditionText('')
                 resetFilters()
+              }}
+              onAskAboutSelected={(snps) => {
+                const genes = [...new Set(snps.map(s => s.gene_symbol).filter(Boolean))].join(', ')
+                const rsids = snps.map(s => s.rsid).join(', ')
+                const query = `Tell me about these variants together and how they interact: ${rsids}${genes ? ` (genes: ${genes})` : ''}. What does this combination mean for my health?`
+                setCmdkOpen(true)
+                setTimeout(() => send(query), 100)
               }}
             />
           </main>

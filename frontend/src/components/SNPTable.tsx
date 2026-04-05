@@ -1,3 +1,4 @@
+import { useState, useCallback, useRef } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -100,11 +101,53 @@ const columns: ColumnDef<SNP, any>[] = [
 interface Props {
   data: SNPResult
   loading: boolean
+  totalVariants?: number
   onRowClick?: (snp: SNP) => void
   onPageChange?: (page: number) => void
+  onResetFilters?: () => void
+  onAskAboutSelected?: (snps: SNP[]) => void
 }
 
-export function SNPTable({ data, loading, onRowClick, onPageChange }: Props) {
+export function SNPTable({ data, loading, totalVariants, onRowClick, onPageChange, onResetFilters, onAskAboutSelected }: Props) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const lastClickedIndex = useRef<number | null>(null)
+
+  const handleRowClick = useCallback((snp: SNP, index: number, e: React.MouseEvent) => {
+    if (e.shiftKey && lastClickedIndex.current !== null) {
+      // Shift+click: range select
+      const start = Math.min(lastClickedIndex.current, index)
+      const end = Math.max(lastClickedIndex.current, index)
+      setSelected(prev => {
+        const next = new Set(prev)
+        for (let i = start; i <= end; i++) {
+          next.add(data.items[i].rsid)
+        }
+        return next
+      })
+    } else if (e.metaKey || e.ctrlKey) {
+      // Cmd/Ctrl+click: toggle individual
+      setSelected(prev => {
+        const next = new Set(prev)
+        if (next.has(snp.rsid)) {
+          next.delete(snp.rsid)
+        } else {
+          next.add(snp.rsid)
+        }
+        return next
+      })
+      lastClickedIndex.current = index
+    } else {
+      // Normal click: open drawer (existing behavior), clear selection
+      if (selected.size > 0) {
+        setSelected(new Set())
+      }
+      onRowClick?.(snp)
+      lastClickedIndex.current = index
+    }
+  }, [data.items, onRowClick, selected.size])
+
+  const selectedSNPs = data.items.filter(s => selected.has(s.rsid))
+
   const table = useReactTable({
     data: data.items,
     columns,
@@ -149,21 +192,43 @@ export function SNPTable({ data, loading, onRowClick, onPageChange }: Props) {
             ) : data.items.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
-                  <span className="label">NO_SIGNAL // NO_VARIANTS_FOUND</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                    <span className="label">0 variants match current filters.</span>
+                    {totalVariants != null && totalVariants > 0 && (
+                      <span className="label" style={{ color: 'var(--text-tertiary)' }}>
+                        {totalVariants.toLocaleString()} variants hidden by filters.
+                      </span>
+                    )}
+                    {onResetFilters && (
+                      <button
+                        className="btn"
+                        style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--font-size-xs)' }}
+                        onClick={onResetFilters}
+                      >
+                        RESET_FILTERS
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map((row, i) => (
+              table.getRowModel().rows.map((row, i) => {
+                const isSelected = selected.has(row.original.rsid)
+                const baseBg = isSelected
+                  ? 'color-mix(in srgb, var(--primary) 12%, var(--bg))'
+                  : i % 2 === 0 ? 'transparent' : 'var(--bg-raised)'
+                return (
                 <tr
                   key={row.id}
-                  onClick={() => onRowClick?.(row.original)}
+                  onClick={(e) => handleRowClick(row.original, i, e)}
                   style={{
-                    cursor: onRowClick ? 'pointer' : 'default',
-                    background: i % 2 === 0 ? 'transparent' : 'var(--bg-raised)',
-                    borderBottom: '1px solid var(--border)',
+                    cursor: 'pointer',
+                    background: baseBg,
+                    borderBottom: `1px solid ${isSelected ? 'var(--primary-dim)' : 'var(--border)'}`,
+                    borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-inset)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'var(--bg-raised)' }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-inset)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = baseBg }}
                 >
                   {row.getVisibleCells().map(cell => (
                     <td
@@ -177,11 +242,52 @@ export function SNPTable({ data, loading, onRowClick, onPageChange }: Props) {
                     </td>
                   ))}
                 </tr>
-              ))
+                )
+              })
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Selection action bar */}
+      {selected.size > 0 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: 'var(--space-sm) var(--space-md)',
+          background: 'color-mix(in srgb, var(--primary) 8%, var(--bg-raised))',
+          borderTop: '1px solid var(--primary-dim)',
+          borderBottom: '1px solid var(--primary-dim)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+            <span className="label" style={{ color: 'var(--primary)' }}>
+              {selected.size} SELECTED
+            </span>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>
+              {selectedSNPs.map(s => s.gene_symbol || s.rsid).filter(Boolean).join(', ')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            {onAskAboutSelected && (
+              <button
+                className="btn btn--accent"
+                style={{ fontSize: 'var(--font-size-xs)' }}
+                onClick={() => onAskAboutSelected(selectedSNPs)}
+              >
+                ASK AI ABOUT COMBO
+              </button>
+            )}
+            <button
+              className="btn"
+              style={{ fontSize: 'var(--font-size-xs)' }}
+              onClick={() => setSelected(new Set())}
+            >
+              CLEAR
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       <div style={{
