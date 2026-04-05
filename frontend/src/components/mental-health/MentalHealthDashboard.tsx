@@ -73,7 +73,7 @@ export function MentalHealthDashboard({
   })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       <FilterBar
         activeCategory={activeCategory}
         activeActionType={activeActionType}
@@ -125,7 +125,7 @@ export function MentalHealthDashboard({
       </div>
 
       {/* Pathway rows */}
-      <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {filteredSections.length === 0 ? (
           <div style={{
             fontFamily: 'var(--font-mono)',
