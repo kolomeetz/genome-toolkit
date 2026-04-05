@@ -1,9 +1,33 @@
-import type { PathwaySection, GeneData, GeneStatus } from '../../types/genomics'
+import { useState } from 'react'
+import type { PathwaySection, GeneData, ActionData, GeneStatus } from '../../types/genomics'
 import { STATUS_COLORS } from '../../types/genomics'
 import { useMentalHealthFilters } from '../../hooks/useMentalHealthFilters'
 import { FilterBar } from './FilterBar'
 import { NarrativeBlock } from './NarrativeBlock'
 import { GeneCard } from './GeneCard'
+import { GeneDetail } from './GeneDetail'
+
+const GENE_META: Record<string, { populationInfo: string; explanation: string; interactions?: { genes: string; description: string }[] }> = {
+  'MTHFR': {
+    populationInfo: '~10% of Europeans carry T/T. ~25% carry at least one T allele. More common in Mediterranean ancestry.',
+    explanation: 'MTHFR converts dietary folate into methylfolate, the active form your body uses. With T/T, this conversion runs at about 30% efficiency. This doesn\'t mean you\'re deficient — it means you may need more folate or a more bioavailable form.',
+    interactions: [
+      { genes: 'MTHFR + COMT', description: 'Both affect methylation. Slow COMT may mean methyl donors build up — folinic acid may be better tolerated than methylfolate.' },
+      { genes: 'MTHFR + MTR/MTRR', description: 'B12 recycling feeds into the same pathway. B12 supplementation becomes more important.' },
+    ],
+  },
+  'COMT': {
+    populationInfo: '~25% of Europeans carry A/A (slow). Sometimes called the "Worrier" genotype.',
+    explanation: 'COMT clears dopamine from the prefrontal cortex. Slow COMT means dopamine lingers longer — better focus in calm environments, but stress neurotransmitters also take longer to clear.',
+    interactions: [
+      { genes: 'COMT + MAO-A', description: 'Both slow — slower neurotransmitter clearance overall.' },
+    ],
+  },
+  'GAD1': {
+    populationInfo: '~40% of population carries at least one risk allele.',
+    explanation: 'GAD1 encodes the enzyme that produces GABA, the brain\'s primary calming neurotransmitter. Your variant is associated with slightly lower GABA production.',
+  },
+}
 
 interface MentalHealthDashboardProps {
   data: PathwaySection[]
@@ -12,6 +36,8 @@ interface MentalHealthDashboardProps {
   lastUpdated?: string
   onExport: (format: 'pdf' | 'md' | 'doctor') => void
   onGeneClick: (gene: GeneData) => void
+  actions: Record<string, ActionData[]>
+  onToggleAction: (id: string) => void
 }
 
 const LEGEND_ITEMS: { status: GeneStatus; label: string }[] = [
@@ -28,9 +54,17 @@ export function MentalHealthDashboard({
   lastUpdated,
   onExport,
   onGeneClick,
+  actions,
+  onToggleAction,
 }: MentalHealthDashboardProps) {
+  const [expandedGene, setExpandedGene] = useState<GeneData | null>(null)
   const { activeCategory, activeActionType, setCategory, setActionType, clearAll, matchesGene } =
     useMentalHealthFilters()
+
+  const handleGeneClick = (gene: GeneData) => {
+    setExpandedGene(prev => (prev?.rsid === gene.rsid ? null : gene))
+    onGeneClick(gene)
+  }
 
   const filteredSections = data.filter(section => {
     if (activeCategory === null && activeActionType === null) return true
@@ -112,14 +146,27 @@ export function MentalHealthDashboard({
             return (
               <div
                 key={section.narrative.pathway}
-                style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
               >
-                <NarrativeBlock narrative={section.narrative} />
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {visibleGenes.map(gene => (
-                    <GeneCard key={gene.rsid} gene={gene} onClick={onGeneClick} />
-                  ))}
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                  <NarrativeBlock narrative={section.narrative} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {visibleGenes.map(gene => (
+                      <GeneCard key={gene.rsid} gene={gene} onClick={handleGeneClick} />
+                    ))}
+                  </div>
                 </div>
+                {expandedGene && visibleGenes.some(g => g.rsid === expandedGene.rsid) && (
+                  <GeneDetail
+                    gene={expandedGene}
+                    actions={actions[expandedGene.symbol] || []}
+                    populationInfo={GENE_META[expandedGene.symbol]?.populationInfo}
+                    explanation={GENE_META[expandedGene.symbol]?.explanation}
+                    interactions={GENE_META[expandedGene.symbol]?.interactions}
+                    onClose={() => setExpandedGene(null)}
+                    onToggleAction={onToggleAction}
+                  />
+                )}
               </div>
             )
           })

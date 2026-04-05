@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { PathwaySection } from '../types/genomics'
+import type { PathwaySection, ActionData } from '../types/genomics'
 
 const MOCK_SECTIONS: PathwaySection[] = [
   {
@@ -92,11 +92,62 @@ const MOCK_SECTIONS: PathwaySection[] = [
   },
 ]
 
+const MOCK_ACTIONS: Record<string, ActionData[]> = {
+  'MTHFR': [
+    {
+      id: 'mthfr-methylfolate', type: 'consider',
+      title: 'Methylfolate supplementation',
+      description: 'L-methylfolate (5-MTHF) bypasses the MTHFR conversion step. Start low and increase gradually.',
+      detail: 'Form: L-methylfolate (Metafolin / Quatrefolic) or folinic acid. Starting dose: 400-800 mcg/day. Note: If you experience irritability or anxiety, switch to folinic acid — some slow COMT carriers do better with non-methyl forms. Interaction: Works synergistically with B12 (methylcobalamin).',
+      evidenceTier: 'E2', studyCount: 12, tags: ['supplement', 'COMT interaction'],
+      geneSymbol: 'MTHFR', done: false,
+    },
+    {
+      id: 'mthfr-homocysteine', type: 'monitor',
+      title: 'Test homocysteine levels',
+      description: 'Homocysteine is the best biomarker for methylation function. Elevated levels confirm the MTHFR variant is having a functional impact.',
+      detail: 'Target: below 10 umol/L (optimal: 6-8). Frequency: baseline, then 3 months after starting folate. Doctor note: "I have MTHFR C677T T/T and would like to check my homocysteine level"',
+      evidenceTier: 'E1', studyCount: 20, tags: ['bloodwork', 'doctor talking point'],
+      geneSymbol: 'MTHFR', done: false,
+    },
+  ],
+  'COMT': [
+    {
+      id: 'comt-stress', type: 'try',
+      title: 'Structured stress management',
+      description: 'With slow COMT, stress neurotransmitters linger longer. Regular stress reduction practice has outsized benefits for your genotype.',
+      detail: 'Meditation, breathwork, or yoga — even 10 minutes daily shows measurable cortisol changes. Your nervous system takes longer to return to baseline; building a regular practice shortens recovery time.',
+      evidenceTier: 'E2', studyCount: 8, tags: ['lifestyle'],
+      geneSymbol: 'COMT', done: false,
+    },
+  ],
+  'GAD1': [
+    {
+      id: 'gad1-magnesium', type: 'consider',
+      title: 'Magnesium glycinate supplementation',
+      description: 'Magnesium supports GABA receptor function, which may partially compensate for your GAD1 variant.',
+      detail: 'Glycinate form preferred for calming effects. 200-400mg before bed. Also supports sleep quality.',
+      evidenceTier: 'E3', studyCount: 5, tags: ['supplement', 'sleep'],
+      geneSymbol: 'GAD1', done: false,
+    },
+    {
+      id: 'gad1-theanine', type: 'consider',
+      title: 'L-theanine for acute stress',
+      description: 'L-theanine increases GABA and alpha brain waves. May help during acute stress without sedation.',
+      detail: '100-200mg as needed. Works synergistically with caffeine (take together to smooth out stimulant effect).',
+      evidenceTier: 'E3', studyCount: 4, tags: ['supplement'],
+      geneSymbol: 'GAD1', done: false,
+    },
+  ],
+}
+
 interface UseMentalHealthDataReturn {
   sections: PathwaySection[]
   loading: boolean
   totalGenes: number
   totalActions: number
+  actions: Record<string, ActionData[]>
+  getActionsForGene: (symbol: string) => ActionData[]
 }
 
 export function useMentalHealthData(): UseMentalHealthDataReturn {
@@ -123,5 +174,12 @@ export function useMentalHealthData(): UseMentalHealthDataReturn {
   const totalGenes = sections.reduce((sum, s) => sum + s.genes.length, 0)
   const totalActions = sections.reduce((sum, s) => sum + s.narrative.actionCount, 0)
 
-  return { sections, loading, totalGenes, totalActions }
+  return {
+    sections,
+    loading,
+    totalGenes,
+    totalActions,
+    actions: MOCK_ACTIONS,
+    getActionsForGene: (symbol: string) => MOCK_ACTIONS[symbol] || [],
+  }
 }

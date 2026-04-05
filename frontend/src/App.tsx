@@ -16,6 +16,11 @@ function App() {
   const voice = useVoice()
   const [view, setView] = useState<'snps' | 'mental-health'>('snps')
   const mentalHealth = useMentalHealthData()
+  const [actionStates, setActionStates] = useState<Record<string, boolean>>({})
+
+  const handleToggleAction = useCallback((id: string) => {
+    setActionStates(prev => ({ ...prev, [id]: !prev[id] }))
+  }, [])
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
   const [genes, setGenes] = useState<{ gene: string; count: number }[]>([])
@@ -223,6 +228,8 @@ function App() {
             totalActions={mentalHealth.totalActions}
             onExport={(format) => console.log('export', format)}
             onGeneClick={(gene) => console.log('gene click', gene.symbol)}
+            actions={mentalHealth.actions}
+            onToggleAction={handleToggleAction}
           />
         </main>
       )}
