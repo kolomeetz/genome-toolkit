@@ -90,10 +90,41 @@ export function MentalHealthDashboard({
     return true
   })
 
-  // Count actionable genes
+  // Count genes by status
   const actionableCount = data.reduce((sum, s) => sum + s.genes.filter(g => g.status === 'actionable').length, 0)
   const monitorCount = data.reduce((sum, s) => sum + s.genes.filter(g => g.status === 'monitor').length, 0)
   const optimalCount = data.reduce((sum, s) => sum + s.genes.filter(g => g.status === 'optimal').length, 0)
+
+  // Generate integral evaluation from actual data
+  const generateEvaluation = (): string => {
+    const actionableGenes = data.flatMap(s => s.genes.filter(g => g.status === 'actionable'))
+    const optimalGenes = data.flatMap(s => s.genes.filter(g => g.status === 'optimal'))
+    const monitorGenes = data.flatMap(s => s.genes.filter(g => g.status === 'monitor'))
+    const actionablePathways = data.filter(s => s.narrative.status === 'actionable').map(s => s.narrative.pathway)
+    const optimalPathways = data.filter(s => s.narrative.status === 'optimal').map(s => s.narrative.pathway)
+
+    const parts: string[] = []
+
+    if (actionableGenes.length > 0) {
+      const geneNames = actionableGenes.map(g => g.symbol).join(', ')
+      parts.push(`Your primary focus area is ${actionablePathways[0] || 'methylation'} — ${geneNames} ${actionableGenes.length === 1 ? 'shows' : 'show'} variants that benefit from targeted intervention.`)
+    }
+
+    if (optimalGenes.length > 0) {
+      const pathwayNames = optimalPathways.join(' and ')
+      parts.push(`${pathwayNames || 'Key pathways'} ${optimalPathways.length === 1 ? 'is' : 'are'} in the optimal range, providing protective factors.`)
+    }
+
+    if (monitorGenes.length > 0) {
+      parts.push(`${monitorGenes.length} ${monitorGenes.length === 1 ? 'gene requires' : 'genes require'} monitoring but no immediate action.`)
+    }
+
+    if (totalActions > 0) {
+      parts.push(`${totalActions} evidence-based actions are available across your profile.`)
+    }
+
+    return parts.join(' ')
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -112,13 +143,14 @@ export function MentalHealthDashboard({
           Mental Health
         </div>
         <div style={{
-          fontSize: 13,
-          color: 'var(--text-secondary)',
-          lineHeight: 1.7,
-          maxWidth: 720,
+          fontSize: 12,
+          color: 'var(--text)',
+          lineHeight: 1.8,
+          maxWidth: 760,
           fontFamily: 'var(--font-mono)',
+          marginBottom: 4,
         }}>
-          Your neurotransmitter pathways, methylation status, and mental health genetics — with actionable recommendations based on your genotype.
+          {generateEvaluation()}
         </div>
         <div style={{
           display: 'flex',
