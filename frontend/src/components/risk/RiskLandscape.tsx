@@ -485,9 +485,6 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
         style={{
           padding: '40px 24px 32px',
           borderBottom: '1px solid var(--border)',
-          maxWidth: 1100,
-          margin: '0 auto',
-          width: '100%',
           display: 'flex',
           gap: 24,
           alignItems: 'flex-start',
@@ -515,7 +512,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
             fontSize: 'var(--font-size-sm)',
             color: 'var(--text-secondary)',
             lineHeight: 1.7,
-            maxWidth: 720,
+            maxWidth: 760,
             fontFamily: 'var(--font-mono)',
           }}
         >
@@ -552,7 +549,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
       </div>
 
       {/* Main content */}
-      <div style={{ padding: '28px 24px', maxWidth: 1100, margin: '0 auto', width: '100%', flex: 1 }}>
+      <div style={{ padding: '28px 24px', flex: 1 }}>
         {/* Context block */}
         <div
           style={{

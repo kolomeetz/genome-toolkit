@@ -129,7 +129,7 @@ export function AddictionProfile({ onAddToChecklist }: AddictionProfileProps) {
           fontSize: 13,
           color: 'var(--text-secondary)',
           lineHeight: 1.7,
-          maxWidth: 680,
+          maxWidth: 760,
           fontFamily: 'var(--font-mono)',
         }}>
           How your genetics relate to reward sensitivity, substance metabolism, and dependence patterns.

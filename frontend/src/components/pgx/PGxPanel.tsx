@@ -52,7 +52,7 @@ export function PGxPanel({ onAddToChecklist }: PGxPanelProps) {
         <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: 8 }}>
           PGx / Drug Metabolism
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8, maxWidth: 720, fontFamily: 'var(--font-mono)' }}>
+        <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8, maxWidth: 760, fontFamily: 'var(--font-mono)' }}>
           How your enzymes process medications and substances. {MOCK_PGX.length} enzymes analyzed, covering prescription drugs and recreational substances with harm reduction context.
         </div>
         </div>{/* close flex wrapper */}
