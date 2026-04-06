@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useVaultGenes } from './useVaultGenes'
-import type { VaultGene } from './useVaultGenes'
-import type { PathwaySection, ActionData, GeneData, GeneStatus, EvidenceTier, ActionType } from '../types/genomics'
+import type { PathwaySection, ActionData } from '../types/genomics'
 
 // ── Pathway groupings for mental health ──────────────────────────────────────
 
@@ -174,24 +172,45 @@ interface UseMentalHealthDataReturn {
 }
 
 export function useMentalHealthData(): UseMentalHealthDataReturn {
-  const { genes, loading: genesLoading } = useVaultGenes()
   const [sections, setSections] = useState<PathwaySection[]>([])
   const [actions, setActions] = useState<Record<string, ActionData[]>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (genesLoading || genes.length === 0) return
-
-    buildFromVaultGenes(genes, setSections, setActions)
+    // Single API call — server does all parsing and grouping
+    fetch('/api/mental-health/dashboard')
+      .then(r => {
+        if (!r.ok) throw new Error(`Dashboard API: ${r.status}`)
+        return r.json()
+      })
+      .then(data => {
+        if (data?.sections?.length > 0) {
+          console.log(`[genome-toolkit] Dashboard: loaded ${data.totalGenes} genes, ${data.totalActions} actions from vault`)
+          setSections(data.sections)
+          // Extract actions from sections
+          const allActions: Record<string, ActionData[]> = {}
+          for (const section of data.sections) {
+            if (section.actions) {
+              Object.assign(allActions, section.actions)
+            }
+          }
+          setActions(allActions)
+        } else {
+          console.warn('[genome-toolkit] Dashboard API returned empty — no vault notes found')
+        }
+      })
+      .catch(err => {
+        console.error('[genome-toolkit] Dashboard API failed:', err.message)
+      })
       .finally(() => setLoading(false))
-  }, [genes, genesLoading])
+  }, [])
 
   const totalGenes = sections.reduce((sum, s) => sum + s.genes.length, 0)
   const totalActions = sections.reduce((sum, s) => sum + s.narrative.actionCount, 0)
 
   return {
     sections,
-    loading: loading || genesLoading,
+    loading,
     totalGenes,
     totalActions,
     actions,
