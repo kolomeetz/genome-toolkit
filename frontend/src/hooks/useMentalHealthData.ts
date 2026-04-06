@@ -75,6 +75,91 @@ function mapActionType(t: string): ActionType {
   return 'consider'
 }
 
+async function buildFromVaultGenes(
+  genes: VaultGene[],
+  setSections: (s: PathwaySection[]) => void,
+  setActions: (a: Record<string, ActionData[]>) => void,
+): Promise<void> {
+  const builtSections: PathwaySection[] = []
+  const allActions: Record<string, ActionData[]> = {}
+
+  for (const [, sys] of Object.entries(MH_SYSTEMS)) {
+    const matched = genes.filter((g) => matchesSystem(g, sys.tags))
+    if (matched.length === 0) continue
+
+    const geneDataList = matched.map((g) => vaultGeneToGeneData(g, sys.name))
+
+    let totalActionCount = 0
+    for (const g of matched) {
+      try {
+        const res = await fetch(`/api/vault/genes/${g.symbol}/actions`)
+        if (res.ok) {
+          const data = await res.json()
+          const geneActions: ActionData[] = (data.actions ?? []).map(
+            (
+              a: {
+                id?: string
+                type?: string
+                title?: string
+                description?: string
+                detail?: string
+                evidence_tier?: string
+                study_count?: number
+                tags?: string[]
+                done?: boolean
+              },
+              idx: number,
+            ) => ({
+              id: a.id ?? `${g.symbol}-${idx}`,
+              type: mapActionType(a.type ?? 'consider'),
+              title: a.title ?? '',
+              description: a.description ?? '',
+              detail: a.detail,
+              evidenceTier: mapTier(a.evidence_tier ?? 'E3'),
+              studyCount: a.study_count ?? 0,
+              tags: a.tags ?? [],
+              geneSymbol: g.symbol,
+              done: a.done ?? false,
+            }),
+          )
+          allActions[g.symbol] = geneActions
+          totalActionCount += geneActions.length
+
+          const gd = geneDataList.find((gd) => gd.symbol === g.symbol)
+          if (gd) gd.actionCount = geneActions.length
+        }
+      } catch {
+        // skip failed fetches
+      }
+    }
+
+    const statuses = geneDataList.map((g) => g.status)
+    const sectionStatus = worstStatus(statuses)
+
+    builtSections.push({
+      narrative: {
+        pathway: sys.name,
+        status: sectionStatus,
+        body: matched
+          .map((g) => g.description)
+          .filter(Boolean)
+          .join(' '),
+        priority:
+          sectionStatus === 'actionable'
+            ? `Priority: ${sys.name.toLowerCase()} support`
+            : `Status: ${sectionStatus}`,
+        hint: '',
+        geneCount: matched.length,
+        actionCount: totalActionCount,
+      },
+      genes: geneDataList,
+    })
+  }
+
+  setSections(builtSections)
+  setActions(allActions)
+}
+
 interface UseMentalHealthDataReturn {
   sections: PathwaySection[]
   loading: boolean
@@ -93,79 +178,37 @@ export function useMentalHealthData(): UseMentalHealthDataReturn {
   useEffect(() => {
     if (genesLoading) return
 
-    const buildData = async () => {
-      // Build pathway sections
-      const builtSections: PathwaySection[] = []
-      const allActions: Record<string, ActionData[]> = {}
-
-      for (const [, sys] of Object.entries(MH_SYSTEMS)) {
-        const matched = genes.filter((g) => matchesSystem(g, sys.tags))
-        if (matched.length === 0) continue
-
-        const geneDataList = matched.map((g) => vaultGeneToGeneData(g, sys.name))
-
-        // Fetch actions for each gene in this pathway
-        let totalActionCount = 0
-        for (const g of matched) {
-          try {
-            const res = await fetch(`/api/vault/genes/${g.symbol}/actions`)
-            if (res.ok) {
-              const data = await res.json()
-              const geneActions: ActionData[] = (data.actions ?? []).map(
-                (a: { id?: string; type?: string; title?: string; description?: string; detail?: string; evidence_tier?: string; study_count?: number; tags?: string[]; done?: boolean }, idx: number) => ({
-                  id: a.id ?? `${g.symbol}-${idx}`,
-                  type: mapActionType(a.type ?? 'consider'),
-                  title: a.title ?? '',
-                  description: a.description ?? '',
-                  detail: a.detail,
-                  evidenceTier: mapTier(a.evidence_tier ?? 'E3'),
-                  studyCount: a.study_count ?? 0,
-                  tags: a.tags ?? [],
-                  geneSymbol: g.symbol,
-                  done: a.done ?? false,
-                }),
-              )
-              allActions[g.symbol] = geneActions
-              totalActionCount += geneActions.length
-
-              // Update actionCount on the GeneData
-              const gd = geneDataList.find((gd) => gd.symbol === g.symbol)
-              if (gd) gd.actionCount = geneActions.length
+    // Try the dashboard endpoint first (returns parsed vault data with actions)
+    fetch('/api/mental-health/dashboard')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.sections && data.sections.length > 0) {
+          console.log(`[genome-toolkit] Dashboard: loaded ${data.totalGenes} genes from vault`)
+          setSections(data.sections)
+          // Collect actions from all sections
+          const vaultActions: Record<string, ActionData[]> = {}
+          for (const section of data.sections) {
+            if (section.actions) {
+              for (const [symbol, actionList] of Object.entries(
+                section.actions as Record<string, ActionData[]>,
+              )) {
+                vaultActions[symbol] = actionList
+              }
             }
-          } catch {
-            // skip failed fetches
           }
+          if (Object.keys(vaultActions).length > 0) {
+            setActions(vaultActions)
+          }
+        } else {
+          // Fall back to building sections from useVaultGenes
+          console.log('[genome-toolkit] Dashboard: falling back to vault gene list')
+          buildFromVaultGenes(genes, setSections, setActions)
         }
-
-        const statuses = geneDataList.map((g) => g.status)
-        const sectionStatus = worstStatus(statuses)
-
-        builtSections.push({
-          narrative: {
-            pathway: sys.name,
-            status: sectionStatus,
-            body: matched
-              .map((g) => g.description)
-              .filter(Boolean)
-              .join(' '),
-            priority:
-              sectionStatus === 'actionable'
-                ? `Priority: ${sys.name.toLowerCase()} support`
-                : `Status: ${sectionStatus}`,
-            hint: '',
-            geneCount: matched.length,
-            actionCount: totalActionCount,
-          },
-          genes: geneDataList,
-        })
-      }
-
-      setSections(builtSections)
-      setActions(allActions)
-      setLoading(false)
-    }
-
-    buildData()
+      })
+      .catch(() => {
+        buildFromVaultGenes(genes, setSections, setActions)
+      })
+      .finally(() => setLoading(false))
   }, [genes, genesLoading])
 
   const totalGenes = sections.reduce((sum, s) => sum + s.genes.length, 0)
