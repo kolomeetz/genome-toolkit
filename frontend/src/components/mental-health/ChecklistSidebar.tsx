@@ -84,7 +84,7 @@ export function ChecklistSidebar({
   })
 
   return (
-    <div style={{
+    <div className="sidebar-drawer" style={{
       width: 420,
       background: 'var(--bg-raised)',
       borderLeft: '1px solid var(--border)',

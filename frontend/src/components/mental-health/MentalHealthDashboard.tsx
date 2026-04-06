@@ -136,7 +136,7 @@ export function MentalHealthDashboard({
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Hero header */}
-      <div style={{
+      <div className="hero-header" style={{
         padding: '40px 24px 32px',
         borderBottom: '1px solid var(--border)',
         display: 'flex',
@@ -169,7 +169,7 @@ export function MentalHealthDashboard({
         }}>
           {generateEvaluation()}
         </div>
-        <div style={{
+        <div className="stats-row" style={{
           display: 'flex',
           gap: 24,
           marginTop: 20,
@@ -269,7 +269,7 @@ export function MentalHealthDashboard({
       </div>
 
       {/* Pathway rows */}
-      <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="section-content" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {filteredSections.length === 0 ? (
           <div style={{
             fontFamily: 'var(--font-mono)',
@@ -292,7 +292,7 @@ export function MentalHealthDashboard({
                 key={section.narrative.pathway}
                 style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
               >
-                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                <div className="pathway-row" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                   <NarrativeBlock narrative={section.narrative} />
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {visibleGenes.map(gene => (

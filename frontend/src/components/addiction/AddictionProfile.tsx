@@ -11,7 +11,7 @@ import { printPage, downloadFile, addictionToMarkdown } from '../../lib/export'
 
 function SubstanceCardItem({ substance, added, onAdd }: { substance: SubstanceCard; added?: boolean; onAdd?: () => void }) {
   return (
-    <div style={{
+    <div className="substance-card" style={{
       background: 'var(--bg-raised)',
       borderLeft: `4px solid ${substance.borderColor}`,
       border: `1.5px solid ${substance.borderColor}`,
@@ -105,7 +105,7 @@ export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: Addi
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
       {/* Hero header */}
-      <div style={{
+      <div className="hero-header" style={{
         padding: '40px 24px 32px',
         borderBottom: '1px solid var(--border)',
         display: 'flex',
@@ -137,7 +137,7 @@ export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: Addi
           How your genetics relate to reward sensitivity, substance metabolism, and dependence patterns.
           This is context for self-understanding and harm reduction, not diagnosis.
         </div>
-        <div style={{ display: 'flex', gap: 24, marginTop: 20 }}>
+        <div className="stats-row" style={{ display: 'flex', gap: 24, marginTop: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--sig-risk)', fontFamily: 'var(--font-mono)' }}>
               {TOTAL_GENES}
@@ -175,7 +175,7 @@ export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: Addi
       </div>
 
       {/* Main content */}
-      <div style={{ padding: '24px 24px 0' }}>
+      <div className="section-content" style={{ padding: '24px 24px 0' }}>
 
         {/* Context block */}
         <div style={{
@@ -208,7 +208,7 @@ export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: Addi
         {/* Pathway sections */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 24 }}>
           {PATHWAYS.map(section => (
-            <div key={section.narrative.pathway} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            <div key={section.narrative.pathway} className="pathway-row" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
               <NarrativeBlock narrative={section.narrative} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {section.genes.map(gene => (
@@ -257,6 +257,7 @@ export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: Addi
 
         {/* Export buttons */}
         <div
+          className="export-buttons"
           style={{
             display: 'flex',
             justifyContent: 'flex-end',

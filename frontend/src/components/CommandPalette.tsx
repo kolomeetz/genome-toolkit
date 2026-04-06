@@ -264,7 +264,7 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
       }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
+      <div className="command-palette-inner" style={{
         width: '100%',
         maxWidth: 860,
         background: 'var(--bg-raised)',

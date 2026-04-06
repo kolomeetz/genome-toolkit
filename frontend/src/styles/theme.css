@@ -194,6 +194,60 @@ body {
 .chat-markdown--lg blockquote { padding-left: 16px; font-size: 14px; }
 .chat-markdown--lg code { font-size: var(--font-size-sm); padding: 2px 6px; }
 
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  /* Pathway sections: stack narrative + genes vertically */
+  .pathway-row { flex-direction: column !important; }
+
+  /* Sidebar drawers: narrower */
+  .sidebar-drawer { width: 340px !important; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  :root {
+    --space-lg: 16px;
+    --space-xl: 20px;
+  }
+
+  /* Nav bar: scroll horizontally */
+  .nav-buttons { overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 4px !important; flex-wrap: nowrap !important; }
+  .nav-buttons .btn { white-space: nowrap; flex-shrink: 0; font-size: 8px !important; padding: 4px 8px !important; }
+
+  /* Hero headers: stack glyph above text */
+  .hero-header { flex-direction: column !important; gap: 12px !important; padding: 24px 16px 20px !important; }
+
+  /* Stats row: wrap to 2 columns */
+  .stats-row { gap: 12px 20px !important; }
+
+  /* Sidebar drawers: full width overlay */
+  .sidebar-drawer { width: 100% !important; }
+
+  /* Command palette: full screen on mobile */
+  .command-palette-inner { max-width: 100% !important; height: 100vh !important; border: none !important; }
+
+  /* Content padding */
+  .section-content { padding: 16px !important; }
+
+  /* Gene cards in expanded risk detail */
+  .gene-cards-row { flex-direction: column !important; }
+
+  /* Export button rows */
+  .export-buttons { flex-wrap: wrap !important; }
+
+  /* Substance cards: full width */
+  .substance-card { min-width: 0 !important; }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .hero-header { padding: 16px 12px !important; }
+  .section-content { padding: 12px !important; }
+  .command-palette-inner { border-radius: 0 !important; }
+}
+
 /* ── Print styles ──────────────────────────────────────────────────────────── */
 @media print {
   /* Hide non-content elements */

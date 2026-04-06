@@ -232,6 +232,7 @@ function ExpandedDetail({ cause, addedSet, onAddToChecklist }: { cause: Mortalit
 
       {cause.genes && cause.genes.length > 0 && (
         <div
+          className="gene-cards-row"
           style={{
             display: 'flex',
             gap: 10,
@@ -491,6 +492,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       {/* Hero */}
       <div
+        className="hero-header"
         style={{
           padding: '40px 24px 32px',
           borderBottom: '1px solid var(--border)',
@@ -530,7 +532,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'flex', gap: 24, marginTop: 20, flexWrap: 'wrap' }}>
+        <div className="stats-row" style={{ display: 'flex', gap: 24, marginTop: 20, flexWrap: 'wrap' }}>
           {[
             { value: stats.actionable, label: 'Actionable areas', color: 'var(--sig-risk)' },
             { value: stats.monitor, label: 'Monitor', color: 'var(--sig-monitor)' },
@@ -558,7 +560,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
       </div>
 
       {/* Main content */}
-      <div style={{ padding: '28px 24px', flex: 1 }}>
+      <div className="section-content" style={{ padding: '28px 24px', flex: 1 }}>
         {/* Context block */}
         <div
           style={{
@@ -610,6 +612,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
 
         {/* Export buttons */}
         <div
+          className="export-buttons"
           style={{
             display: 'flex',
             justifyContent: 'flex-end',

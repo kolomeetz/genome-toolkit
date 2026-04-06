@@ -236,7 +236,7 @@ function App() {
               : 'AWAITING_DATA'}
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+        <div className="nav-buttons" style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
           <button
             className="btn"
             style={{

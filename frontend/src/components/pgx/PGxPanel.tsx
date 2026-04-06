@@ -44,7 +44,7 @@ export function PGxPanel({ onExport, onAddToChecklist }: PGxPanelProps) {
   return (
     <div>
       {/* Hero */}
-      <div style={{ padding: '40px 24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div className="hero-header" style={{ padding: '40px 24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 24, alignItems: 'flex-start' }}>
         <GenomeGlyph
           genotypes={MOCK_PGX.map(s => s.enzyme.alleles.replace('*', ''))}
           size={100}
@@ -110,7 +110,7 @@ export function PGxPanel({ onExport, onAddToChecklist }: PGxPanelProps) {
         </div>
       </div>
 
-      <div style={{ padding: '24px' }}>
+      <div className="section-content" style={{ padding: '24px' }}>
         {/* Disclaimer */}
         <div style={{
           background: 'var(--bg-raised)', border: '1.5px solid var(--primary)', borderRadius: 6,

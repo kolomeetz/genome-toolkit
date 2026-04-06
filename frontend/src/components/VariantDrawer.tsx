@@ -69,6 +69,7 @@ export function VariantDrawer({ snp, onClose, onAskAI, onAddToChecklist }: Props
 
   return (
     <div
+      className="sidebar-drawer"
       style={{
         position: 'fixed',
         top: 0,
