@@ -15,6 +15,12 @@ import { ChecklistSidebar } from './components/mental-health/ChecklistSidebar'
 import { PGxPanel } from './components/pgx/PGxPanel'
 import { AddictionProfile } from './components/addiction'
 import { RiskLandscape } from './components/risk'
+import {
+  printPage,
+  downloadFile,
+  mentalHealthToMarkdown,
+  checklistToMarkdown,
+} from './lib/export'
 
 function App() {
   const { result, filters, loading, updateFilters, debouncedUpdateFilters, setPage, resetFilters, activeFilterCount } = useSNPs()
@@ -55,6 +61,7 @@ function App() {
   }, [])
 
   const [cmdkOpen, setCmdkOpen] = useState(false)
+  const [cmdkInitialQuery, setCmdkInitialQuery] = useState<string | undefined>(undefined)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
   const [genes, setGenes] = useState<{ gene: string; count: number }[]>([])
   const [insights, setInsights] = useState<InsightData | null>(null)
@@ -118,6 +125,27 @@ function App() {
       rawSend(text)
     }
   }, [rawSend, voice.voiceEnabled])
+
+  const handleExport = useCallback((format: 'pdf' | 'md' | 'doctor' | 'prescriber' | string) => {
+    if (format === 'doctor' || format === 'prescriber' || format === 'pdf') {
+      printPage(format as 'doctor' | 'prescriber' | 'pdf')
+    } else if (format === 'md') {
+      // Generate markdown based on current view
+      if (view === 'mental-health') {
+        const md = mentalHealthToMarkdown(mentalHealth.sections, mentalHealth.actions)
+        downloadFile(md, `mental-health-${new Date().toISOString().slice(0, 10)}.md`)
+      } else if (view === 'checklist') {
+        const md = checklistToMarkdown(checklist.items)
+        downloadFile(md, `checklist-${new Date().toISOString().slice(0, 10)}.md`)
+      } else {
+        // For views that handle their own markdown (pgx, risk, addiction),
+        // the export is handled in the component via onExport prop
+        // but if called from checklist sidebar, export checklist
+        const md = checklistToMarkdown(checklist.items)
+        downloadFile(md, `checklist-${new Date().toISOString().slice(0, 10)}.md`)
+      }
+    }
+  }, [view, mentalHealth, checklist.items])
 
   const handleDiscuss = useCallback((context: string) => {
     setCmdkOpen(true)
@@ -360,31 +388,37 @@ function App() {
                 const genes = [...new Set(snps.map(s => s.gene_symbol).filter(Boolean))].join(', ')
                 const rsids = snps.map(s => s.rsid).join(', ')
                 const query = `Tell me about these variants together and how they interact: ${rsids}${genes ? ` (genes: ${genes})` : ''}. What does this combination mean for my health?`
+                setCmdkInitialQuery(query)
                 setCmdkOpen(true)
-                setTimeout(() => send(query), 100)
               }}
             />
           </main>
         </>
       ) : view === 'pgx' ? (
         <main>
-          <PGxPanel onAddToChecklist={(title, gene) => {
-            checklist.addItem(title, gene || 'custom', 'consider')
-            setChecklistHighlight(true)
-            setTimeout(() => setChecklistHighlight(false), 1500)
-          }} />
+          <PGxPanel
+            onExport={handleExport}
+            onAddToChecklist={(title, gene) => {
+              checklist.addItem(title, gene || 'custom', 'consider')
+              setChecklistHighlight(true)
+              setTimeout(() => setChecklistHighlight(false), 1500)
+            }}
+          />
         </main>
       ) : view === 'addiction' ? (
         <main>
-          <AddictionProfile onAddToChecklist={(title, gene) => {
-            checklist.addItem(title, gene || 'custom', 'consider')
-            setChecklistHighlight(true)
-            setTimeout(() => setChecklistHighlight(false), 1500)
-          }} />
+          <AddictionProfile
+            onExport={handleExport}
+            onAddToChecklist={(title, gene) => {
+              checklist.addItem(title, gene || 'custom', 'consider')
+              setChecklistHighlight(true)
+              setTimeout(() => setChecklistHighlight(false), 1500)
+            }}
+          />
         </main>
       ) : view === 'risk' ? (
         <main>
-          <RiskLandscape onAddToChecklist={(title, cause) => {
+          <RiskLandscape onExport={handleExport} onAddToChecklist={(title, cause) => {
             checklist.addItem(title, 'custom', 'consider', '', cause)
             setChecklistHighlight(true)
             setTimeout(() => setChecklistHighlight(false), 1500)
@@ -396,7 +430,7 @@ function App() {
             data={mentalHealth.sections}
             totalGenes={mentalHealth.totalGenes}
             totalActions={mentalHealth.totalActions}
-            onExport={(format) => console.log('export', format)}
+            onExport={handleExport}
             onGeneClick={(gene) => console.log('gene click', gene.symbol)}
             actions={mentalHealth.actions}
             onToggleAction={checklist.toggleDone}
@@ -441,7 +475,8 @@ function App() {
       {/* Command Palette */}
       <CommandPalette
         open={cmdkOpen}
-        onClose={() => setCmdkOpen(false)}
+        onClose={() => { setCmdkOpen(false); setCmdkInitialQuery(undefined) }}
+        initialQuery={cmdkInitialQuery}
         messages={messages}
         streaming={streaming}
         streamingText={streamingText}
@@ -473,7 +508,7 @@ function App() {
             onDelete={checklist.deleteItem}
             onAdd={(title) => checklist.addItem(title)}
             onClose={() => setChecklistOpen(false)}
-            onExport={(format) => console.log('export', format)}
+            onExport={handleExport}
             onResearchPrompt={() => console.log('research prompt')}
           />
         </>

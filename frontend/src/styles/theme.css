@@ -193,3 +193,55 @@ body {
 .chat-markdown--lg td { padding: 7px 14px; }
 .chat-markdown--lg blockquote { padding-left: 16px; font-size: 14px; }
 .chat-markdown--lg code { font-size: var(--font-size-sm); padding: 2px 6px; }
+
+/* ── Print styles ──────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide non-content elements */
+  header, footer, nav,
+  .no-print,
+  [style*="position: fixed"] { display: none !important; }
+
+  /* Reset backgrounds for ink saving */
+  body, main, div { background: white !important; }
+
+  /* Full width */
+  main { width: 100% !important; max-width: none !important; padding: 0 !important; }
+
+  /* Readable serif text */
+  body { font-family: Georgia, 'Times New Roman', serif !important; font-size: 11pt !important; color: #222 !important; }
+
+  /* Keep mono for gene names / data */
+  code, [style*="font-family: var(--font-mono)"] { font-family: 'IBM Plex Mono', monospace !important; }
+
+  /* Hide all buttons */
+  button, .btn { display: none !important; }
+
+  /* Reset text colors */
+  * { color: #222 !important; }
+
+  /* Borders simpler */
+  * { border-color: #ccc !important; }
+
+  /* Doctor / prescriber header */
+  body[data-print-mode="doctor"]::before,
+  body[data-print-mode="prescriber"]::before {
+    content: "GENOME TOOLKIT  ---  CONFIDENTIAL PATIENT REPORT";
+    display: block;
+    text-align: center;
+    font-size: 9pt;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #999;
+    padding: 8px 0;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 16px;
+    font-family: Georgia, serif;
+  }
+
+  /* Page breaks */
+  h2, h3 { page-break-after: avoid; }
+  table { page-break-inside: avoid; }
+
+  /* Links show URL */
+  a[href]::after { content: " (" attr(href) ")"; font-size: 9pt; color: #666; }
+}

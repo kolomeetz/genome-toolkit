@@ -5,6 +5,7 @@ import type { GeneData } from '../../types/genomics'
 import { useAddictionData } from '../../hooks/useAddictionData'
 import type { SubstanceCard } from '../../hooks/useAddictionData'
 import { GenomeGlyph } from '../GenomeGlyph'
+import { printPage, downloadFile, addictionToMarkdown } from '../../lib/export'
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -87,10 +88,11 @@ function SubstanceCardItem({ substance, added, onAdd }: { substance: SubstanceCa
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface AddictionProfileProps {
+  onExport?: (format: string) => void
   onAddToChecklist?: (title: string, gene: string) => void
 }
 
-export function AddictionProfile({ onAddToChecklist }: AddictionProfileProps) {
+export function AddictionProfile({ onExport: _onExport, onAddToChecklist }: AddictionProfileProps) {
   const { pathways: PATHWAYS, substances: SUBSTANCES, loading, totalGenes: TOTAL_GENES, actionableCount: ACTIONABLE_COUNT } = useAddictionData()
   const [addedSubstances, setAddedSubstances] = useState<Set<string>>(new Set())
   const handleGeneClick = (_gene: GeneData) => {
@@ -251,6 +253,55 @@ export function AddictionProfile({ onAddToChecklist }: AddictionProfileProps) {
               />
             )
           })}
+        </div>
+
+        {/* Export buttons */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 6,
+            paddingTop: 12,
+            borderTop: '1px dashed var(--border-dashed)',
+            marginBottom: 24,
+          }}
+        >
+          {(
+            [
+              { format: 'pdf', label: 'Export PDF', accent: false },
+              { format: 'md', label: 'Export MD', accent: false },
+              { format: 'doctor', label: 'Print for doctor', accent: true },
+            ] as const
+          ).map(({ format, label, accent }) => (
+            <button
+              key={format}
+              onClick={() => {
+                if (format === 'md') {
+                  const md = addictionToMarkdown(PATHWAYS, SUBSTANCES)
+                  downloadFile(md, `addiction-profile-${new Date().toISOString().slice(0, 10)}.md`)
+                } else if (format === 'doctor') {
+                  printPage('doctor')
+                } else {
+                  printPage('pdf')
+                }
+              }}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 500,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                padding: '4px 10px',
+                border: `1px solid ${accent ? 'var(--accent)' : 'var(--border-strong)'}`,
+                background: 'transparent',
+                color: accent ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                borderRadius: 2,
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
       </div>

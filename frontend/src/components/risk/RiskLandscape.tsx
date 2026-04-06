@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRiskData } from '../../hooks/useRiskData'
 import { GenomeGlyph } from '../GenomeGlyph'
+import { printPage, downloadFile, riskLandscapeToMarkdown } from '../../lib/export'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -475,6 +476,14 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
   }
 
   function handleExport(format: 'pdf' | 'md' | 'doctor') {
+    if (format === 'md') {
+      const md = riskLandscapeToMarkdown(CAUSES)
+      downloadFile(md, `risk-landscape-${new Date().toISOString().slice(0, 10)}.md`)
+    } else if (format === 'doctor') {
+      printPage('doctor')
+    } else if (format === 'pdf') {
+      printPage('pdf')
+    }
     onExport?.(format)
   }
 

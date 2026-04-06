@@ -172,6 +172,7 @@ interface Props {
   actions: AgentAction[]
   onSend: (text: string) => void
   onAction: (action: AgentAction) => void
+  initialQuery?: string
 }
 
 function messagesToMarkdown(messages: ChatMessage[]): string {
@@ -199,15 +200,18 @@ function downloadMarkdown(text: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction }: Props) {
+export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction, initialQuery }: Props) {
   const [input, setInput] = useState('')
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50)
-  }, [open])
+    if (open) {
+      if (initialQuery) setInput(initialQuery)
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+  }, [open, initialQuery])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
@@ -312,6 +316,7 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
           ref={scrollRef}
           style={{
             flex: 1,
+            minHeight: 0,
             overflowY: 'auto',
             padding: 'var(--space-lg) var(--space-xl)',
           }}

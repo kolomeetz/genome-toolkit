@@ -1,6 +1,7 @@
 import type { GeneData, ActionData } from '../../types/genomics'
 import { EvidenceBadge } from './EvidenceBadge'
 import { ActionCard } from './ActionCard'
+import { printPage, downloadFile, geneToMarkdown } from '../../lib/export'
 
 interface GeneDetailProps {
   gene: GeneData
@@ -10,6 +11,7 @@ interface GeneDetailProps {
   interactions?: { genes: string; description: string }[]
   onClose: () => void
   onToggleAction: (actionId: string) => void
+  onDiscuss?: (context: string) => void
   checklistIds?: Set<string>
   onAddToChecklist?: (action: ActionData) => void
 }
@@ -22,6 +24,7 @@ export function GeneDetail({
   interactions,
   onClose,
   onToggleAction,
+  onDiscuss: _onDiscuss,
   checklistIds = new Set(),
   onAddToChecklist,
 }: GeneDetailProps) {
@@ -303,26 +306,35 @@ export function GeneDetail({
           </span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{
-            background: 'none',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            padding: '5px 12px',
-            cursor: 'pointer',
-            fontSize: 11,
-            color: 'var(--text-secondary)',
-          }}>
+          <button
+            onClick={() => printPage('doctor')}
+            style={{
+              background: 'none',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              padding: '5px 12px',
+              cursor: 'pointer',
+              fontSize: 11,
+              color: 'var(--text-secondary)',
+            }}
+          >
             Print for doctor
           </button>
-          <button style={{
-            background: 'none',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            padding: '5px 12px',
-            cursor: 'pointer',
-            fontSize: 11,
-            color: 'var(--text-secondary)',
-          }}>
+          <button
+            onClick={() => {
+              const md = geneToMarkdown(gene, actions)
+              downloadFile(md, `${gene.symbol}-${new Date().toISOString().slice(0, 10)}.md`)
+            }}
+            style={{
+              background: 'none',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              padding: '5px 12px',
+              cursor: 'pointer',
+              fontSize: 11,
+              color: 'var(--text-secondary)',
+            }}
+          >
             Export
           </button>
         </div>

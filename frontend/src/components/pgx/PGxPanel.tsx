@@ -4,6 +4,7 @@ import { MetabolizerBar } from './MetabolizerBar'
 import { DrugCard } from './DrugCard'
 import { GenomeGlyph } from '../GenomeGlyph'
 import { usePGxData } from '../../hooks/usePGxData'
+import { printPage, downloadFile, pgxToMarkdown } from '../../lib/export'
 
 type DrugFilter = 'all' | 'antidepressants' | 'pain' | 'cardio' | 'substances' | 'safety'
 
@@ -16,10 +17,11 @@ const FILTERS: { key: DrugFilter; label: string }[] = [
 ]
 
 interface PGxPanelProps {
+  onExport?: (format: string) => void
   onAddToChecklist?: (title: string, gene: string) => void
 }
 
-export function PGxPanel({ onAddToChecklist }: PGxPanelProps) {
+export function PGxPanel({ onExport, onAddToChecklist }: PGxPanelProps) {
   const { sections: MOCK_PGX, loading } = usePGxData()
   const [filter, setFilter] = useState<DrugFilter>('all')
   const [addedDrugs, setAddedDrugs] = useState<Set<string>>(new Set())
@@ -82,18 +84,27 @@ export function PGxPanel({ onAddToChecklist }: PGxPanelProps) {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <button style={{
-            fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500,
-            textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px',
-            border: '1px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: 'pointer',
-          }}>
+          <button
+            onClick={() => printPage('prescriber')}
+            style={{
+              fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500,
+              textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px',
+              border: '1px solid var(--accent)', background: 'transparent', color: 'var(--accent)', cursor: 'pointer',
+            }}
+          >
             Print for prescriber
           </button>
-          <button style={{
-            fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500,
-            textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px',
-            border: '1px solid var(--border-strong)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer',
-          }}>
+          <button
+            onClick={() => {
+              const md = pgxToMarkdown(MOCK_PGX)
+              downloadFile(md, `pgx-report-${new Date().toISOString().slice(0, 10)}.md`)
+            }}
+            style={{
+              fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 500,
+              textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px',
+              border: '1px solid var(--border-strong)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer',
+            }}
+          >
             Export
           </button>
         </div>
