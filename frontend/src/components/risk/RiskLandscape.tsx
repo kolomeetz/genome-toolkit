@@ -106,15 +106,15 @@ function GeneMiniCard({ gene }: { gene: GeneMini }) {
         </span>
         <span
           style={{
-            fontSize: 'var(--font-size-xs)',
+            fontSize: 7,
             fontWeight: 500,
-            padding: '2px 6px',
+            padding: '2px 5px',
             borderRadius: 3,
             letterSpacing: '0.08em',
             color: 'var(--bg-raised)',
             background: borderColor,
             whiteSpace: 'nowrap',
-            marginLeft: 6,
+            flexShrink: 0,
           }}
         >
           {gene.evidenceTier}
@@ -214,7 +214,7 @@ function ExpandedDetail({ cause, addedSet, onAddToChecklist }: { cause: Mortalit
         marginBottom: 4,
       }}
     >
-      {cause.narrative && (
+      {cause.narrative && !(cause.genes?.length === 1 && cause.genes[0].description === cause.narrative) && (
         <div
           style={{
             fontSize: 'var(--font-size-sm)',
