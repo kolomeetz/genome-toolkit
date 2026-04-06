@@ -103,7 +103,7 @@ async def list_vault_genes():
 # ---------------------------------------------------------------------------
 
 _ACTION_HEADING_RE = re.compile(
-    r"^##\s+(Recommended\s+Actions|Actions|Action\s+Items)\s*$", re.IGNORECASE
+    r"^##\s+(Recommended\s+Actions|Actions|Action\s+Items|What\s+Changes\s+This|What\s+To\s+Do|Actionable\s+Recommendations)\s*$", re.IGNORECASE
 )
 _BOLD_ACTION_RE = re.compile(
     r"^-\s+\*\*(Consider|Monitor|Discuss|Avoid)\*\*:\s*(.+)", re.IGNORECASE
@@ -146,12 +146,35 @@ def _parse_actions(body: str, gene_symbol: str) -> list[dict]:
             })
             continue
 
-        # Bullet items inside action sections
+        # "- **Title**: Description" format (common in vault notes)
+        if in_action_section and stripped.startswith("- **"):
+            parts = stripped.lstrip("- ").split("**", 2)
+            if len(parts) >= 3:
+                title = parts[1].strip(":").strip()
+                desc = parts[2].strip(":").strip()
+                # Infer action type from content
+                lower = (title + " " + desc).lower()
+                atype = "consider"
+                if any(w in lower for w in ["test", "measure", "check", "blood", "level"]):
+                    atype = "monitor"
+                elif any(w in lower for w in ["discuss", "ask", "doctor", "clinician"]):
+                    atype = "discuss"
+                elif any(w in lower for w in ["exercise", "meditation", "walk", "sleep", "avoid", "reduce"]):
+                    atype = "try"
+                actions.append({
+                    "type": atype,
+                    "title": title,
+                    "description": desc,
+                    "gene_symbol": gene_symbol,
+                })
+                continue
+
+        # Plain bullet items inside action sections
         if in_action_section and stripped.startswith("- "):
             title = stripped[2:].strip()
             if title:
                 actions.append({
-                    "type": "action",
+                    "type": "consider",
                     "title": title,
                     "gene_symbol": gene_symbol,
                 })

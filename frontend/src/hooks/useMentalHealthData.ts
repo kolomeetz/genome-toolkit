@@ -50,7 +50,11 @@ function worstStatus(statuses: GeneStatus[]): GeneStatus {
 
 function matchesSystem(gene: VaultGene, tags: string[]): boolean {
   const lower = tags.map((t) => t.toLowerCase())
-  return gene.systems.some((s) => lower.includes(s.toLowerCase()))
+  return gene.systems.some((s) => {
+    // Strip wikilinks: "[[Methylation]]" -> "methylation"
+    const clean = s.replace(/\[\[/g, '').replace(/\]\]/g, '').toLowerCase()
+    return lower.some(tag => clean.includes(tag.toLowerCase()) || tag.toLowerCase().includes(clean))
+  })
 }
 
 function vaultGeneToGeneData(g: VaultGene, pathway: string): GeneData {
