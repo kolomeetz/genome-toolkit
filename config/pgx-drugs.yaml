@@ -38,6 +38,22 @@ enzymes:
           poor: { impact: warn, text: "Use alternative beta blocker", description: "Significantly elevated metoprolol levels. Risk of bradycardia and hypotension." }
           intermediate: { impact: adjust, text: "Consider dose reduction", description: "Moderately elevated levels. Monitor heart rate and blood pressure." }
           normal: { impact: ok, text: "Standard dosing", description: "Normal metabolism. Standard dosing guidelines." }
+      - class: Antipsychotics (Risperidone, Haloperidol, Aripiprazole)
+        drugs: "Risperidone (Risperdal), Haloperidol (Haldol), Aripiprazole (Abilify), Perphenazine"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Higher side effect risk at standard doses", description: "CYP2D6 is the primary metabolic pathway for several atypical and typical antipsychotics. Poor metabolizers accumulate elevated levels, increasing EPS, sedation, and metabolic side effects.", danger_note: "If prescribed any of these, mention CYP2D6 status. Signs levels are too high: muscle stiffness, restlessness (akathisia), tremor, excess sedation, weight gain. CPIC recommends lower starting doses. Aripiprazole in particular has clear CPIC dosing guidance." }
+          intermediate: { impact: adjust, text: "Start low, titrate slowly", description: "Moderately slower clearance. Start at lower end of range and monitor for side effects." }
+          normal: { impact: ok, text: "Standard dosing", description: "Normal metabolism. Standard protocols apply." }
+          ultrarapid: { impact: warn, text: "May underperform at standard doses", description: "Rapid clearance can lead to subtherapeutic levels. If symptoms aren't controlled, this is why — discuss dose increase or alternative antipsychotic." }
+      - class: Tricyclic Antidepressants
+        drugs: "Amitriptyline (Elavil), Nortriptyline (Pamelor), Imipramine, Desipramine, Doxepin"
+        category: drug
+        impact_by_status:
+          poor: { impact: warn, text: "Toxicity risk — use 50% dose or alternative", description: "TCAs have a narrow therapeutic window. CYP2D6 poor metabolizers reach toxic levels quickly, risking cardiac arrhythmias and anticholinergic side effects.", danger_note: "Still commonly prescribed for chronic pain, migraine prevention, and sleep — not just depression. CPIC recommends 50% dose reduction or alternative (e.g., different TCA with CYP2D6-independent clearance). Watch for dry mouth, urinary retention, fast heartbeat, confusion — these mean levels are too high." }
+          intermediate: { impact: adjust, text: "Start at 75% of standard dose", description: "Moderately slower metabolism. Lower starting doses with careful titration." }
+          normal: { impact: ok, text: "Standard dosing with monitoring", description: "Normal metabolism. Standard TCA protocols apply." }
+          ultrarapid: { impact: warn, text: "May underperform at standard doses", description: "Rapid clearance reduces efficacy. CPIC recommends alternative antidepressant or higher dose with TDM." }
   - symbol: CYP3A4
     drug_cards:
       - class: Benzodiazepines
@@ -64,6 +80,12 @@ enzymes:
         impact_by_status:
           poor: { impact: danger, text: "Therapeutic drug monitoring required", description: "Dramatically elevated levels. Toxicity risk.", danger_note: "Mandatory TDM with dose adjustments based on blood levels." }
           normal: { impact: ok, text: "Standard monitoring", description: "Normal metabolism. Follow standard TDM protocols." }
+      - class: Grapefruit (food-drug interaction)
+        drugs: "Grapefruit, grapefruit juice, pomelo, Seville oranges"
+        category: substance
+        impact_by_status:
+          normal: { impact: warn, text: "Can dramatically raise levels of CYP3A4 drugs", description: "Grapefruit contains furanocoumarins that irreversibly inhibit intestinal CYP3A4 for 24-72 hours. This is NOT about your genotype — it affects everyone. One glass of grapefruit juice can double or triple plasma levels of sensitive drugs like statins, some calcium channel blockers, certain benzodiazepines, and immunosuppressants.", danger_note: "If you take any CYP3A4 substrate (check the cards above — statins, CCBs, benzos, immunosuppressants), avoid grapefruit entirely. Separating by a few hours does NOT work — the effect lasts days. Safe citrus: regular oranges, lemons, limes, mandarins. Dangerous: grapefruit, pomelo, Seville oranges, some tangelos." }
+          poor: { impact: warn, text: "Even more dramatic effects", description: "Combined with your already slower CYP3A4 metabolism, grapefruit can push levels into toxic range very quickly." }
       - class: Recreational Substances
         drugs: "Cocaine, Ketamine, GHB"
         category: substance
@@ -191,3 +213,15 @@ enzymes:
         impact_by_status:
           ultrarapid: { impact: warn, text: "Faster tolerance + higher ALD risk long-term", description: "CYP2E1 is the secondary alcohol pathway (main one is ADH). Ultrarapid CYP2E1 metabolism generates more reactive oxygen species during alcohol breakdown, increasing long-term liver damage risk.", danger_note: "Short-term: you may feel 'less drunk' per drink than peers — this isn't protection, it's a faster path to tolerance and dependence. Long-term: higher risk of fatty liver and hepatitis at the same drinking level as friends. Alcohol-free days matter more for you than they do for an average person." }
           normal: { impact: ok, text: "Standard metabolism", description: "Normal CYP2E1. ADH/ALDH2 status is more relevant for alcohol — check those genes." }
+
+  - symbol: SLCO1B1
+    guideline: CPIC
+    description: "SLCO1B1 is a liver transporter, not a CYP enzyme. It pumps statins into liver cells where they work. Decreased function means statins accumulate in muscle instead — the primary cause of statin-induced muscle pain and myopathy."
+    drug_cards:
+      - class: Statins (Simvastatin, Atorvastatin, Rosuvastatin)
+        drugs: "Simvastatin (Zocor), Atorvastatin (Lipitor), Rosuvastatin (Crestor), Pravastatin"
+        category: drug
+        impact_by_status:
+          poor: { impact: danger, text: "High myopathy risk — avoid simvastatin", description: "Decreased SLCO1B1 function means statins stay in muscle tissue instead of being delivered to liver. Simvastatin at 80mg carries ~18% myopathy risk in poor function carriers vs ~0.6% in normal function. CPIC strongly recommends alternative statins or lower doses.", danger_note: "If a doctor prescribes simvastatin, REQUEST an alternative. Rosuvastatin and pravastatin are much safer for you. Watch for muscle pain, weakness, dark urine — these mean the statin is damaging muscle (rhabdomyolysis). Don't just tough it out — statin myopathy can progress quickly. Most people with SLCO1B1 issues can still take statins safely on alternatives at moderate doses." }
+          intermediate: { impact: warn, text: "Lower doses or alternative statin recommended", description: "Moderately decreased transport. CPIC recommends avoiding high-dose simvastatin; lower-intensity alternatives are safer." }
+          normal: { impact: ok, text: "Standard statin dosing", description: "Normal transporter function. Standard statin protocols apply — muscle pain is still possible but not elevated above baseline population risk." }
