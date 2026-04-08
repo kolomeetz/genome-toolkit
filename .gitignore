@@ -34,3 +34,11 @@ vault-template/data/cron.log
 .enzyme-embeddings/
 data/
 .superpowers/
+
+# Node
+node_modules/
+
+# Relay / MCP local state
+relay.db
+relay.db-shm
+relay.db-wal
