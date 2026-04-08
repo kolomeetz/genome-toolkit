@@ -1,9 +1,61 @@
 import { useState } from 'react'
 import { useGWASData } from '../../hooks/useGWASData'
-import type { GWASMatch } from '../../hooks/useGWASData'
+import type { GWASMatch, GWASTraitData } from '../../hooks/useGWASData'
 
 interface GWASFindingsProps {
   trait: string
+  onDiscuss?: (context: string) => void
+}
+
+/** Build a plain-language interpretation of the user's risk allele tally. */
+function interpretTally(data: GWASTraitData): { headline: string; meaning: string; band: 'lower' | 'middle' | 'higher' } {
+  const pct = data.risk_allele_max > 0
+    ? (data.risk_allele_total / data.risk_allele_max) * 100
+    : 50
+
+  let band: 'lower' | 'middle' | 'higher'
+  let headline: string
+  if (pct < 40) {
+    band = 'lower'
+    headline = 'You carry fewer risk-associated variants than average'
+  } else if (pct > 60) {
+    band = 'higher'
+    headline = 'You carry more risk-associated variants than average'
+  } else {
+    band = 'middle'
+    headline = 'You carry an average number of risk-associated variants'
+  }
+
+  const meaning = (
+    `Of the ${data.matched_hits} ${data.display_name?.toLowerCase() ?? 'anxiety'}-associated SNPs found in your genome, ` +
+    `you carry ${data.risk_allele_total} risk-direction allele copies out of ${data.risk_allele_max} possible. ` +
+    `That places you in the ${band} portion of the distribution. ` +
+    `Genetics is ONE factor among many — environment, sleep, exercise, stress, social support, and history matter ` +
+    `at least as much for most people. This number does not predict whether you will or won't develop ${data.display_name?.toLowerCase() ?? 'anxiety'}.`
+  )
+
+  return { headline, meaning, band }
+}
+
+/** Build a chat prompt that gives the agent enough context to discuss the findings. */
+function buildDiscussionPrompt(data: GWASTraitData): string {
+  const top = data.matches.slice(0, 8).map(m => {
+    const dir = m.direction === 'risk' ? '+' : m.direction === 'protective' ? '−' : '·'
+    return `${m.rsid} ${m.user_genotype} (effect=${m.effect_allele}, count=${m.effect_allele_count}, ${dir}log_OR=${m.effect.toFixed(3)}, p=${m.p_value.toExponential(1)})`
+  }).join('\n  ')
+
+  return (
+    `I'd like to understand my polygenic findings for ${data.display_name ?? data.trait}.\n\n` +
+    `Source: ${data.source} (${data.config}), ${data.publication}.\n` +
+    `Of ${data.total_hits} genome-wide significant SNPs (p < ${data.threshold.toExponential(0)}), ` +
+    `${data.matched_hits} were found in my genome. I carry ${data.risk_allele_total} risk-direction allele copies ` +
+    `out of ${data.risk_allele_max} possible (${Math.round((data.risk_allele_total / Math.max(data.risk_allele_max, 1)) * 100)}%).\n\n` +
+    `Top hits in my genome:\n  ${top}\n\n` +
+    `Please explain in plain language: (1) what this number actually means and doesn't mean, ` +
+    `(2) the biggest caveats to keep in mind (LD clumping, this isn't a calibrated PRS, etc), ` +
+    `(3) what — if anything — is actionable, and (4) any specific genes or biological systems ` +
+    `the top hits point to.`
+  )
 }
 
 /**
@@ -11,7 +63,7 @@ interface GWASFindingsProps {
  * Shows: top significant SNPs, effect allele counts, direction, p-values,
  * and a simple tally of risk alleles carried.
  */
-export function GWASFindings({ trait }: GWASFindingsProps) {
+export function GWASFindings({ trait, onDiscuss }: GWASFindingsProps) {
   const { data, loading, error } = useGWASData(trait)
   const [expanded, setExpanded] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
@@ -90,22 +142,7 @@ export function GWASFindings({ trait }: GWASFindingsProps) {
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             {data.matched_hits} of {data.total_hits} genome-wide significant SNPs found in your genome ·
-            p &lt; {data.threshold.toExponential(0)} ·{' '}
-            <button
-              onClick={() => setShowAbout((v) => !v)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                color: 'var(--primary)',
-                cursor: 'pointer',
-                fontSize: 9,
-                fontFamily: 'inherit',
-                textDecoration: 'underline',
-              }}
-            >
-              {showAbout ? 'hide details' : 'about this data'}
-            </button>
+            p &lt; {data.threshold.toExponential(0)}
           </div>
         </div>
         <div style={{
@@ -121,76 +158,161 @@ export function GWASFindings({ trait }: GWASFindingsProps) {
         </div>
       </div>
 
-      {/* About block */}
+      {/* Methodology / caveats block */}
       {showAbout && (
         <div style={{
-          padding: '12px 18px',
+          padding: '14px 18px',
           borderBottom: '1px solid var(--border)',
           background: 'var(--bg-inset)',
           fontSize: 10,
           lineHeight: 1.7,
           color: 'var(--text)',
         }}>
-          <div style={{ marginBottom: 8 }}>
-            <strong>{data.publication}</strong> · Source:{' '}
-            <code style={{ fontSize: 9 }}>{data.source}</code> ({data.config})
+          <div style={{ fontSize: 10, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)' }}>
+            What you're looking at
           </div>
-          <div style={{ marginBottom: 8 }}>
-            These are SNPs that reached genome-wide statistical significance in a large meta-analysis by the
-            Psychiatric Genomics Consortium. "Risk alleles" here means copies of the effect allele at each
-            SNP, weighted by the direction of the published effect. This is NOT a polygenic risk score (PRS) —
-            it's a simple tally. Genetics are one of many factors; environment, experience, and life context
-            matter more for most people.
+          <div style={{ marginBottom: 10 }}>
+            The <strong>Psychiatric Genomics Consortium (PGC)</strong> meta-analysed the genomes of hundreds of thousands of people
+            with and without {data.display_name?.toLowerCase() ?? data.trait}, and identified specific SNPs (single-letter genetic variants)
+            that occur statistically more often in one group than the other. The threshold p &lt; 5×10⁻⁸ is the standard cutoff for
+            "genome-wide significant" — strong enough that we'd expect fewer than 1 false positive across the entire genome by chance.
           </div>
-          <div style={{ fontSize: 9, color: 'var(--text-secondary)' }}>
-            Citation: {data.citation}
-            <br />
-            License: {data.license}
+          <div style={{ marginBottom: 10 }}>
+            For each significant SNP, we look at your genotype and count how many copies of the "risk-direction" allele you carry
+            (0, 1, or 2). For protective alleles, we invert the count. Add it all up, divide by the maximum possible — that's
+            your tally. The midpoint marker on the bar above represents what an average person would carry by chance.
+          </div>
+
+          <div style={{ fontSize: 10, fontWeight: 600, marginTop: 14, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)' }}>
+            Important caveats
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, marginBottom: 10 }}>
+            <li style={{ marginBottom: 4 }}><strong>This is NOT a polygenic risk score (PRS).</strong> A real PRS is calibrated against a reference population to give a percentile. This is just a weighted count.</li>
+            <li style={{ marginBottom: 4 }}><strong>Many of these SNPs are correlated</strong> (linkage disequilibrium). Hits in the same genomic region get counted multiple times, inflating the tally. Proper LD clumping would shrink the count substantially.</li>
+            <li style={{ marginBottom: 4 }}><strong>Effect sizes are tiny.</strong> Each SNP individually shifts risk by 1-5% — the appeal is in their combination, not any single variant.</li>
+            <li style={{ marginBottom: 4 }}><strong>Genetic risk ≠ destiny.</strong> Twin studies show {data.display_name?.toLowerCase() ?? data.trait} heritability around 30-50%. Half or more of the variance is environment, life events, sleep, stress, and the things you actually have control over.</li>
+            <li><strong>This GWAS was mostly European ancestry.</strong> Effect estimates may not transfer perfectly to other populations.</li>
+          </ul>
+
+          <div style={{ fontSize: 9, color: 'var(--text-secondary)', borderTop: '1px dashed var(--border-dashed)', paddingTop: 8, marginTop: 8 }}>
+            <div><strong>Source:</strong> {data.publication}</div>
+            <div><strong>Dataset:</strong> <code style={{ fontSize: 9 }}>{data.source}</code> / {data.config}</div>
+            <div><strong>License:</strong> {data.license}</div>
+            <div><strong>Citation:</strong> {data.citation}</div>
           </div>
         </div>
       )}
 
-      {/* Tally bar */}
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{
-          fontSize: 9,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: 'var(--text-secondary)',
-          marginBottom: 6,
-        }}>
-          Risk allele tally
-        </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}>
-          <div style={{
-            flex: 1,
-            height: 6,
-            background: 'var(--bg-inset)',
-            borderRadius: 3,
-            position: 'relative',
-          }}>
+      {/* Plain-language interpretation */}
+      {(() => {
+        const interp = interpretTally(data)
+        const bandColor =
+          interp.band === 'lower' ? 'var(--sig-benefit)' :
+          interp.band === 'higher' ? 'var(--sig-risk)' :
+          'var(--sig-reduced)'
+        return (
+          <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)' }}>
             <div style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              height: '100%',
-              width: `${riskPct}%`,
-              background: 'linear-gradient(90deg, var(--sig-benefit), var(--sig-reduced), var(--sig-risk))',
-              borderRadius: 3,
-            }} />
+              fontSize: 12,
+              fontWeight: 600,
+              color: bandColor,
+              marginBottom: 8,
+              lineHeight: 1.4,
+            }}>
+              {interp.headline}
+            </div>
+
+            {/* Tally bar */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 10,
+            }}>
+              <div style={{
+                flex: 1,
+                height: 8,
+                background: 'var(--bg-inset)',
+                borderRadius: 4,
+                position: 'relative',
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  height: '100%',
+                  width: `${riskPct}%`,
+                  background: 'linear-gradient(90deg, var(--sig-benefit), var(--sig-reduced), var(--sig-risk))',
+                  borderRadius: 4,
+                }} />
+                {/* Average marker at 50% */}
+                <div style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: -2,
+                  height: 12,
+                  width: 1,
+                  background: 'var(--text-tertiary)',
+                }} />
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)', minWidth: 56, textAlign: 'right' }}>
+                {data.risk_allele_total}/{data.risk_allele_max}
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              <span>fewer risk alleles</span>
+              <span>average</span>
+              <span>more risk alleles</span>
+            </div>
+
+            <div style={{ fontSize: 10, lineHeight: 1.7, color: 'var(--text)' }}>
+              {interp.meaning}
+            </div>
+
+            {/* Action row: Ask AI button */}
+            {onDiscuss && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => onDiscuss(buildDiscussionPrompt(data))}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 9,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    padding: '6px 14px',
+                    border: '1px solid var(--primary)',
+                    background: 'var(--primary)',
+                    color: 'var(--bg-raised)',
+                    cursor: 'pointer',
+                    borderRadius: 3,
+                  }}
+                >
+                  → Ask AI about my findings
+                </button>
+                <button
+                  onClick={() => setShowAbout((v) => !v)}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 9,
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    padding: '6px 14px',
+                    border: '1px solid var(--border)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    borderRadius: 3,
+                  }}
+                >
+                  {showAbout ? 'Hide details' : 'Methodology & caveats'}
+                </button>
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
-            {data.risk_allele_total} / {data.risk_allele_max}
-          </div>
-        </div>
-        <div style={{ fontSize: 9, color: 'var(--text-tertiary)', marginTop: 6, lineHeight: 1.5 }}>
-          Simple weighted count — NOT a polygenic risk score. See "about" above for caveats.
-        </div>
-      </div>
+        )
+      })()}
 
       {/* SNP list */}
       <div style={{ padding: '8px 0' }}>

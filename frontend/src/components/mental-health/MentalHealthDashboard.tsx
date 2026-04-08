@@ -324,7 +324,7 @@ export function MentalHealthDashboard({
 
         {/* PGC GWAS findings — only shows if config/gwas/anxiety-hits.json exists */}
         <div style={{ padding: '0 var(--space-lg) var(--space-lg)' }}>
-          <GWASFindings trait="anxiety" />
+          <GWASFindings trait="anxiety" onDiscuss={onDiscuss} />
         </div>
       </div>
 
