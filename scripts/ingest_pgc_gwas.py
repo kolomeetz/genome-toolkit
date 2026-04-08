@@ -135,7 +135,14 @@ def ingest(trait: str, config: str | None, threshold: float, out_dir: Path) -> N
         print(f"  Available: {ds.column_names}", file=sys.stderr)
         sys.exit(3)
 
+    # Detect whether effect column is on log-scale (BETA) or odds-ratio scale (OR).
+    # We always store on log scale so downstream code has a single convention:
+    #   effect > 0  →  effect allele raises risk
+    #   effect < 0  →  effect allele is protective
+    effect_col_name = cols["effect"].upper()
+    effect_is_or = effect_col_name in ("OR", "ODDS_RATIO")
     print(f"  Column map: {cols}")
+    print(f"  Effect scale: {'OR (will convert to log(OR))' if effect_is_or else 'BETA (log scale)'}")
 
     # Filter to significant hits (streaming row-by-row to keep memory low).
     p_col = cols["p"]
@@ -146,15 +153,24 @@ def ingest(trait: str, config: str | None, threshold: float, out_dir: Path) -> N
     print(f"  Hits: {len(filtered):,}")
 
     # Convert to compact records.
+    import math
     hits: list[dict] = []
     for row in filtered:
+        raw_effect = _safe_float(row[cols["effect"]])
+        if raw_effect is not None and effect_is_or:
+            # Convert odds ratio to log(OR). OR must be > 0; otherwise skip.
+            if raw_effect <= 0:
+                raw_effect = None
+            else:
+                raw_effect = math.log(raw_effect)
+
         rec = {
             "rsid": str(row[cols["snp"]]) if row[cols["snp"]] else None,
             "chr": _safe_int(row[cols["chr"]]),
             "pos": _safe_int(row[cols["pos"]]),
             "effect_allele": (row[cols["a1"]] or "").upper() or None,
             "other_allele": (row[cols["a2"]] or "").upper() or None,
-            "effect": _safe_float(row[cols["effect"]]),
+            "effect": raw_effect,
             "p_value": _safe_float(row[p_col]),
         }
         if cols["se"]:
@@ -181,6 +197,8 @@ def ingest(trait: str, config: str | None, threshold: float, out_dir: Path) -> N
         "citation": meta["citation"],
         "license": "CC BY 4.0",
         "threshold": threshold,
+        "effect_scale": "log_or" if effect_is_or else "beta",
+        "note": "Effect values are on log scale. Positive = effect allele raises risk.",
         "n_hits": len(hits),
         "hits": hits,
     }
