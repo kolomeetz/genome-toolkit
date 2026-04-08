@@ -12,8 +12,32 @@ from backend.app.db.genome import GenomeDB
 from backend.app.db.users import UsersDB
 from backend.app.agent.tools import set_genome_db, set_vault_path
 
-DATA_DIR = Path(os.environ.get("GENOME_DATA_DIR", "./data"))
-GENOME_DB_PATH = Path(os.environ.get("GENOME_DB_PATH", str(DATA_DIR / "genome.db")))
+# Resolution order for paths: env var → config/settings.yaml → built-in defaults.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_user_settings() -> dict:
+    try:
+        import yaml
+        p = REPO_ROOT / "config" / "settings.yaml"
+        if p.exists():
+            return yaml.safe_load(p.read_text()) or {}
+    except Exception:
+        pass
+    return {}
+
+
+_user_settings = _load_user_settings()
+
+
+def _resolve_path(env_var: str, settings_key: str, default: str) -> Path:
+    """Resolve a path: env var wins, then settings.yaml, then default. Expands ~ and env vars."""
+    raw = os.environ.get(env_var) or _user_settings.get(settings_key) or default
+    return Path(os.path.expandvars(os.path.expanduser(str(raw))))
+
+
+DATA_DIR = _resolve_path("GENOME_DATA_DIR", "genome_data_dir", "./data")
+GENOME_DB_PATH = _resolve_path("GENOME_DB_PATH", "genome_db_path", str(DATA_DIR / "genome.db"))
 USERS_DB_PATH = DATA_DIR / "users.db"
 
 genome_db = GenomeDB(GENOME_DB_PATH)

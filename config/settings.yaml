@@ -7,7 +7,7 @@
 # Run `python scripts/setup.py` to configure keys securely
 
 # --- Paths ---
-genome_db_path: "./data/genome.db"
+genome_db_path: "~/Brains/genome/data/genome.db"
 genome_vault_path: "~/Brains/genome"
 
 # --- Text-to-Speech ---
