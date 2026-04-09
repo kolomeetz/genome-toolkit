@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, type ReactNode, type Componen
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { ChatMessage, AgentAction } from '../hooks/useChat'
+import type { StarterPrompt } from '../hooks/useStarterPrompts'
 
 /* ── Vault link / gene name helpers ── */
 
@@ -177,6 +178,9 @@ interface Props {
   voiceListening?: boolean
   onStartListening?: () => void
   onStopListening?: () => void
+  starterPrompts?: StarterPrompt[]
+  starterCapabilities?: string[]
+  starterExplore?: string[]
 }
 
 function messagesToMarkdown(messages: ChatMessage[]): string {
@@ -204,7 +208,7 @@ function downloadMarkdown(text: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction, initialQuery, voiceSupported, voiceListening, onStartListening, onStopListening }: Props) {
+export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction, initialQuery, voiceSupported, voiceListening, onStartListening, onStopListening, starterPrompts, starterCapabilities, starterExplore }: Props) {
   const [input, setInput] = useState('')
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -326,18 +330,116 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
           }}
         >
           {messages.length === 0 && !streaming && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'var(--text-tertiary)',
-              fontSize: 'var(--font-size-lg)',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: 'var(--tracking-wide)',
-              textTransform: 'uppercase',
-            }}>
-              ASK_ANYTHING_ABOUT_YOUR_GENOME
+            <div style={{ padding: 'var(--space-xl)', height: '100%', overflowY: 'auto' }}>
+              {starterCapabilities && starterCapabilities.length > 0 && (
+                <div style={{ marginBottom: 'var(--space-lg)' }}>
+                  <div className="label" style={{ color: 'var(--primary)', marginBottom: 'var(--space-sm)' }}>
+                    WHAT I CAN DO
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
+                    {starterCapabilities.map((cap, i) => (
+                      <span key={i} style={{
+                        fontSize: 'var(--font-size-xs)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 3,
+                        color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-mono)',
+                        padding: '4px 10px',
+                      }}>
+                        {cap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {starterPrompts && starterPrompts.length > 0 && (
+                <div style={{ marginBottom: 'var(--space-lg)' }}>
+                  <div className="label" style={{ color: 'var(--accent)', marginBottom: 'var(--space-sm)' }}>
+                    SUGGESTED FOR YOU
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                    {starterPrompts.map((p, i) => (
+                      <button
+                        key={i}
+                        onClick={() => onSend(p.text)}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)' }}
+                        onMouseLeave={e => {
+                          if (i !== 0) e.currentTarget.style.borderColor = 'var(--border)'
+                        }}
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontFamily: 'var(--font-mono)',
+                          border: i === 0 ? '1px solid var(--primary)' : '1px solid var(--border)',
+                          background: i === 0 ? 'rgba(91, 126, 161, 0.04)' : 'transparent',
+                        }}
+                      >
+                        <p style={{
+                          fontWeight: 600,
+                          fontSize: 'var(--font-size-md)',
+                          color: 'var(--text)',
+                          margin: 0,
+                        }}>
+                          {p.text}
+                        </p>
+                        <p style={{
+                          fontSize: 'var(--font-size-xs)',
+                          color: 'var(--text-tertiary)',
+                          margin: '2px 0 0',
+                        }}>
+                          {p.subtitle}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {starterExplore && starterExplore.length > 0 && (
+                <div style={{ marginBottom: 'var(--space-lg)' }}>
+                  <div className="label" style={{ color: 'var(--text-tertiary)', marginBottom: 'var(--space-sm)' }}>
+                    EXPLORE
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
+                    {starterExplore.map((text, i) => (
+                      <button
+                        key={i}
+                        onClick={() => onSend(text)}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary-dim)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
+                        style={{
+                          border: '1px dashed var(--border)',
+                          borderRadius: 3,
+                          fontSize: 'var(--font-size-sm)',
+                          padding: '6px 12px',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          background: 'transparent',
+                        }}
+                      >
+                        {text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(!starterPrompts || starterPrompts.length === 0) && (!starterCapabilities || starterCapabilities.length === 0) && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: 'var(--text-tertiary)',
+                  fontSize: 'var(--font-size-lg)',
+                  fontFamily: 'var(--font-mono)',
+                }}>
+                  Ask about your genome...
+                </div>
+              )}
             </div>
           )}
           {messages.map((msg, i) => (
