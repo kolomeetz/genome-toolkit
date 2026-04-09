@@ -63,7 +63,7 @@ class TestParseNote:
         note = parse_note(vault_notes_dir / "gene_bdnf.md")
 
         assert "What This Gene Does" in note.sections
-        assert "Personal Genotype" in note.sections
+        assert "Example Genotype" in note.sections
         assert "Health Relevance" in note.sections
         assert "Drug Interactions" in note.sections
         assert "Gene-Gene Interactions" in note.sections

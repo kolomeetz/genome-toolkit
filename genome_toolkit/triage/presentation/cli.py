@@ -1,9 +1,9 @@
 """CLI entry point for genome-triage.
 
 Usage:
-    python -m genome_toolkit.triage --vault ~/Brains/genome
-    python -m genome_toolkit.triage --vault ~/Brains/genome --svg overview.svg
-    python -m genome_toolkit.triage --vault ~/Brains/genome --interactive
+    python -m genome_toolkit.triage --vault ~/genome-vault
+    python -m genome_toolkit.triage --vault ~/genome-vault --svg overview.svg
+    python -m genome_toolkit.triage --vault ~/genome-vault --interactive
 """
 from __future__ import annotations
 

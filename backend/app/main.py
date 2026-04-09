@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     await users_db.connect()
     await users_db.init_schema()
     set_genome_db(genome_db)
-    vault = os.environ.get("GENOME_VAULT_PATH", os.path.expanduser("~/Brains/genome"))
+    vault = os.environ.get("GENOME_VAULT_PATH", os.path.expanduser("~/genome-vault"))
     set_vault_path(vault)
     yield
     await genome_db.close()

@@ -126,7 +126,7 @@ Interactive triage for vault action items with DDD architecture:
 
 ```bash
 # CLI
-cd genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --classify
+cd genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --classify
 
 # TUI (Textual terminal UI)
 genome-triage

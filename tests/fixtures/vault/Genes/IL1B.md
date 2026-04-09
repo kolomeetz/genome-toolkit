@@ -23,7 +23,7 @@ tags:
 
 # IL1B — Interleukin 1 Beta
 
-## Personal Genotype
+## Example Genotype
 
 | SNP | Genotype | Significance | Tier |
 |-----|----------|-------------|------|

@@ -110,7 +110,7 @@ def test_suggestion_to_stub():
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && python -m pytest tests/triage/presentation/test_data_bridge.py -v`
+Run: `cd /path/to/genome-toolkit && python -m pytest tests/triage/presentation/test_data_bridge.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'genome_toolkit.triage.presentation.tui.data_bridge'`
 
 - [ ] **Step 3: Write implementation**
@@ -171,7 +171,7 @@ def suggestion_to_stub(suggestion: Suggestion) -> ScoredItemStub:
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && python -m pytest tests/triage/presentation/test_data_bridge.py -v`
+Run: `cd /path/to/genome-toolkit && python -m pytest tests/triage/presentation/test_data_bridge.py -v`
 Expected: 2 passed
 
 - [ ] **Step 5: Commit**
@@ -291,7 +291,7 @@ In `cli.py`, change the interactive section:
 
 - [ ] **Step 3: Run to verify no crash**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --interactive`
+Run: `cd /path/to/genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --interactive`
 Expected: TUI opens with real vault data
 
 - [ ] **Step 4: Commit**
@@ -505,7 +505,7 @@ In `TriageApp`, collect actions as `(TriageItem, Command)` tuples. Map from `Sco
 
 - [ ] **Step 4: Test interactively**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --interactive`
+Run: `cd /path/to/genome-toolkit && PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --interactive`
 Test: Focus a card, press `a` → card dims + strikethrough. Press `q` → batch bar shows 1 pending. Click Apply → writes to vault.
 
 - [ ] **Step 5: Commit**
@@ -579,7 +579,7 @@ Tests that create `TriageApp()` without args should still work (falls back to st
 
 - [ ] **Step 2: Run all tests**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && python -m pytest tests/triage/ -v --tb=short`
+Run: `cd /path/to/genome-toolkit && python -m pytest tests/triage/ -v --tb=short`
 Expected: All pass
 
 - [ ] **Step 3: Commit**
@@ -596,12 +596,12 @@ git commit -m "test(triage): update TUI tests for real data constructors"
 - [ ] **Step 1: Run full CLI pipeline**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
-PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome
-PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --svg /tmp/final-overview.svg
-PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --svg-visit /tmp/final-visit.svg
-PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --save
-PYTHONPATH=. python -m genome_toolkit.triage --vault ~/Brains/genome --interactive
+cd /path/to/genome-toolkit
+PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault
+PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --svg /tmp/final-overview.svg
+PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --svg-visit /tmp/final-visit.svg
+PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --save
+PYTHONPATH=. python -m genome_toolkit.triage --vault ~/genome-vault --interactive
 ```
 
 - [ ] **Step 2: In TUI, test full workflow**

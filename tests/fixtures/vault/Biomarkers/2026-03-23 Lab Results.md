@@ -6,7 +6,7 @@ tags:
   - bloodwork
   - limbach
 test_date: '2026-03-23'
-lab: Limbach
+lab: Example Lab
 markers:
   - name: "CRP"
     value: 1.8
@@ -42,7 +42,7 @@ markers:
 
 # Lab Results — 2026-03-23
 
-**Lab:** Limbach Heidelberg
+**Lab:** Example Lab
 **Date:** 2026-03-23
 
 ## Results
@@ -58,8 +58,8 @@ markers:
 ## Genetic Context
 
 - **Transferrin Saturation 48%** — elevated, consistent with [[HFE]] rs1800562 A;G carrier status. Monitor trend. Threshold for intervention is >55%.
-- **GGT 62 U/L** — mildly elevated. [[PNPLA3]] rs738409 G;G increases baseline liver enzyme risk. Correlates with sedentary period.
-- **Ferritin 285 ng/mL** — upper normal range, watch in context of HFE carrier status.
+- **GGT 35 U/L** — mildly elevated. [[PNPLA3]] rs738409 G;G increases baseline liver enzyme risk. Correlates with sedentary period.
+- **Ferritin 150 ng/mL** — upper normal range, watch in context of HFE carrier status.
 - **CRP 1.8 mg/L** — within normal range but [[IL1B]] profile suggests monitoring trend for SSRI response prediction.
 
 ## Follow-up

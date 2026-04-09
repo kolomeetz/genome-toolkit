@@ -18,7 +18,7 @@ tags:
 
 # IL6 — Interleukin 6
 
-## Personal Genotype
+## Example Genotype
 
 No directly genotyped variants. Functional status inferred from biomarkers.
 

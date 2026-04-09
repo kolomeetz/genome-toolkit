@@ -27,7 +27,7 @@ tags:
 
 # CYP2D6 — Cytochrome P450 2D6
 
-## Personal Genotype
+## Example Genotype
 
 | SNP | Genotype | Significance | Tier |
 |-----|----------|-------------|------|

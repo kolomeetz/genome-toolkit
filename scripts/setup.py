@@ -121,7 +121,7 @@ def run_setup():
     )
     vault_path = ask(
         "Obsidian vault path",
-        default=existing.get("genome_vault_path", "~/Brains/genome"),
+        default=existing.get("genome_vault_path", "~/genome-vault"),
     )
     # Validate vault path
     expanded_vault = Path(vault_path).expanduser()

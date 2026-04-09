@@ -103,9 +103,9 @@ async def health():
 - [ ] **Step 4: Verify it starts**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
+cd /path/to/genome-toolkit
 pip install -r backend/requirements.txt
-GENOME_DB_PATH=~/Brains/genome/data/genome.db python -c "from backend.app.main import app; print('OK')"
+GENOME_DB_PATH=~/genome-vault/data/genome.db python -c "from backend.app.main import app; print('OK')"
 ```
 
 Expected: `OK` (import succeeds — server doesn't need to run yet, db classes don't exist yet so this will fail until Task 2).
@@ -778,7 +778,7 @@ git add backend/app/routes/snps.py backend/app/main.py tests/backend/test_snps_r
 - [ ] **Step 1: Scaffold Vite project**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
+cd /path/to/genome-toolkit
 npm create vite@latest frontend -- --template react-ts
 cd frontend
 npm install
@@ -1038,7 +1038,7 @@ export default defineConfig({
 - [ ] **Step 5: Verify frontend builds and renders**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit/frontend
+cd /path/to/genome-toolkit/frontend
 npm run build
 npm run dev &
 # Visit http://localhost:5173 — should show cream background, "GENOME_TOOLKIT" header with instrument panel typography
@@ -1048,7 +1048,7 @@ kill %1
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
+cd /path/to/genome-toolkit
 git add frontend/ && git commit -m "feat: scaffold frontend with retro instrument panel design system"
 ```
 
@@ -1432,7 +1432,7 @@ Update `frontend/src/main.tsx` — remove `import './index.css'` if present.
 - [ ] **Step 5: Build and verify**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit/frontend && npm run build
+cd /path/to/genome-toolkit/frontend && npm run build
 ```
 
 Expected: Build succeeds.
@@ -1440,7 +1440,7 @@ Expected: Build succeeds.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
+cd /path/to/genome-toolkit
 git add frontend/src/ && git commit -m "feat: add SNP table with filters, pagination, instrument panel design"
 ```
 
@@ -1862,8 +1862,8 @@ app.include_router(chat_router)
 - [ ] **Step 4: Test manually**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
-GENOME_DB_PATH=~/Brains/genome/data/genome.db uvicorn backend.app.main:app --reload --port 8000 &
+cd /path/to/genome-toolkit
+GENOME_DB_PATH=~/genome-vault/data/genome.db uvicorn backend.app.main:app --reload --port 8000 &
 
 # Create session
 curl -X POST http://localhost:8000/api/sessions
@@ -2242,7 +2242,7 @@ Add before closing `</div>` of App:
 - [ ] **Step 5: Build and verify**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit/frontend && npm run build
+cd /path/to/genome-toolkit/frontend && npm run build
 ```
 
 Expected: Build succeeds.
@@ -2250,7 +2250,7 @@ Expected: Build succeeds.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
+cd /path/to/genome-toolkit
 git add frontend/src/ && git commit -m "feat: add Cmd+K command palette with SSE streaming chat"
 ```
 
@@ -2481,14 +2481,14 @@ git add backend/app/main.py scripts/setup.sh .gitignore && git commit -m "feat: 
 - [ ] **Step 1: Build frontend**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit/frontend && npm run build
+cd /path/to/genome-toolkit/frontend && npm run build
 ```
 
 - [ ] **Step 2: Start server against real genome.db**
 
 ```bash
-cd /Users/glebkalinin/genome-toolkit
-GENOME_DB_PATH=~/Brains/genome/data/genome.db uvicorn backend.app.main:app --port 8000
+cd /path/to/genome-toolkit
+GENOME_DB_PATH=~/genome-vault/data/genome.db uvicorn backend.app.main:app --port 8000
 ```
 
 - [ ] **Step 3: Verify in browser**

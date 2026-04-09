@@ -1089,7 +1089,7 @@ app.include_router(mental_health_router)
 
 - [ ] **Step 3: Test manually**
 
-Run: `cd /Users/glebkalinin/genome-toolkit && python -c "from backend.app.routes.mental_health import router; print('Mental health router OK')"` 
+Run: `cd /path/to/genome-toolkit && python -c "from backend.app.routes.mental_health import router; print('Mental health router OK')"` 
 Expected: prints "Mental health router OK"
 
 - [ ] **Step 4: Commit**

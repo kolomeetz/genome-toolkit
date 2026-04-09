@@ -7,8 +7,8 @@
 # Run `python scripts/setup.py` to configure keys securely
 
 # --- Paths ---
-genome_db_path: "~/Brains/genome/data/genome.db"
-genome_vault_path: "~/Brains/genome"
+genome_db_path: "~/genome-vault/data/genome.db"
+genome_vault_path: "~/genome-vault"
 
 # --- Text-to-Speech ---
 tts:

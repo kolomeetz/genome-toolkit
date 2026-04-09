@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for the GWAS freshness check LaunchAgent.
+  Do NOT commit the generated .plist — it contains personal paths and tokens.
+  Run ./scripts/install_gwas_cron.sh to generate and install.
+-->
 <plist version="1.0">
 <dict>
     <key>Label</key>
@@ -8,19 +13,19 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/miniconda3/bin/python3</string>
-        <string>/Users/glebkalinin/genome-toolkit/scripts/check_gwas_updates.py</string>
+        <string>__PYTHON_PATH__</string>
+        <string>__PROJECT_DIR__/scripts/check_gwas_updates.py</string>
         <string>--notify</string>
     </array>
 
     <key>EnvironmentVariables</key>
     <dict>
         <key>PYTHONPATH</key>
-        <string>/Users/glebkalinin/genome-toolkit</string>
+        <string>__PROJECT_DIR__</string>
         <key>HF_TOKEN</key>
-        <string>REDACTED_HF_TOKEN</string>
+        <string>__HF_TOKEN__</string>
         <key>GENOME_VAULT_ROOT</key>
-        <string>/Users/glebkalinin/Brains/genome</string>
+        <string>__GENOME_VAULT_ROOT__</string>
         <key>PATH</key>
         <string>/opt/miniconda3/bin:/usr/local/bin:/usr/bin:/bin</string>
     </dict>
@@ -36,11 +41,11 @@
     </dict>
 
     <key>StandardOutPath</key>
-    <string>/Users/glebkalinin/Library/Logs/genome-gwas-check.log</string>
+    <string>__HOME__/Library/Logs/genome-gwas-check.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/glebkalinin/Library/Logs/genome-gwas-check.log</string>
+    <string>__HOME__/Library/Logs/genome-gwas-check.log</string>
 
     <key>WorkingDirectory</key>
-    <string>/Users/glebkalinin/genome-toolkit</string>
+    <string>__PROJECT_DIR__</string>
 </dict>
 </plist>

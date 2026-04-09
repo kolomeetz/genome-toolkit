@@ -9,7 +9,7 @@ Usage:
     python scripts/generate_gwas_gene_notes.py
     python scripts/generate_gwas_gene_notes.py --top 10 --dry-run
     python scripts/generate_gwas_gene_notes.py --update
-    python scripts/generate_gwas_gene_notes.py --vault-root ~/Brains/genome
+    python scripts/generate_gwas_gene_notes.py --vault-root ~/genome-vault
 """
 from __future__ import annotations
 
@@ -460,7 +460,7 @@ def main() -> None:
         "--vault-root",
         type=Path,
         default=None,
-        help="Obsidian vault root (default: $GENOME_VAULT_ROOT or ~/Brains/genome).",
+        help="Obsidian vault root (default: $GENOME_VAULT_ROOT or ~/genome-vault).",
     )
     parser.add_argument(
         "--db",

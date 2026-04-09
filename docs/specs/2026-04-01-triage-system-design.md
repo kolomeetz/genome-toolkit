@@ -291,31 +291,31 @@ class SessionRepository(ABC):
 
 ```bash
 # Quick console view (rich table, colored by bucket)
-python -m genome_toolkit.triage --vault ~/Brains/genome
+python -m genome_toolkit.triage --vault ~/genome-vault
 
 # Save markdown report to vault
-python -m genome_toolkit.triage --vault ~/Brains/genome --save
+python -m genome_toolkit.triage --vault ~/genome-vault --save
 
 # JSON output for piping
-python -m genome_toolkit.triage --vault ~/Brains/genome --json
+python -m genome_toolkit.triage --vault ~/genome-vault --json
 
 # SVG overview report
-python -m genome_toolkit.triage --vault ~/Brains/genome --svg overview.svg
+python -m genome_toolkit.triage --vault ~/genome-vault --svg overview.svg
 
 # SVG score card for specific item
-python -m genome_toolkit.triage --vault ~/Brains/genome --svg-card ITEM_ID -o card.svg
+python -m genome_toolkit.triage --vault ~/genome-vault --svg-card ITEM_ID -o card.svg
 
 # SVG doctor visit report (prescriber items, high evidence only)
-python -m genome_toolkit.triage --vault ~/Brains/genome --svg-visit visit.svg
+python -m genome_toolkit.triage --vault ~/genome-vault --svg-visit visit.svg
 
 # Interactive TUI dashboard
-python -m genome_toolkit.triage --vault ~/Brains/genome --interactive
+python -m genome_toolkit.triage --vault ~/genome-vault --interactive
 
 # Filter by context
-python -m genome_toolkit.triage --vault ~/Brains/genome --context prescriber
+python -m genome_toolkit.triage --vault ~/genome-vault --context prescriber
 
 # Filter by bucket
-python -m genome_toolkit.triage --vault ~/Brains/genome --bucket do-now
+python -m genome_toolkit.triage --vault ~/genome-vault --bucket do-now
 ```
 
 ## 6. SVG Generation

@@ -8,8 +8,10 @@ vault-template/data/cache/
 vault-template/data/clinvar/
 vault-template/data/output/imputed/
 
-# API keys
+# API keys and secrets
 .env
+*.plist
+!*.plist.template
 
 # Python
 *.pyc

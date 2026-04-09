@@ -29,7 +29,7 @@ tags:
 
 BDNF is the primary growth factor for synaptic plasticity and neurogenesis.
 
-## Personal Genotype
+## Example Genotype
 
 | SNP | Genotype | Significance | Evidence |
 |-----|----------|-------------|----------|
