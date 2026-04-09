@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from backend.app.main import genome_db
 
-VAULT_PATH = os.environ.get("GENOME_VAULT_PATH", os.path.expanduser("~/genome-vault"))
+VAULT_PATH = os.environ.get("GENOME_VAULT_ROOT", os.environ.get("GENOME_VAULT_PATH", os.path.expanduser("~/genome-vault")))
 
 router = APIRouter(prefix="/api")
 

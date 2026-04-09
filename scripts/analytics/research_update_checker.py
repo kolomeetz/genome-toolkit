@@ -21,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lib.config import VAULT_ROOT, RESEARCH_DIR
 
-BRAIN_RESEARCH_DIR = Path(os.path.expanduser("~/Brains/brain/ai-research"))
+BRAIN_RESEARCH_DIR = Path(os.environ.get("BRAIN_RESEARCH_DIR", os.path.expanduser("~/genome-vault/research")))
 
 # Topic -> (re-check interval in days, search terms, databases)
 # Derived from Research Update Tracker.md
