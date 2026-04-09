@@ -6,8 +6,9 @@ import { FilterBar } from './FilterBar'
 import { NarrativeBlock } from './NarrativeBlock'
 import { GeneCard } from './GeneCard'
 import { GeneDetail } from './GeneDetail'
-import { GenomeGlyph } from '../GenomeGlyph'
+import { HeroHeader, StatBox, EmptyState } from '../common'
 import { GWASFindings } from './GWASFindings'
+import { useGWASTraits } from '../../hooks/useGWASTraits'
 
 const GENE_META: Record<string, { populationInfo: string; explanation: string; interactions?: { genes: string; description: string }[] }> = {
   'MTHFR': {
@@ -66,6 +67,7 @@ export function MentalHealthDashboard({
   onAddToChecklist,
 }: MentalHealthDashboardProps) {
   const [expandedGene, setExpandedGene] = useState<GeneData | null>(null)
+  const { traits: gwasTraits } = useGWASTraits()
   const { activeCategory, activeActionType, setCategory, setActionType, clearAll, matchesGene, matchesAction } =
     useMentalHealthFilters()
 
@@ -137,87 +139,20 @@ export function MentalHealthDashboard({
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {/* Hero header */}
-      <div className="hero-header" style={{
-        padding: '40px 24px 32px',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        gap: 24,
-        alignItems: 'flex-start',
-      }}>
-        {/* Genome Glyph */}
-        <GenomeGlyph
-          genotypes={data.flatMap(s => s.genes.map(g => g.genotype))}
-          size={100}
-          label="your profile"
-        />
-        <div style={{ flex: 1 }}>
-        <div style={{
-          fontSize: 28,
-          fontWeight: 600,
-          letterSpacing: '0.08em',
-          fontFamily: 'var(--font-mono)',
-          marginBottom: 8,
-        }}>
-          Mental Health
+      <HeroHeader
+        title="Mental Health"
+        description={generateEvaluation()}
+        genotypes={data.flatMap(s => s.genes.map(g => g.genotype))}
+        glyphLabel="your profile"
+      >
+        <div className="stats-row" style={{ display: 'flex', gap: 24, marginTop: 20 }}>
+          <StatBox value={actionableCount} label="Actionable" color="var(--sig-risk)" />
+          <StatBox value={monitorCount} label="Monitor" color="var(--sig-reduced)" />
+          <StatBox value={optimalCount} label="Optimal" color="var(--sig-benefit)" />
+          <StatBox value={totalActions} label="Actions available" color="var(--primary)" />
+          <StatBox value={data.length} label="Pathways mapped" color="var(--text-secondary)" />
         </div>
-        <div style={{
-          fontSize: 12,
-          color: 'var(--text)',
-          lineHeight: 1.8,
-          maxWidth: 760,
-          fontFamily: 'var(--font-mono)',
-          marginBottom: 4,
-        }}>
-          {generateEvaluation()}
-        </div>
-        <div className="stats-row" style={{
-          display: 'flex',
-          gap: 24,
-          marginTop: 20,
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--sig-risk)', fontFamily: 'var(--font-mono)' }}>
-              {actionableCount}
-            </span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-              Actionable
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--sig-reduced)', fontFamily: 'var(--font-mono)' }}>
-              {monitorCount}
-            </span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-              Monitor
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--sig-benefit)', fontFamily: 'var(--font-mono)' }}>
-              {optimalCount}
-            </span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-              Optimal
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
-              {totalActions}
-            </span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-              Actions available
-            </span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-              {data.length}
-            </span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-secondary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
-              Pathways mapped
-            </span>
-          </div>
-        </div>
-        </div>{/* close flex wrapper */}
-      </div>
+      </HeroHeader>
 
       <FilterBar
         activeCategory={activeCategory}
@@ -272,16 +207,7 @@ export function MentalHealthDashboard({
       {/* Pathway rows */}
       <div className="section-content" style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {filteredSections.length === 0 ? (
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--text-tertiary)',
-            padding: '40px 0',
-            textAlign: 'center',
-            letterSpacing: '0.1em',
-          }}>
-            NO_RESULTS — try clearing the active filter
-          </div>
+          <EmptyState message="NO_RESULTS" hint="try clearing the active filter" />
         ) : (
           filteredSections.map(section => {
             const visibleGenes = activeCategory
@@ -322,10 +248,14 @@ export function MentalHealthDashboard({
           })
         )}
 
-        {/* PGC GWAS findings — only shows if config/gwas/anxiety-hits.json exists */}
-        <div style={{ padding: '0 var(--space-lg) var(--space-lg)' }}>
-          <GWASFindings trait="anxiety" onDiscuss={onDiscuss} />
-        </div>
+        {/* PGC GWAS findings — one panel per available trait */}
+        {gwasTraits.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 var(--space-lg) var(--space-lg)' }}>
+            {gwasTraits.map(t => (
+              <GWASFindings key={t.trait} trait={t.trait} onDiscuss={onDiscuss} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Footer */}

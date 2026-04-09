@@ -85,6 +85,7 @@ from backend.app.routes.tts import router as tts_router
 from backend.app.routes.mental_health import router as mental_health_router
 from backend.app.routes.checklist import router as checklist_router
 from backend.app.routes.vault import router as vault_router
+from backend.app.routes.gwas_analytics import router as gwas_analytics_router
 from backend.app.routes.gwas import router as gwas_router
 
 app.include_router(snps_router)
@@ -94,6 +95,7 @@ app.include_router(tts_router)
 app.include_router(mental_health_router)
 app.include_router(checklist_router)
 app.include_router(vault_router)
+app.include_router(gwas_analytics_router)
 app.include_router(gwas_router)
 
 

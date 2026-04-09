@@ -10,7 +10,7 @@ import json
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(prefix="/api/gwas")
 
@@ -419,9 +419,19 @@ async def get_addiction_gwas_summary():
 
 
 @router.get("/{trait}")
-async def get_gwas_matches(trait: str):
-    """Join stored GWAS hits against genome.db, return matched SNPs with risk-allele counts."""
-    hits_file = GWAS_CONFIG_DIR / f"{trait}-hits.json"
+async def get_gwas_matches(trait: str, clumped: bool = Query(False)):
+    """Join stored GWAS hits against genome.db, return matched SNPs with risk-allele counts.
+
+    When ``clumped=true``, prefer the LD-clumped file ({trait}-hits-clumped.json)
+    if it exists, falling back to the regular file otherwise.
+    """
+    # Resolve the hits file — prefer clumped variant when requested
+    if clumped:
+        clumped_file = GWAS_CONFIG_DIR / f"{trait}-hits-clumped.json"
+        hits_file = clumped_file if clumped_file.exists() else GWAS_CONFIG_DIR / f"{trait}-hits.json"
+    else:
+        hits_file = GWAS_CONFIG_DIR / f"{trait}-hits.json"
+
     if not hits_file.exists():
         raise HTTPException(
             status_code=404,
@@ -486,7 +496,7 @@ async def get_gwas_matches(trait: str):
     # Sort by strength of effect (largest |effect| first)
     matches.sort(key=lambda m: abs(m["effect"] or 0), reverse=True)
 
-    return {
+    result = {
         "trait": trait,
         "display_name": data.get("display_name"),
         "source": data.get("source"),
@@ -501,3 +511,14 @@ async def get_gwas_matches(trait: str):
         "risk_allele_max": risk_allele_max,
         "matches": matches,
     }
+
+    # Include clumping metadata when a clumped file was used
+    if data.get("clumping_window_kb") is not None:
+        result["clumped"] = True
+        result["clumping_window_kb"] = data["clumping_window_kb"]
+        result["n_hits_before_clump"] = data.get("n_hits_before_clump")
+        result["n_hits_after_clump"] = data.get("n_hits_after_clump")
+    else:
+        result["clumped"] = False
+
+    return result

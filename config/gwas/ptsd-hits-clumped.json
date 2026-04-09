@@ -1,0 +1,51 @@
+{
+  "trait": "ptsd",
+  "display_name": "Post-traumatic stress disorder",
+  "source": "OpenMed/pgc-ptsd",
+  "config": "ptsd2019",
+  "publication": "PGC PTSD Working Group, 2019",
+  "citation": "Nievergelt CM et al. International meta-analysis of PTSD genome-wide association studies. Nature Communications, 2019.",
+  "license": "CC BY 4.0",
+  "threshold": 5e-08,
+  "effect_scale": "log_or",
+  "note": "Effect values: positive = effect allele raises risk, negative = protective. Scale: OR (converted to log(OR)).",
+  "n_hits": 3,
+  "hits": [
+    {
+      "rsid": "rs34517852",
+      "chr": 6,
+      "pos": 157789333,
+      "effect_allele": "A",
+      "other_allele": "T",
+      "effect": 0.10949993642209024,
+      "p_value": 3.164e-09,
+      "se": 0.0185,
+      "n": 30273
+    },
+    {
+      "rsid": "rs115539978",
+      "chr": 13,
+      "pos": 55759209,
+      "effect_allele": "T",
+      "other_allele": "C",
+      "effect": 0.28359874701414484,
+      "p_value": 2.79e-08,
+      "se": 0.0511,
+      "n": 11321
+    },
+    {
+      "rsid": "rs9364611",
+      "chr": 6,
+      "pos": 162163506,
+      "effect_allele": "T",
+      "other_allele": "C",
+      "effect": -0.12390020745954189,
+      "p_value": 4.359e-08,
+      "se": 0.0226,
+      "n": 70237
+    }
+  ],
+  "clumping_window_kb": 500,
+  "n_hits_before_clump": 25,
+  "n_hits_after_clump": 3
+}

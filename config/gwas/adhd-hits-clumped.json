@@ -1,0 +1,288 @@
+{
+  "trait": "adhd",
+  "display_name": "ADHD",
+  "source": "OpenMed/pgc-adhd",
+  "config": "adhd2022",
+  "publication": "PGC ADHD Working Group, 2022",
+  "citation": "Psychiatric Genomics Consortium ADHD Working Group. Genome-wide association meta-analysis of ADHD. 2022.",
+  "license": "CC BY 4.0",
+  "threshold": 5e-08,
+  "effect_scale": "log_or",
+  "note": "Effect values are on log scale. Positive = effect allele raises risk.",
+  "n_hits": 27,
+  "hits": [
+    {
+      "rsid": "rs549845",
+      "chr": 1,
+      "pos": 44076469,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": 0.07880193823740346,
+      "p_value": 9.033e-15,
+      "se": 0.0102
+    },
+    {
+      "rsid": "rs4916723",
+      "chr": 5,
+      "pos": 87854395,
+      "effect_allele": "A",
+      "other_allele": "C",
+      "effect": -0.08529648462208468,
+      "p_value": 9.477e-15,
+      "se": 0.011
+    },
+    {
+      "rsid": "rs2582895",
+      "chr": 11,
+      "pos": 28602173,
+      "effect_allele": "C",
+      "other_allele": "A",
+      "effect": 0.07249739014825923,
+      "p_value": 4.094e-14,
+      "se": 0.0096
+    },
+    {
+      "rsid": "rs77960",
+      "chr": 5,
+      "pos": 103964585,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.07320530275927482,
+      "p_value": 2.462e-13,
+      "se": 0.01
+    },
+    {
+      "rsid": "rs6082363",
+      "chr": 20,
+      "pos": 21250843,
+      "effect_allele": "T",
+      "other_allele": "C",
+      "effect": 0.07030001680015711,
+      "p_value": 4.375e-12,
+      "se": 0.0101
+    },
+    {
+      "rsid": "rs9969232",
+      "chr": 7,
+      "pos": 114158954,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.06830025425879313,
+      "p_value": 9.983e-12,
+      "se": 0.01
+    },
+    {
+      "rsid": "rs17576773",
+      "chr": 4,
+      "pos": 112217523,
+      "effect_allele": "C",
+      "other_allele": "T",
+      "effect": 0.09630059826890462,
+      "p_value": 1.625e-10,
+      "se": 0.0151
+    },
+    {
+      "rsid": "rs114142727",
+      "chr": 3,
+      "pos": 87015142,
+      "effect_allele": "C",
+      "other_allele": "G",
+      "effect": 0.2506030642103601,
+      "p_value": 5.126e-10,
+      "se": 0.0403
+    },
+    {
+      "rsid": "rs2886697",
+      "chr": 3,
+      "pos": 20724204,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": 0.05879707050845711,
+      "p_value": 7.898e-10,
+      "se": 0.0096
+    },
+    {
+      "rsid": "rs76284431",
+      "chr": 14,
+      "pos": 98690923,
+      "effect_allele": "T",
+      "other_allele": "A",
+      "effect": -0.08160058720460577,
+      "p_value": 1.194e-09,
+      "se": 0.0134
+    },
+    {
+      "rsid": "rs1162202",
+      "chr": 16,
+      "pos": 61966703,
+      "effect_allele": "C",
+      "other_allele": "T",
+      "effect": 0.06139608886507434,
+      "p_value": 1.922e-09,
+      "se": 0.0102
+    },
+    {
+      "rsid": "rs704061",
+      "chr": 12,
+      "pos": 89771903,
+      "effect_allele": "T",
+      "other_allele": "C",
+      "effect": -0.05590390694523381,
+      "p_value": 2.299e-09,
+      "se": 0.0094
+    },
+    {
+      "rsid": "rs17718444",
+      "chr": 3,
+      "pos": 71499401,
+      "effect_allele": "C",
+      "other_allele": "T",
+      "effect": 0.061198574721008696,
+      "p_value": 2.873e-09,
+      "se": 0.0103
+    },
+    {
+      "rsid": "rs2025286",
+      "chr": 6,
+      "pos": 70858701,
+      "effect_allele": "A",
+      "other_allele": "C",
+      "effect": -0.054899789981662256,
+      "p_value": 3.997e-09,
+      "se": 0.0093
+    },
+    {
+      "rsid": "rs1438898",
+      "chr": 2,
+      "pos": 145714354,
+      "effect_allele": "A",
+      "other_allele": "C",
+      "effect": 0.0628996789690455,
+      "p_value": 4.877e-09,
+      "se": 0.0108
+    },
+    {
+      "rsid": "rs10875612",
+      "chr": 5,
+      "pos": 144474779,
+      "effect_allele": "C",
+      "other_allele": "T",
+      "effect": -0.054297803407849204,
+      "p_value": 5.624e-09,
+      "se": 0.0093
+    },
+    {
+      "rsid": "rs9877066",
+      "chr": 3,
+      "pos": 43691501,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.11829941895929504,
+      "p_value": 6.597e-09,
+      "se": 0.0204
+    },
+    {
+      "rsid": "rs7844069",
+      "chr": 8,
+      "pos": 93277087,
+      "effect_allele": "T",
+      "other_allele": "G",
+      "effect": 0.05519816046476231,
+      "p_value": 6.736e-09,
+      "se": 0.0095
+    },
+    {
+      "rsid": "rs4925811",
+      "chr": 8,
+      "pos": 145802447,
+      "effect_allele": "T",
+      "other_allele": "G",
+      "effect": -0.05799994429798873,
+      "p_value": 8.303e-09,
+      "se": 0.0101
+    },
+    {
+      "rsid": "rs76857496",
+      "chr": 18,
+      "pos": 5871800,
+      "effect_allele": "C",
+      "other_allele": "A",
+      "effect": 0.08000270687351517,
+      "p_value": 1.242e-08,
+      "se": 0.014
+    },
+    {
+      "rsid": "rs7506904",
+      "chr": 18,
+      "pos": 50625779,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.05590390694523381,
+      "p_value": 1.242e-08,
+      "se": 0.0098
+    },
+    {
+      "rsid": "rs6537401",
+      "chr": 4,
+      "pos": 147099654,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.056803182824310544,
+      "p_value": 1.395e-08,
+      "se": 0.01
+    },
+    {
+      "rsid": "rs2311059",
+      "chr": 3,
+      "pos": 51884072,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": -0.058095323190712124,
+      "p_value": 3.163e-08,
+      "se": 0.0105
+    },
+    {
+      "rsid": "rs11596214",
+      "chr": 10,
+      "pos": 106453832,
+      "effect_allele": "G",
+      "other_allele": "A",
+      "effect": 0.0528011569911275,
+      "p_value": 3.167e-08,
+      "se": 0.0095
+    },
+    {
+      "rsid": "rs7613360",
+      "chr": 3,
+      "pos": 49916710,
+      "effect_allele": "C",
+      "other_allele": "T",
+      "effect": -0.053400776727115296,
+      "p_value": 3.175e-08,
+      "se": 0.0097
+    },
+    {
+      "rsid": "rs73145587",
+      "chr": 7,
+      "pos": 67685754,
+      "effect_allele": "A",
+      "other_allele": "T",
+      "effect": 0.10130128812999895,
+      "p_value": 3.665e-08,
+      "se": 0.0184
+    },
+    {
+      "rsid": "rs11255890",
+      "chr": 10,
+      "pos": 8784773,
+      "effect_allele": "C",
+      "other_allele": "A",
+      "effect": 0.05300033656165302,
+      "p_value": 4.144e-08,
+      "se": 0.0097
+    }
+  ],
+  "clumping_window_kb": 500,
+  "n_hits_before_clump": 1428,
+  "n_hits_after_clump": 27
+}
