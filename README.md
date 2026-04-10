@@ -316,14 +316,13 @@ The toolkit follows a **separation of concerns**:
 - [x] Gzip support for all DTC parsers
 - [x] Integration tests for genome_init.py end-to-end
 
-**Open issues:**
-- [Wire provider_formats.yaml into detection logic](https://github.com/glebis/genome-toolkit/issues/2)
-- [Implement validator wrappers for multi-agent consensus](https://github.com/glebis/genome-toolkit/issues/3)
-- [Implement warn_on and tolerance thresholds](https://github.com/glebis/genome-toolkit/issues/4)
-- [Normalize genes.rsids to JSON arrays](https://github.com/glebis/genome-toolkit/issues/5)
-- [GRCh38 liftover support](https://github.com/glebis/genome-toolkit/issues/6)
-- [Smoke tests for skill-referenced files](https://github.com/glebis/genome-toolkit/issues/7)
-- [Vault migration script](https://github.com/glebis/genome-toolkit/issues/8)
+- [x] Wire provider_formats.yaml into detection logic ([#2](https://github.com/glebis/genome-toolkit/issues/2))
+- [x] Validator wrappers for multi-agent consensus ([#3](https://github.com/glebis/genome-toolkit/issues/3))
+- [x] warn_on and tolerance thresholds in consensus ([#4](https://github.com/glebis/genome-toolkit/issues/4))
+- [x] Normalize genes.rsids to JSON arrays ([#5](https://github.com/glebis/genome-toolkit/issues/5))
+- [x] GRCh38 liftover support via pyliftover ([#6](https://github.com/glebis/genome-toolkit/issues/6))
+- [x] Smoke tests for skill-referenced files ([#7](https://github.com/glebis/genome-toolkit/issues/7))
+- [x] Vault migration script with dry-run mode ([#8](https://github.com/glebis/genome-toolkit/issues/8))
 
 ## Disclaimer
 
