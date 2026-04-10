@@ -200,7 +200,8 @@ function App() {
       params.delete('variant')
     }
     const qs = params.toString()
-    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+    const hash = window.location.hash
+    window.history.replaceState(null, '', (qs ? `?${qs}` : window.location.pathname) + hash)
   }, [])
 
   const handleAskAI = useCallback((query: string) => {

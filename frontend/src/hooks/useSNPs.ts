@@ -87,7 +87,8 @@ function persistFilters(f: SNPFilters) {
   if (f.page > 1) params.set('page', String(f.page))
 
   const qs = params.toString()
-  const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname
+  const hash = window.location.hash
+  const newUrl = (qs ? `${window.location.pathname}?${qs}` : window.location.pathname) + hash
   window.history.replaceState(null, '', newUrl)
 }
 
