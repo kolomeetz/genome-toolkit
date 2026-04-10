@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterator
 
+import yaml
+
 
 @dataclass
 class SnpRecord:
@@ -90,35 +92,78 @@ def read_header_lines(filepath: Path, n: int = 20) -> list[str]:
     return lines
 
 
+def _load_provider_config() -> dict:
+    """Load provider_formats.yaml from the config directory.
+
+    Searches relative to this file's location (scripts/lib/providers/ -> config/).
+    """
+    # Resolve config path relative to the project root (3 levels up from this file)
+    here = Path(__file__).resolve().parent
+    config_path = here.parent.parent.parent / "config" / "provider_formats.yaml"
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"provider_formats.yaml not found at {config_path}. "
+            "Cannot perform config-driven provider detection."
+        )
+    with open(config_path) as f:
+        return yaml.safe_load(f)
+
+
+def _build_provider_map() -> dict[str, "type[GenomeProvider]"]:
+    """Return a mapping from config provider keys to provider classes."""
+    from . import twentythree, ancestry, myheritage, vcf
+
+    return {
+        "23andme": twentythree.TwentyThreeAndMe,
+        "ancestry": ancestry.AncestryDNA,
+        "myheritage": myheritage.MyHeritage,
+        "nebula": vcf.GenericVCF,   # Nebula is handled by GenericVCF (sets provider="nebula" in metadata)
+        "vcf": vcf.GenericVCF,
+    }
+
+
 def detect_provider(filepath: Path) -> tuple[type[GenomeProvider], float]:
     """Auto-detect the provider for a genome file.
+
+    Detection order and provider signatures are loaded from
+    config/provider_formats.yaml so that adding a new provider
+    only requires updating the YAML file and implementing a class.
 
     Returns the best-matching provider class and its confidence score.
     Raises ValueError if no provider matches with confidence > 0.
     """
-    from . import twentythree, ancestry, myheritage, vcf
+    config = _load_provider_config()
+    detection_order: list[str] = config.get("detection_order", list(config.get("providers", {}).keys()))
+    provider_map = _build_provider_map()
 
-    providers: list[type[GenomeProvider]] = [
-        twentythree.TwentyThreeAndMe,
-        ancestry.AncestryDNA,
-        myheritage.MyHeritage,
-        vcf.GenericVCF,
-    ]
+    # Build ordered list of provider classes, deduplicated (nebula/vcf both map to GenericVCF)
+    seen: set[type] = set()
+    ordered_providers: list[type[GenomeProvider]] = []
+    for key in detection_order:
+        cls = provider_map.get(key)
+        if cls is not None and cls not in seen:
+            ordered_providers.append(cls)
+            seen.add(cls)
 
     header_lines = read_header_lines(filepath)
     best_provider = None
     best_confidence = 0.0
 
-    for provider_cls in providers:
+    for provider_cls in ordered_providers:
         confidence = provider_cls.detect(filepath, header_lines)
         if confidence > best_confidence:
             best_confidence = confidence
             best_provider = provider_cls
 
     if best_provider is None or best_confidence == 0:
+        supported = ", ".join(
+            config["providers"][k]["name"]
+            for k in detection_order
+            if k in config.get("providers", {})
+        )
         raise ValueError(
             f"Could not detect genome data format for {filepath}. "
-            "Supported formats: 23andMe, AncestryDNA, MyHeritage, VCF."
+            f"Supported formats: {supported}."
         )
 
     return best_provider, best_confidence
