@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from backend.app.main import users_db
-from backend.app.agent.agent import create_agent_session, stream_agent_response
+from backend.app.agent.agent import create_agent_session, stream_agent_response, build_system_prompt
 
 router = APIRouter(prefix="/api")
 
@@ -18,6 +18,7 @@ _active_clients: dict = {}
 class ChatRequest(BaseModel):
     session_id: str
     message: str
+    page_context: str | None = None
 
 
 @router.post("/chat")
@@ -30,13 +31,16 @@ async def chat(req: ChatRequest):
     await users_db.save_message(req.session_id, "user", req.message)
     await users_db.touch_session(req.session_id)
 
-    async def get_or_create_client(session_id: str):
+    async def get_or_create_client(session_id: str, page_context: str | None = None):
         """Get existing client or create new one. Handles stale connections."""
         client = _active_clients.get(session_id)
         if client is not None:
+            # Update system prompt with fresh page context
+            if page_context:
+                client.options.system_prompt = build_system_prompt(page_context)
             return client
 
-        client, _ = await create_agent_session()
+        client, _ = await create_agent_session(page_context=page_context)
         await client.connect()
         _active_clients[session_id] = client
         return client
@@ -44,7 +48,7 @@ async def chat(req: ChatRequest):
     async def event_stream():
         text_parts = []
         try:
-            client = await get_or_create_client(req.session_id)
+            client = await get_or_create_client(req.session_id, req.page_context)
             async for event in stream_agent_response(client, req.message):
                 if event["event"] == "text_delta":
                     text_parts.append(event["data"]["content"])

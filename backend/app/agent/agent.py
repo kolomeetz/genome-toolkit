@@ -46,6 +46,18 @@ Voice mode:
 - Your full text response still goes to screen. The voice_summary goes to the speaker.
 - Both in the same turn — no extra request needed."""
 
+def build_system_prompt(page_context: str | None = None) -> str:
+    """Build system prompt, optionally injecting page context."""
+    if not page_context:
+        return SYSTEM_PROMPT
+    return (
+        SYSTEM_PROMPT
+        + "\n\n## User's Current Page Context\n"
+        + page_context
+        + "\n\nUse this context to give relevant answers. The user can see this data on their screen right now."
+    )
+
+
 # MCP server config — created once, shared across sessions
 _genome_mcp = None
 
@@ -57,7 +69,10 @@ def get_genome_mcp():
     return _genome_mcp
 
 
-async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient, str | None]:
+async def create_agent_session(
+    cwd: str | None = None,
+    page_context: str | None = None,
+) -> tuple[ClaudeSDKClient, str | None]:
     """Create a new Agent SDK client with genome tools.
 
     Returns (client, session_id).
@@ -68,7 +83,7 @@ async def create_agent_session(cwd: str | None = None) -> tuple[ClaudeSDKClient,
     resolved_cwd = cwd or str(Path(__file__).resolve().parents[3])
 
     options = ClaudeAgentOptions(
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=build_system_prompt(page_context),
         mcp_servers={"genome": mcp},
         allowed_tools=[
             "mcp__genome__query_snps",
