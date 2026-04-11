@@ -47,6 +47,15 @@ class UsersDB:
                 FOREIGN KEY (session_id) REFERENCES sessions(id)
             );
         """)
+        # Add columns for chat history feature (idempotent)
+        try:
+            await self._conn.execute("ALTER TABLE sessions ADD COLUMN title TEXT DEFAULT ''")
+        except Exception:
+            pass  # column already exists
+        try:
+            await self._conn.execute("ALTER TABLE sessions ADD COLUMN view_context TEXT DEFAULT ''")
+        except Exception:
+            pass  # column already exists
 
     async def create_session(self) -> dict:
         sid = str(uuid.uuid4())
@@ -113,6 +122,42 @@ class UsersDB:
         await self._conn.execute(
             f"UPDATE imports SET {', '.join(sets)} WHERE id = ?", params
         )
+        await self._conn.commit()
+
+    async def list_sessions(self, limit: int = 50, offset: int = 0) -> list[dict]:
+        """List sessions ordered by last_active desc, with first message preview."""
+        async with self._conn.execute(
+            """SELECT s.id, s.title, s.view_context, s.created_at, s.last_active,
+               (SELECT COUNT(*) FROM chat_messages WHERE session_id = s.id) as message_count,
+               (SELECT content FROM chat_messages WHERE session_id = s.id AND role = 'user' ORDER BY id LIMIT 1) as first_message
+               FROM sessions s
+               ORDER BY s.last_active DESC
+               LIMIT ? OFFSET ?""",
+            [limit, offset],
+        ) as c:
+            return [dict(row) for row in await c.fetchall()]
+
+    async def update_session(self, session_id: str, **kwargs):
+        """Update session fields (title, view_context)."""
+        allowed = {'title', 'view_context'}
+        sets = []
+        params = []
+        for key, val in kwargs.items():
+            if key in allowed:
+                sets.append(f"{key} = ?")
+                params.append(val)
+        if not sets:
+            return
+        params.append(session_id)
+        await self._conn.execute(
+            f"UPDATE sessions SET {', '.join(sets)} WHERE id = ?", params
+        )
+        await self._conn.commit()
+
+    async def delete_session(self, session_id: str):
+        """Delete session and its messages."""
+        await self._conn.execute("DELETE FROM chat_messages WHERE session_id = ?", [session_id])
+        await self._conn.execute("DELETE FROM sessions WHERE id = ?", [session_id])
         await self._conn.commit()
 
     async def get_import(self, import_id: int) -> dict | None:

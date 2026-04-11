@@ -31,6 +31,27 @@ async def chat(req: ChatRequest):
     await users_db.save_message(req.session_id, "user", req.message)
     await users_db.touch_session(req.session_id)
 
+    # Auto-set session title from first user message
+    session_data = await users_db.get_session(req.session_id)
+    if session_data and not session_data.get('title'):
+        # Use first 60 chars of first message as title
+        title = req.message[:60].strip()
+        if len(req.message) > 60:
+            title = title.rsplit(' ', 1)[0] + '...'
+        await users_db.update_session(req.session_id, title=title)
+
+    if req.page_context:
+        # Extract view name from first line "You are on the X page."
+        first_line = req.page_context.split('\n')[0] if req.page_context else ''
+        view_tag = ''
+        if 'RISK' in first_line: view_tag = 'risk'
+        elif 'MENTAL HEALTH' in first_line: view_tag = 'mental-health'
+        elif 'PGX' in first_line: view_tag = 'pgx'
+        elif 'ADDICTION' in first_line: view_tag = 'addiction'
+        elif 'SNP' in first_line: view_tag = 'snps'
+        if view_tag:
+            await users_db.update_session(req.session_id, view_context=view_tag)
+
     async def get_or_create_client(session_id: str, page_context: str | None = None):
         """Get existing client or create new one. Handles stale connections."""
         client = _active_clients.get(session_id)
