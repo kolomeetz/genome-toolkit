@@ -4,6 +4,7 @@ import { useSNPs, type SNP } from './hooks/useSNPs'
 import { useChat, type UIAction, type AgentAction } from './hooks/useChat'
 import { useVoice } from './hooks/useVoice'
 import { useStarterPrompts } from './hooks/useStarterPrompts'
+import { useSessionHistory } from './hooks/useSessionHistory'
 import { SNPTable } from './components/SNPTable'
 import { CommandPalette } from './components/CommandPalette'
 import { VariantDrawer } from './components/VariantDrawer'
@@ -39,6 +40,7 @@ function App() {
   const mentalHealth = useMentalHealthData()
   const checklist = useChecklist()
   const starterPrompts = useStarterPrompts(view)
+  const sessionHistory = useSessionHistory()
   const [checklistOpen, setChecklistOpen] = useState(false)
   const [checklistHighlight, setChecklistHighlight] = useState(false)
   const [paletteCollapsed, setPaletteCollapsed] = useState(false)
@@ -121,7 +123,7 @@ function App() {
     }
   }, [updateFilters, voice, checklist])
 
-  const { messages, streaming, streamingText, status, suggestions, actions, send: rawSend } = useChat(handleUIAction)
+  const { messages, streaming, streamingText, status, suggestions, actions, send: rawSend, sessionId, switchSession, newSession } = useChat(handleUIAction)
 
   // Build page context from current view + hook data
   const getPageContext = useCallback((): string => {
@@ -155,6 +157,13 @@ function App() {
       rawSend(text, ctx)
     }
   }, [rawSend, voice.voiceEnabled, getPageContext])
+
+  // Refresh session list when streaming finishes (new messages saved)
+  useEffect(() => {
+    if (!streaming && cmdkOpen) {
+      sessionHistory.refresh()
+    }
+  }, [streaming])
 
   const handleExport = useCallback((format: 'pdf' | 'md' | 'doctor' | 'prescriber' | string) => {
     if (format === 'doctor' || format === 'prescriber' || format === 'pdf') {
@@ -552,6 +561,23 @@ function App() {
         starterExplore={starterPrompts.explore}
         collapsed={paletteCollapsed}
         onToggleCollapse={() => setPaletteCollapsed(prev => !prev)}
+        sessions={sessionHistory.sessions}
+        sessionsLoading={sessionHistory.loading}
+        currentSessionId={sessionId}
+        onSelectSession={(id) => {
+          switchSession(id)
+          sessionHistory.refresh()
+        }}
+        onNewSession={async () => {
+          await newSession()
+          sessionHistory.refresh()
+        }}
+        onDeleteSession={async (id) => {
+          await sessionHistory.deleteSession(id)
+          if (id === sessionId) {
+            await newSession()
+          }
+        }}
       />
 
       {/* Checklist Sidebar */}
