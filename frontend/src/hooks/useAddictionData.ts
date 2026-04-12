@@ -4,12 +4,13 @@ import type { VaultGene } from './useVaultGenes'
 import type { PathwaySection, GeneData, GeneStatus, EvidenceTier, ActionData, ActionType } from '../types/genomics'
 import { useSubstancesData } from './useSubstancesData'
 import type { SubstanceCard } from './useSubstancesData'
+import { useSystems } from './useSystems'
 
 export type { SubstanceCard }
 
-// ── Pathway groupings ────────────────────────────────────────────────────────
+// ── Fallback pathway groupings (used when config unavailable) ────────────────
 
-const PATHWAY_SYSTEMS: Record<string, { name: string; tags: string[] }> = {
+const FALLBACK_SYSTEMS: Record<string, { name: string; tags: string[] }> = {
   dopamine: {
     name: 'Dopamine & Reward Sensitivity',
     tags: ['Dopamine System', 'Behavioral Architecture'],
@@ -116,14 +117,24 @@ interface UseAddictionDataReturn {
 export function useAddictionData(): UseAddictionDataReturn {
   const { genes, loading: genesLoading } = useVaultGenes()
   const { substances, loading: substancesLoading } = useSubstancesData()
+  const { systems: allSystems, loading: systemsLoading, getSystemsForDomain } = useSystems()
   const [pathways, setPathways] = useState<PathwaySection[]>([])
   const [actions, setActions] = useState<Record<string, ActionData[]>>({})
 
   useEffect(() => {
-    if (genesLoading) return
+    if (genesLoading || systemsLoading) return
 
     const controller = new AbortController()
     const { signal } = controller
+
+    // Use config-driven systems for addiction domain, fallback to hardcoded
+    const addictionSystems = getSystemsForDomain('addiction')
+    const systemsToUse: Record<string, { name: string; tags: string[] }> =
+      Object.keys(addictionSystems).length > 0
+        ? Object.fromEntries(
+            Object.entries(addictionSystems).map(([key, sys]) => [key, { name: sys.name, tags: sys.tags }])
+          )
+        : FALLBACK_SYSTEMS
 
     const geneMap = new Map<string, VaultGene>()
     for (const g of genes) geneMap.set(g.symbol.toUpperCase(), g)
@@ -133,7 +144,7 @@ export function useAddictionData(): UseAddictionDataReturn {
       const builtPathways: PathwaySection[] = []
       const allActions: Record<string, ActionData[]> = {}
 
-      for (const [, sys] of Object.entries(PATHWAY_SYSTEMS)) {
+      for (const [, sys] of Object.entries(systemsToUse)) {
         const matched = genes.filter((g) => matchesSystem(g, sys.tags))
         if (matched.length === 0) continue
 
@@ -205,7 +216,7 @@ export function useAddictionData(): UseAddictionDataReturn {
     build()
 
     return () => { controller.abort() }
-  }, [genes, genesLoading])
+  }, [genes, genesLoading, allSystems, systemsLoading])
 
   const totalGenes = pathways.reduce((sum, p) => sum + p.genes.length, 0)
   const actionableCount = pathways.reduce(
@@ -216,7 +227,7 @@ export function useAddictionData(): UseAddictionDataReturn {
   return {
     pathways,
     substances,
-    loading: genesLoading || substancesLoading,
+    loading: genesLoading || substancesLoading || systemsLoading,
     totalGenes,
     actionableCount,
     actions,

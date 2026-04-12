@@ -109,14 +109,22 @@ interface ConfigCause {
   description?: string
 }
 
+export interface Demographic {
+  sex: string
+  age_range: string
+  ancestry: string
+}
+
 interface UseRiskDataReturn {
   causes: MortalityCause[]
+  demographic: Demographic | null
   loading: boolean
 }
 
 export function useRiskData(): UseRiskDataReturn {
   const { genes, loading: genesLoading } = useVaultGenes()
   const [config, setConfig] = useState<ConfigCause[] | null>(null)
+  const [demographic, setDemographic] = useState<Demographic | null>(null)
   const [configLoading, setConfigLoading] = useState(true)
   const [causes, setCauses] = useState<MortalityCause[]>([])
 
@@ -129,6 +137,7 @@ export function useRiskData(): UseRiskDataReturn {
       })
       .then((data) => {
         setConfig(data.causes ?? data)
+        if (data.demographic) setDemographic(data.demographic)
         setConfigLoading(false)
       })
       .catch((err) => {
@@ -231,6 +240,7 @@ export function useRiskData(): UseRiskDataReturn {
 
   return {
     causes,
+    demographic,
     loading: genesLoading || configLoading || (config !== null && causes.length === 0),
   }
 }

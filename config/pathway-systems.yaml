@@ -1,0 +1,177 @@
+# Pathway systems configuration
+# Replaces hardcoded MH_SYSTEMS, PATHWAY_SYSTEMS, and backend PATHWAYS
+# Each system maps vault gene tags to a named pathway and its view domain(s)
+#
+# domains: mental-health, addiction, risk, pgx
+# tags: must match vault gene frontmatter `systems` values (after wikilink stripping)
+#
+# To add a new system: add an entry here. No code changes needed.
+
+systems:
+  # ── Mental Health ────────────────────────────────────────────────────────────
+  methylation:
+    name: "Methylation Pathway"
+    tags: ["Methylation"]
+    domains: ["mental-health"]
+
+  serotonin:
+    name: "Serotonin & Neuroplasticity"
+    tags: ["Serotonin System", "Neurotransmitter Synthesis"]
+    domains: ["mental-health"]
+
+  dopamine:
+    name: "Dopamine & Reward"
+    tags: ["Dopamine System", "Behavioral Architecture"]
+    domains: ["mental-health", "addiction"]
+
+  gaba:
+    name: "GABA & Sleep"
+    tags: ["GABA System", "Sleep Architecture"]
+    domains: ["mental-health", "addiction"]
+
+  stress:
+    name: "Stress Response"
+    tags: ["Stress Response", "HPA Axis"]
+    domains: ["mental-health"]
+
+  circadian:
+    name: "Circadian Rhythm"
+    tags: ["Circadian Rhythm"]
+    domains: ["mental-health"]
+
+  gut_brain:
+    name: "Gut-Brain Axis"
+    tags: ["Gut-Brain Axis", "Gut Microbiome"]
+    domains: ["mental-health"]
+
+  immune:
+    name: "Inflammation & Immune"
+    tags: ["Immune and Inflammatory"]
+    domains: ["mental-health", "risk"]
+
+  # ── Addiction & Reward ───────────────────────────────────────────────────────
+  opioid:
+    name: "Opioid Receptor Sensitivity"
+    tags: ["Opioid and Reward"]
+    domains: ["addiction"]
+
+  alcohol:
+    name: "Alcohol & Liver Metabolism"
+    tags: ["Liver and Metabolism", "Drug Metabolism"]
+    domains: ["addiction", "pgx"]
+
+  endocannabinoid:
+    name: "Endocannabinoid System"
+    tags: ["Endocannabinoid System"]
+    domains: ["addiction"]
+
+  # ── Addiction — substance & behavioral ────────────────────────────────────────
+  nicotine:
+    name: "Nicotine Metabolism"
+    tags: ["Drug Metabolism"]
+    domains: ["addiction"]
+
+  stimulant:
+    name: "Stimulant Response"
+    tags: ["Stimulant Response"]
+    domains: ["addiction"]
+
+  behavioral_addiction:
+    name: "Behavioral Addiction"
+    tags: ["Behavioral Addiction"]
+    domains: ["addiction"]
+
+  # ── Hormonal ────────────────────────────────────────────────────────────────
+  hormonal:
+    name: "Hormonal Regulation"
+    tags: ["Hormonal Regulation"]
+    domains: ["mental-health", "risk"]
+
+  # ── Risk / Metabolic ────────────────────────────────────────────────────────
+  lipid:
+    name: "Lipid Metabolism"
+    tags: ["Lipid Metabolism"]
+    domains: ["risk"]
+
+  vitamin_d:
+    name: "Vitamin D Signaling"
+    tags: ["Vitamin D Signaling"]
+    domains: ["risk"]
+
+  neurodegeneration:
+    name: "Neurodegeneration"
+    tags: ["Neurodegeneration"]
+    domains: ["risk"]
+
+  appetite:
+    name: "Appetite Regulation"
+    tags: ["Appetite Regulation"]
+    domains: ["risk"]
+
+  musculoskeletal:
+    name: "Musculoskeletal"
+    tags: ["Musculoskeletal"]
+    domains: ["risk"]
+
+  # ── PGx ─────────────────────────────────────────────────────────────────────
+  drug_metabolism:
+    name: "Drug Metabolism"
+    tags: ["Drug Metabolism"]
+    domains: ["pgx"]
+
+# ── Goal pills for SNP Browser ────────────────────────────────────────────────
+# Each pill is either a navigation link (actionType: navigate) or a gene filter
+goal_pills:
+  - id: mental_health
+    label: MOOD
+    actionType: navigate
+    target: mental-health
+    tooltip: "Open Mental Health dashboard"
+
+  - id: medication_safety
+    label: DRUGS
+    actionType: navigate
+    target: pgx
+    tooltip: "Open Pharmacogenomics dashboard"
+
+  - id: addiction_recovery
+    label: RECOVERY
+    actionType: navigate
+    target: addiction
+    tooltip: "Open Addiction dashboard"
+
+  - id: cardiovascular
+    label: HEART
+    actionType: navigate
+    target: risk
+    tooltip: "Open Risk Landscape"
+
+  - id: sleep_optimization
+    label: SLEEP
+    actionType: filter
+    target: "CLOCK,PER2,PER3,ADORA2A,CYP1A2,MTNR1B,ADA,ADORA1,HCRTR2"
+    tooltip: "Filter SNPs by sleep-related genes"
+
+  - id: gut_health
+    label: GUT
+    actionType: filter
+    target: "ATG16L1,FUT2,IL1B,PTPN22,NOD2,TNF,IL6,HLA-B,ABP1,LCT,TAS2R38,HTR3A"
+    tooltip: "Filter SNPs by gut health genes"
+
+  - id: liver_health
+    label: LIVER
+    actionType: filter
+    target: "PNPLA3,HFE,CYP2E1,UGT1A1,GSTM1,NAT2,FADS1,FADS2,APOE,GSTP1"
+    tooltip: "Filter SNPs by liver health genes"
+
+  - id: inflammation
+    label: IMMUNE
+    actionType: filter
+    target: "IL6,TNF,IL1B,CRP,HLA-B,TLR4,NOD2,ATG16L1,CD226,CFH"
+    tooltip: "Filter SNPs by immune/inflammatory genes"
+
+  - id: brain_health
+    label: BRAIN
+    actionType: filter
+    target: "APOE,BDNF,COMT,MTHFR,SLC6A4,DRD2,HTR2A,TPH2,GRIN2A"
+    tooltip: "Filter SNPs by brain health genes"

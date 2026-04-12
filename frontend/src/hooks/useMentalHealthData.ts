@@ -3,7 +3,8 @@ import type { PathwaySection, ActionData } from '../types/genomics'
 
 // ── Pathway groupings for mental health ──────────────────────────────────────
 
-const MH_SYSTEMS: Record<string, { name: string; tags: string[] }> = {
+// Fallback — used only when config/pathway-systems.yaml is unavailable
+const FALLBACK_MH_SYSTEMS: Record<string, { name: string; tags: string[] }> = {
   methylation: {
     name: 'Methylation Pathway',
     tags: ['Methylation Pathway', 'Methylation'],
@@ -81,11 +82,13 @@ export async function buildFromVaultGenes(
   genes: VaultGene[],
   setSections: (s: PathwaySection[]) => void,
   setActions: (a: Record<string, ActionData[]>) => void,
+  systemsOverride?: Record<string, { name: string; tags: string[] }>,
 ): Promise<void> {
+  const systems = systemsOverride ?? FALLBACK_MH_SYSTEMS
   const builtSections: PathwaySection[] = []
   const allActions: Record<string, ActionData[]> = {}
 
-  for (const [, sys] of Object.entries(MH_SYSTEMS)) {
+  for (const [, sys] of Object.entries(systems)) {
     const matched = genes.filter((g) => matchesSystem(g, sys.tags))
     if (matched.length === 0) continue
 
@@ -162,18 +165,26 @@ export async function buildFromVaultGenes(
   setActions(allActions)
 }
 
+export interface GeneMeta {
+  populationInfo: string
+  explanation: string
+  interactions: { genes: string; description: string }[]
+}
+
 interface UseMentalHealthDataReturn {
   sections: PathwaySection[]
   loading: boolean
   totalGenes: number
   totalActions: number
   actions: Record<string, ActionData[]>
+  geneMeta: Record<string, GeneMeta>
   getActionsForGene: (symbol: string) => ActionData[]
 }
 
 export function useMentalHealthData(): UseMentalHealthDataReturn {
   const [sections, setSections] = useState<PathwaySection[]>([])
   const [actions, setActions] = useState<Record<string, ActionData[]>>({})
+  const [geneMeta, setGeneMeta] = useState<Record<string, GeneMeta>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -190,14 +201,25 @@ export function useMentalHealthData(): UseMentalHealthDataReturn {
         if (data?.sections?.length > 0) {
           console.log(`[genome-toolkit] Dashboard: loaded ${data.totalGenes} genes, ${data.totalActions} actions from vault`)
           setSections(data.sections)
-          // Extract actions from sections
+          // Extract actions and gene_meta from sections
           const allActions: Record<string, ActionData[]> = {}
+          const allMeta: Record<string, GeneMeta> = {}
           for (const section of data.sections) {
             if (section.actions) {
               Object.assign(allActions, section.actions)
             }
+            if (section.gene_meta) {
+              for (const [symbol, meta] of Object.entries(section.gene_meta as Record<string, Record<string, unknown>>)) {
+                allMeta[symbol] = {
+                  populationInfo: (meta.populationInfo as string) || '',
+                  explanation: (meta.explanation as string) || '',
+                  interactions: (meta.interactions as { genes: string; description: string }[]) || [],
+                }
+              }
+            }
           }
           setActions(allActions)
+          setGeneMeta(allMeta)
         } else {
           console.warn('[genome-toolkit] Dashboard API returned empty — no vault notes found')
         }
@@ -222,6 +244,7 @@ export function useMentalHealthData(): UseMentalHealthDataReturn {
     totalGenes,
     totalActions,
     actions,
+    geneMeta,
     getActionsForGene: (symbol: string) => actions[symbol] ?? [],
   }
 }

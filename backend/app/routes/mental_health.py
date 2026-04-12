@@ -1,12 +1,20 @@
-"""Mental health dashboard API — reads vault notes, returns structured dashboard data."""
+"""Mental health dashboard API — reads vault notes, returns structured dashboard data.
+
+Pathway definitions are loaded from config/pathway-systems.yaml (domain: mental-health).
+Genes are matched by their vault `systems` frontmatter tags, not by hardcoded gene lists.
+"""
+import re
 from pathlib import Path
 
+import yaml
 from fastapi import APIRouter
 
 from backend.app.agent import tools as _tools
 from backend.app.vault_parser import parse_gene_note
 
 router = APIRouter(prefix="/api/mental-health")
+
+_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
 
 
 def _normalize_gene_symbol(symbol: str) -> str:
@@ -35,36 +43,102 @@ def _read_gene_note(symbol: str) -> dict | None:
     return {"symbol": symbol, "content": content}
 
 
-# Mental health pathways — which genes belong to which pathway
-PATHWAYS = {
-    'Methylation Pathway': ['MTHFR', 'MTRR', 'MTR'],
-    'Serotonin & Neuroplasticity': ['SLC6A4', 'BDNF', 'HTR2A', 'TPH2'],
-    'Dopamine & Reward': ['COMT', 'DRD2', 'DRD4', 'SLC6A3'],
-    'Monoamine Regulation': ['MAO-A', 'FKBP5'],
-    'GABA & Sleep': ['GAD1', 'GABRA2'],
-}
+def _load_mental_health_pathways() -> dict[str, list[str]]:
+    """Load mental-health pathways from config/pathway-systems.yaml.
+
+    Returns dict mapping pathway name -> list of vault system tags to match against.
+    Falls back to hardcoded defaults if config is missing.
+    """
+    config_file = _CONFIG_DIR / "pathway-systems.yaml"
+    if config_file.exists():
+        data = yaml.safe_load(config_file.read_text()) or {}
+        systems = data.get("systems", {})
+        pathways: dict[str, list[str]] = {}
+        for sys in systems.values():
+            if "mental-health" in sys.get("domains", []):
+                pathways[sys["name"]] = sys.get("tags", [])
+        if pathways:
+            return pathways
+
+    # Fallback: original hardcoded pathways (tag-based, not gene-list)
+    return {
+        'Methylation Pathway': ['Methylation'],
+        'Serotonin & Neuroplasticity': ['Serotonin System', 'Neurotransmitter Synthesis'],
+        'Dopamine & Reward': ['Dopamine System', 'Behavioral Architecture'],
+        'GABA & Sleep': ['GABA System', 'Sleep Architecture'],
+        'Stress Response': ['Stress Response', 'HPA Axis'],
+    }
+
+
+def _strip_wikilinks(value: str) -> str:
+    """Remove Obsidian wikilink brackets: '[[Foo]]' -> 'Foo'."""
+    return re.sub(r"\[\[([^\]]+)\]\]", r"\1", value)
+
+
+def _gene_matches_tags(gene_systems: list[str], pathway_tags: list[str]) -> bool:
+    """Check if a gene's system tags match any of the pathway's tags."""
+    lower_tags = [t.lower() for t in pathway_tags]
+    for s in gene_systems:
+        clean = _strip_wikilinks(s).split("|")[0].strip().lower()
+        if any(tag in clean or clean in tag for tag in lower_tags):
+            return True
+    return False
+
 
 STATUS_PRIORITIES: dict[str, int] = {'actionable': 0, 'monitor': 1, 'neutral': 2, 'optimal': 3}
 
 
 @router.get("/dashboard")
 async def get_dashboard():
-    """Return structured dashboard data parsed from vault notes."""
+    """Return structured dashboard data parsed from vault notes.
+
+    Pathways loaded from config/pathway-systems.yaml (mental-health domain).
+    Genes matched by vault systems tags, not hardcoded gene lists.
+    """
+    pathways = _load_mental_health_pathways()
     sections = []
 
-    for pathway_name, gene_symbols in PATHWAYS.items():
+    # First, scan all vault genes to build a pool we can match by system tags
+    vault_genes_by_symbol: dict[str, dict] = {}
+    if _tools._vault_path:
+        genes_dir = Path(_tools._vault_path) / "Genes"
+        if genes_dir.exists():
+            for f in sorted(genes_dir.iterdir()):
+                if f.suffix != ".md":
+                    continue
+                note_text = f.read_text()
+                parsed = parse_gene_note(note_text)
+                if not parsed.get("symbol"):
+                    continue
+                # Extract systems from frontmatter for tag matching
+                if note_text.startswith("---"):
+                    parts = note_text.split("---", 2)
+                    if len(parts) >= 3:
+                        fm = yaml.safe_load(parts[1]) or {}
+                        raw_systems = fm.get("systems", [])
+                        if isinstance(raw_systems, list):
+                            parsed["_systems"] = [
+                                _strip_wikilinks(s).split("|")[0].strip()
+                                if isinstance(s, str) else str(s)
+                                for s in raw_systems
+                            ]
+                        else:
+                            parsed["_systems"] = []
+                    else:
+                        parsed["_systems"] = []
+                else:
+                    parsed["_systems"] = []
+                vault_genes_by_symbol[parsed["symbol"]] = parsed
+
+    for pathway_name, pathway_tags in pathways.items():
         genes = []
         all_actions: dict[str, list] = {}
         pathway_status = 'optimal'
         total_actions = 0
 
-        for symbol in gene_symbols:
-            note = _read_gene_note(symbol)
-            if not note:
-                continue
-
-            parsed = parse_gene_note(note['content'])
-            if not parsed['symbol']:
+        # Match genes by system tags
+        for symbol, parsed in vault_genes_by_symbol.items():
+            if not _gene_matches_tags(parsed.get("_systems", []), pathway_tags):
                 continue
 
             gene_data = {
@@ -116,14 +190,10 @@ async def get_dashboard():
             'neutral': f'Your {pathway_name.lower()} shows no clinically significant variants.',
         }
 
-        # Build gene_meta (population info, explanation, interactions) in one pass
+        # Build gene_meta (population info, explanation, interactions)
         gene_meta: dict[str, dict] = {}
         for g in genes:
-            g_note = _read_gene_note(g['symbol'])
-            if not g_note:
-                gene_meta[g['symbol']] = {'populationInfo': '', 'explanation': '', 'interactions': []}
-                continue
-            p = parse_gene_note(g_note['content'])
+            p = vault_genes_by_symbol.get(g['symbol'], {})
             gene_meta[g['symbol']] = {
                 'populationInfo': p.get('population_info', ''),
                 'explanation': p.get('explanation', ''),
@@ -150,13 +220,9 @@ async def get_dashboard():
 
     # Find most recent review date across all genes
     all_dates = []
-    for s in sections:
-        for g in s['genes']:
-            g_note = _read_gene_note(g['symbol'])
-            if g_note:
-                p = parse_gene_note(g_note['content'])
-                if p.get('last_reviewed'):
-                    all_dates.append(p['last_reviewed'])
+    for parsed in vault_genes_by_symbol.values():
+        if parsed.get('last_reviewed'):
+            all_dates.append(parsed['last_reviewed'])
 
     return {
         'sections': sections,

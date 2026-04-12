@@ -1,4 +1,5 @@
 import { useState, useRef, type CSSProperties } from 'react'
+import { useSystems, type GoalPill } from '../hooks/useSystems'
 
 export interface InsightData {
   total_variants: number
@@ -24,15 +25,8 @@ interface FilterState {
   clinical: boolean
 }
 
-interface GoalPill {
-  id: string
-  label: string
-  actionType: 'navigate' | 'filter'
-  target: string // view id or comma-separated gene list
-  tooltip: string
-}
-
-const GOAL_PILLS: GoalPill[] = [
+// Fallback goal pills — used when config/pathway-systems.yaml is unavailable
+const FALLBACK_GOAL_PILLS: GoalPill[] = [
   { id: 'mental_health', label: 'MOOD', actionType: 'navigate', target: 'mental-health', tooltip: 'Open Mental Health dashboard' },
   { id: 'medication_safety', label: 'DRUGS', actionType: 'navigate', target: 'pgx', tooltip: 'Open Pharmacogenomics dashboard' },
   { id: 'addiction_recovery', label: 'RECOVERY', actionType: 'navigate', target: 'addiction', tooltip: 'Open Addiction dashboard' },
@@ -230,6 +224,8 @@ export function InsightPanel({
   onSearchChange, onGeneChange, onConditionChange,
   onFilterChange, onClearAll, onNavigate,
 }: Props) {
+  const { goalPills: configPills, loading: systemsLoading } = useSystems()
+  const GOAL_PILLS = configPills.length > 0 ? configPills : FALLBACK_GOAL_PILLS
   const [activeGoalPill, setActiveGoalPill] = useState<string | null>(null)
   const [conditionFocused, setConditionFocused] = useState(false)
   const [geneFocused, setGeneFocused] = useState(false)

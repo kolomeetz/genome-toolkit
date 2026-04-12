@@ -158,25 +158,56 @@ def parse_gene_note(content: str) -> dict[str, Any]:
                 population_info = re.sub(r'^\*\*[^*]+\*\*:?\s*', '', line).strip()
                 break
 
-    # Systems/categories
+    # Systems/categories — map vault system tags to symptom categories
     systems = meta.get('systems', [])
-    categories = []
+    tags = meta.get('tags', [])
+    categories: list[str] = []
+    # Each entry: keyword found in system tag → category assigned
     system_to_category = {
         'methylation': 'mood',
         'serotonin': 'mood',
+        'neurotransmitter': 'mood',
         'dopamine': 'focus',
+        'reward': 'focus',
+        'behavioral': 'focus',
+        'stimulant': 'focus',
         'gaba': 'sleep',
         'sleep': 'sleep',
+        'circadian': 'sleep',
         'stress': 'stress',
-        'reward': 'focus',
+        'hpa': 'stress',
+        'cortisol': 'stress',
+        'immune': 'stress',
+        'inflammat': 'stress',
+        'gut-brain': 'mood',
+        'hormonal': 'mood',
+    }
+    # Also check frontmatter tags for extra category hints
+    tag_to_category = {
+        'anxiety': 'stress',
+        'depression': 'mood',
+        'sleep': 'sleep',
+        'insomnia': 'sleep',
+        'cognition': 'focus',
+        'adhd': 'focus',
+        'attention': 'focus',
+        'stress': 'stress',
+        'mood': 'mood',
+        'fatigue': 'mood',
     }
     for s in systems:
         s_lower = s.lower().replace('[[', '').replace(']]', '')
         for key, cat in system_to_category.items():
             if key in s_lower and cat not in categories:
                 categories.append(cat)
+    for t in tags:
+        if isinstance(t, str):
+            t_lower = t.lower()
+            for key, cat in tag_to_category.items():
+                if key in t_lower and cat not in categories:
+                    categories.append(cat)
     if not categories:
-        categories = ['mood']  # default
+        categories = ['mood']  # default for mental health genes
 
     # Count studies from sources section
     sources_text = extract_section(body, 'Sources')

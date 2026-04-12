@@ -10,7 +10,11 @@ import { HeroHeader, StatBox, EmptyState } from '../common'
 import { GWASFindings } from './GWASFindings'
 import { useGWASTraits } from '../../hooks/useGWASTraits'
 
-const GENE_META: Record<string, { populationInfo: string; explanation: string; interactions?: { genes: string; description: string }[] }> = {
+import type { GeneMeta } from '../../hooks/useMentalHealthData'
+
+// Fallback gene meta — used when vault notes lack population_info/explanation sections.
+// Server returns gene_meta from vault; this covers gaps for well-known genes.
+const FALLBACK_GENE_META: Record<string, GeneMeta> = {
   'MTHFR': {
     populationInfo: '~10% of Europeans carry T/T. ~25% carry at least one T allele. More common in Mediterranean ancestry.',
     explanation: 'MTHFR converts dietary folate into methylfolate, the active form your body uses. With T/T, this conversion runs at about 30% efficiency. This doesn\'t mean you\'re deficient — it means you may need more folate or a more bioavailable form.',
@@ -29,6 +33,7 @@ const GENE_META: Record<string, { populationInfo: string; explanation: string; i
   'GAD1': {
     populationInfo: '~40% of population carries at least one risk allele.',
     explanation: 'GAD1 encodes the enzyme that produces GABA, the brain\'s primary calming neurotransmitter. Your variant is associated with slightly lower GABA production.',
+    interactions: [],
   },
 }
 
@@ -37,6 +42,7 @@ interface MentalHealthDashboardProps {
   totalGenes: number
   totalActions: number
   lastUpdated?: string
+  geneMeta?: Record<string, GeneMeta>
   onExport: (format: 'pdf' | 'md' | 'doctor') => void
   onGeneClick: (gene: GeneData) => void
   actions: Record<string, ActionData[]>
@@ -58,6 +64,7 @@ export function MentalHealthDashboard({
   totalGenes,
   totalActions,
   lastUpdated,
+  geneMeta: serverGeneMeta = {},
   onExport,
   onGeneClick,
   actions,
@@ -66,6 +73,8 @@ export function MentalHealthDashboard({
   checklistIds = new Set(),
   onAddToChecklist,
 }: MentalHealthDashboardProps) {
+  // Merge server gene_meta with fallback — server data takes priority
+  const GENE_META = { ...FALLBACK_GENE_META, ...serverGeneMeta }
   const [expandedGene, setExpandedGene] = useState<GeneData | null>(null)
   const { traits: gwasTraits } = useGWASTraits()
   const { activeCategory, activeActionType, setCategory, setActionType, clearAll, matchesGene, matchesAction } =

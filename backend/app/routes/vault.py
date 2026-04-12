@@ -211,10 +211,96 @@ async def get_gene_actions(symbol: str):
 
 
 # ---------------------------------------------------------------------------
-# GET /api/config/{name}
+# GET /api/vault/systems
 # ---------------------------------------------------------------------------
 
 _CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
+
+
+def _load_pathway_systems() -> dict:
+    """Load pathway systems from config/pathway-systems.yaml."""
+    config_file = _CONFIG_DIR / "pathway-systems.yaml"
+    if not config_file.exists():
+        return {"systems": {}, "goal_pills": []}
+    data = yaml.safe_load(config_file.read_text()) or {}
+    return data
+
+
+@router.get("/vault/systems")
+async def list_vault_systems(domain: str | None = None):
+    """Return pathway systems from config, enriched with actual gene counts from vault.
+
+    Optional query param `domain` filters to systems for a specific view
+    (mental-health, addiction, risk, pgx).
+    """
+    config = _load_pathway_systems()
+    systems_config = config.get("systems", {})
+
+    # Build a map of all vault genes by their system tags
+    vault = _get_vault_path()
+    genes_dir = vault / "Genes"
+    system_genes: dict[str, list[str]] = {}
+
+    if genes_dir.exists():
+        for f in sorted(genes_dir.iterdir()):
+            if f.suffix != ".md":
+                continue
+            gene = _parse_gene_file(f)
+            if not gene:
+                continue
+            for sys_tag in gene.get("systems", []):
+                # Normalize pipe-separated tags: "Immune and Inflammatory|Immune System" -> "Immune and Inflammatory"
+                normalized = sys_tag.split("|")[0].strip()
+                system_genes.setdefault(normalized, []).append(gene["symbol"])
+
+    # Enrich config systems with actual gene counts
+    result = {}
+    for key, sys in systems_config.items():
+        domains = sys.get("domains", [])
+        if domain and domain not in domains:
+            continue
+
+        # Find matching genes from vault
+        matched_genes: list[str] = []
+        for tag in sys.get("tags", []):
+            matched_genes.extend(system_genes.get(tag, []))
+        # Deduplicate preserving order
+        seen: set[str] = set()
+        unique_genes = []
+        for g in matched_genes:
+            if g not in seen:
+                seen.add(g)
+                unique_genes.append(g)
+
+        result[key] = {
+            "name": sys["name"],
+            "tags": sys.get("tags", []),
+            "domains": domains,
+            "gene_count": len(unique_genes),
+            "genes": unique_genes,
+        }
+
+    # Find systems in vault that aren't in config (undiscovered)
+    configured_tags = set()
+    for sys in systems_config.values():
+        for tag in sys.get("tags", []):
+            configured_tags.add(tag)
+
+    unconfigured = {}
+    for tag, genes in system_genes.items():
+        if tag not in configured_tags:
+            unconfigured[tag] = {"gene_count": len(genes), "genes": genes}
+
+    return {
+        "systems": result,
+        "unconfigured": unconfigured,
+        "goal_pills": config.get("goal_pills", []),
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /api/config/{name}
+# ---------------------------------------------------------------------------
 
 
 @router.get("/config/{name}")

@@ -475,6 +475,7 @@ function App() {
             data={mentalHealth.sections}
             totalGenes={mentalHealth.totalGenes}
             totalActions={mentalHealth.totalActions}
+            geneMeta={mentalHealth.geneMeta}
             onExport={handleExport}
             onGeneClick={(gene) => console.log('gene click', gene.symbol)}
             actions={mentalHealth.actions}

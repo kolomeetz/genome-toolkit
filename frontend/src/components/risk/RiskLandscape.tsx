@@ -479,8 +479,12 @@ interface RiskLandscapeProps {
   onAddToChecklist?: (title: string, cause: string) => void
 }
 
+function formatDemographic(d: { sex: string; age_range: string; ancestry: string }): string {
+  return `${d.sex}s, ${d.age_range}, ${d.ancestry.charAt(0).toUpperCase() + d.ancestry.slice(1)} ancestry`
+}
+
 export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps) {
-  const { causes: CAUSES, loading } = useRiskData()
+  const { causes: CAUSES, demographic, loading } = useRiskData()
   const [expandedRank, setExpandedRank] = useState<number | null>(1)
   const [addedActions, setAddedActions] = useState<Set<string>>(new Set())
 
@@ -532,9 +536,10 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
         {/* Context block */}
         <InfoCallout>
           Population bars show how common each cause of death is for{' '}
-          <strong>males, 30–44, European ancestry</strong> (based on your profile). Your personal
-          bar shows where you have relevant genetic variants. Having variants does not predict
-          outcomes — it shows where awareness and prevention can make a difference.
+          <strong>{demographic ? formatDemographic(demographic) : 'your demographic profile'}</strong>{' '}
+          (based on your profile). Your personal bar shows where you have relevant genetic variants.
+          Having variants does not predict outcomes — it shows where awareness and prevention can
+          make a difference.
         </InfoCallout>
 
         {/* Bar legend */}
@@ -573,7 +578,7 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
         }}
       >
         <span>
-          {CAUSES.length} causes &middot; male 30–44 EUR &middot; {stats.actionable} actionable
+          {CAUSES.length} causes &middot; {demographic ? `${demographic.sex} ${demographic.age_range} ${demographic.ancestry.toUpperCase()}` : 'loading'} &middot; {stats.actionable} actionable
         </span>
         <span>GENOME_TOOLKIT // RISK LANDSCAPE</span>
       </div>
