@@ -18,6 +18,8 @@ SERVICE_NAME = "genome-toolkit"
 SECRETS = {
     "anthropic_api_key": "ANTHROPIC_API_KEY",
     "groq_api_key": "GROQ_API_KEY",
+    "elevenlabs_api_key": "ELEVENLABS_API_KEY",
+    "deepgram_api_key": "DEEPGRAM_API_KEY",
 }
 
 

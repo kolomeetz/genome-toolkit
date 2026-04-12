@@ -6,8 +6,10 @@ API keys are stored securely in macOS Keychain (fallback: .env file).
 Other settings go to config/settings.yaml.
 
 Usage:
-    python scripts/setup.py
-    python scripts/setup.py --reconfigure   # re-run, keeping existing values as defaults
+    python scripts/setup.py                          # interactive wizard
+    python scripts/setup.py --reconfigure            # re-run, keeping defaults
+    python scripts/setup.py --auto                   # non-interactive, uses env vars + defaults
+    python scripts/setup.py --auto --vault ~/vault --tts-voice leo --hide-views addiction
 """
 from __future__ import annotations
 
@@ -112,6 +114,16 @@ def run_setup():
         print(f"  Current Groq key: {mask_key(current_groq)}")
     groq_key = ask("Groq API key (for Orpheus TTS)", default=current_groq, secret=True)
 
+    current_elevenlabs = get_secret("elevenlabs_api_key")
+    if current_elevenlabs:
+        print(f"  Current ElevenLabs key: {mask_key(current_elevenlabs)}")
+    elevenlabs_key = ask("ElevenLabs API key (optional)", default=current_elevenlabs, secret=True)
+
+    current_deepgram = get_secret("deepgram_api_key")
+    if current_deepgram:
+        print(f"  Current Deepgram key: {mask_key(current_deepgram)}")
+    deepgram_key = ask("Deepgram API key (optional)", default=current_deepgram, secret=True)
+
     # --- Paths ---
     section("PATHS")
 
@@ -139,7 +151,7 @@ def run_setup():
     tts_provider = ask(
         "TTS provider",
         default=tts_existing.get("provider", "orpheus"),
-        options=["orpheus", "browser", "none"],
+        options=["orpheus", "elevenlabs", "deepgram", "browser", "none"],
     )
 
     tts_voice = tts_existing.get("voice", "tara")
@@ -163,6 +175,20 @@ def run_setup():
             tts_speed = float(speed_str)
         except ValueError:
             tts_speed = 1.0
+    elif tts_provider == "elevenlabs":
+        if not elevenlabs_key:
+            print("    Note: ElevenLabs requires an API key. Set it above or via ELEVENLABS_API_KEY env var.")
+        tts_voice = ask(
+            "Voice ID (see /api/tts/voices for list)",
+            default=tts_voice if tts_voice else "21m00Tcm4TlvDq8ikWAM",
+        )
+    elif tts_provider == "deepgram":
+        if not deepgram_key:
+            print("    Note: Deepgram requires an API key. Set it above or via DEEPGRAM_API_KEY env var.")
+        tts_voice = ask(
+            "Voice model",
+            default=tts_voice if tts_voice else "aura-asteria-en",
+        )
 
     # --- STT ---
     section("SPEECH-TO-TEXT")
@@ -196,9 +222,43 @@ def run_setup():
         existing=gen_existing.get("health_goals", []),
     )
 
+    # --- Display ---
+    section("DISPLAY")
+
+    ALL_VIEWS = ["snps", "mental-health", "pgx", "addiction", "risk"]
+    VIEW_LABELS = {
+        "snps": "SNP Browser",
+        "mental-health": "Mental Health",
+        "pgx": "PGx / Drugs",
+        "addiction": "Addiction",
+        "risk": "Risk Landscape",
+    }
+
+    display_existing = existing.get("display", {})
+    existing_views = display_existing.get("views", ALL_VIEWS)
+
+    print("  Choose which sections to show in the navigation bar.")
+    print("  SNP Browser is always shown. Toggle others with y/n.\n")
+
+    enabled_views = ["snps"]
+    for v in ALL_VIEWS:
+        if v == "snps":
+            continue
+        is_on = v in existing_views
+        choice = ask(
+            f"Show {VIEW_LABELS[v]}?",
+            default="y" if is_on else "n",
+            options=["y", "n"],
+        )
+        if choice == "y":
+            enabled_views.append(v)
+
+    display_theme = display_existing.get("theme", "warm")
+    display_units = display_existing.get("units", "metric")
+
     # --- Store API keys securely ---
     section("STORING API KEYS")
-    for key_name, key_value in [("anthropic_api_key", anthropic_key), ("groq_api_key", groq_key)]:
+    for key_name, key_value in [("anthropic_api_key", anthropic_key), ("groq_api_key", groq_key), ("elevenlabs_api_key", elevenlabs_key), ("deepgram_api_key", deepgram_key)]:
         if key_value:
             method = set_secret(key_name, key_value)
             env_name = SECRETS.get(key_name, key_name.upper())
@@ -224,10 +284,11 @@ def run_setup():
             "medications": medications,
             "health_goals": health_goals,
         },
-        "display": existing.get("display", {
-            "theme": "warm",
-            "units": "metric",
-        }),
+        "display": {
+            "theme": display_theme,
+            "units": display_units,
+            "views": enabled_views,
+        },
     }
 
     # --- Write settings.yaml ---
@@ -263,8 +324,12 @@ def run_setup():
 
     # --- Summary ---
     section("SETUP COMPLETE")
-    print(f"  TTS:         {tts_provider}" + (f" ({tts_voice})" if tts_provider == "orpheus" else ""))
+    print(f"  TTS:         {tts_provider}" + (f" ({tts_voice})" if tts_provider != "browser" else ""))
     print(f"  STT:         {stt_lang}")
+    print(f"  Views:       {', '.join(enabled_views)}")
+    hidden = [v for v in ALL_VIEWS if v not in enabled_views]
+    if hidden:
+        print(f"  Hidden:      {', '.join(hidden)}")
     print(f"  Population:  {population}")
     if medications:
         print(f"  Medications: {', '.join(medications)}")
@@ -279,9 +344,128 @@ def run_setup():
     print()
 
 
+ALL_VIEWS_DEFAULT = ["snps", "mental-health", "pgx", "addiction", "risk"]
+
+
+def run_auto_setup(args):
+    """Non-interactive setup. Reads from CLI args and env vars, writes config files."""
+    existing = load_existing()
+
+    # --- Resolve values: CLI arg > env var > existing config > default ---
+    vault_path = args.vault or os.environ.get("GENOME_VAULT_PATH") or existing.get("genome_vault_path", "~/genome-vault")
+    db_path = args.db or os.environ.get("GENOME_DB_PATH") or existing.get("genome_db_path", "./data/genome.db")
+
+    tts_existing = existing.get("tts", {})
+    tts_provider = args.tts_provider or os.environ.get("TTS_PROVIDER") or tts_existing.get("provider", "orpheus")
+    tts_voice = args.tts_voice or tts_existing.get("voice", "tara")
+    tts_emotion = tts_existing.get("emotion_default", "")
+    tts_speed = tts_existing.get("speed", 1.0)
+
+    stt_lang = args.stt_lang or existing.get("stt", {}).get("language", "en-US")
+
+    gen_existing = existing.get("genetics", {})
+    population = args.population or gen_existing.get("population", "EUR")
+    medications = gen_existing.get("medications", [])
+    health_goals = gen_existing.get("health_goals", [])
+
+    display_existing = existing.get("display", {})
+    display_theme = display_existing.get("theme", "warm")
+    display_units = display_existing.get("units", "metric")
+
+    # Views: start with all, remove hidden ones
+    enabled_views = list(display_existing.get("views", ALL_VIEWS_DEFAULT))
+    if args.hide_views:
+        for v in args.hide_views:
+            if v in enabled_views and v != "snps":
+                enabled_views.remove(v)
+    if args.show_views:
+        for v in args.show_views:
+            if v not in enabled_views and v in ALL_VIEWS_DEFAULT:
+                enabled_views.append(v)
+    if "snps" not in enabled_views:
+        enabled_views.insert(0, "snps")
+
+    # --- Store API keys ---
+    keys = {
+        "anthropic_api_key": os.environ.get("ANTHROPIC_API_KEY", ""),
+        "groq_api_key": os.environ.get("GROQ_API_KEY", ""),
+        "elevenlabs_api_key": os.environ.get("ELEVENLABS_API_KEY", ""),
+        "deepgram_api_key": os.environ.get("DEEPGRAM_API_KEY", ""),
+    }
+    for key_name, key_value in keys.items():
+        if key_value:
+            method = set_secret(key_name, key_value)
+            print(f"  {SECRETS.get(key_name, key_name.upper())}: stored in {method}")
+
+    # --- Build and write settings ---
+    settings = {
+        "genome_db_path": db_path,
+        "genome_vault_path": vault_path,
+        "tts": {
+            "provider": tts_provider,
+            "voice": tts_voice,
+            "emotion_default": tts_emotion,
+            "speed": tts_speed,
+        },
+        "stt": {"language": stt_lang},
+        "genetics": {
+            "population": population,
+            "medications": medications,
+            "health_goals": health_goals,
+        },
+        "display": {
+            "theme": display_theme,
+            "units": display_units,
+            "views": enabled_views,
+        },
+    }
+
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    header = "# User Settings — generated by scripts/setup.py --auto\n\n"
+    with open(SETTINGS_PATH, "w") as f:
+        f.write(header)
+        yaml.dump(settings, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+
+    env_lines = [
+        "# Generated by scripts/setup.py --auto",
+        f"GENOME_DB_PATH={db_path}",
+        f"GENOME_DATA_DIR=./data",
+        f"GENOME_VAULT_PATH={vault_path}",
+        "",
+    ]
+    with open(ENV_PATH, "w") as f:
+        f.write("\n".join(env_lines))
+
+    print(f"  Config: {SETTINGS_PATH}")
+    print(f"  Env:    {ENV_PATH}")
+    print(f"  TTS:    {tts_provider} ({tts_voice})")
+    print(f"  Views:  {', '.join(enabled_views)}")
+    print(f"  Vault:  {vault_path}")
+    print("  Done.")
+
+
 if __name__ == "__main__":
-    try:
-        run_setup()
-    except KeyboardInterrupt:
-        print("\n\n  Setup cancelled.")
-        sys.exit(1)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Genome Toolkit setup")
+    parser.add_argument("--auto", action="store_true", help="Non-interactive setup (agent-friendly)")
+    parser.add_argument("--vault", help="Obsidian vault path")
+    parser.add_argument("--db", help="Genome database path")
+    parser.add_argument("--tts-provider", help="TTS provider: orpheus|elevenlabs|deepgram|browser|none")
+    parser.add_argument("--tts-voice", help="TTS voice ID (e.g. leo, tara)")
+    parser.add_argument("--stt-lang", help="STT language (BCP-47, e.g. en-US)")
+    parser.add_argument("--population", help="Ancestry population: EUR|AFR|EAS|SAS|AMR|NFE|FIN")
+    parser.add_argument("--hide-views", nargs="+", help="Views to hide (e.g. addiction risk)")
+    parser.add_argument("--show-views", nargs="+", help="Views to show (e.g. addiction)")
+    parser.add_argument("--reconfigure", action="store_true", help="Re-run keeping existing defaults")
+
+    args = parser.parse_args()
+
+    if args.auto:
+        run_auto_setup(args)
+    else:
+        try:
+            run_setup()
+        except KeyboardInterrupt:
+            print("\n\n  Setup cancelled.")
+            sys.exit(1)

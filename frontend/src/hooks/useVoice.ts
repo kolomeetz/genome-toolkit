@@ -2,6 +2,25 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 
 export type VoiceState = 'idle' | 'recording' | 'loading' | 'speaking'
 
+/** Try backend TTS, return audio URL or null (= use browser fallback). */
+async function fetchBackendTTS(text: string, emotion?: string): Promise<string | null> {
+  try {
+    const resp = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, emotion: emotion || '' }),
+    })
+    // 204 = browser mode, no audio from backend
+    if (resp.status === 204) return null
+    if (!resp.ok) return null
+    const blob = await resp.blob()
+    if (blob.size === 0) return null
+    return URL.createObjectURL(blob)
+  } catch {
+    return null
+  }
+}
+
 export function useVoice() {
   const [voiceEnabled, setVoiceEnabled] = useState(false)
   const [listening, setListening] = useState(false)
@@ -10,11 +29,12 @@ export function useVoice() {
   const [recordingTime, setRecordingTime] = useState(0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const recordingStartRef = useRef<number>(0)
 
-  // Check browser support
+  // Check browser support for STT
   const supported = typeof window !== 'undefined' && (
     'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
   )
@@ -47,33 +67,56 @@ export function useVoice() {
     }
   }, [listening])
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback(async (text: string, emotion?: string) => {
     if (!voiceEnabled || !text) return
 
-    // Cancel any current speech
+    // Stop any current playback
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
     window.speechSynthesis.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.95
-    utterance.pitch = 1.0
+    setLoading(true)
 
-    // Prefer a natural-sounding voice
-    const voices = window.speechSynthesis.getVoices()
-    const preferred = voices.find(v =>
-      v.name.includes('Samantha') || v.name.includes('Karen') ||
-      v.name.includes('Google') || v.name.includes('Natural')
-    ) || voices.find(v => v.lang.startsWith('en'))
-    if (preferred) utterance.voice = preferred
+    // Try backend TTS first
+    const audioUrl = await fetchBackendTTS(text, emotion)
 
-    utterance.onstart = () => { setLoading(false); setSpeaking(true) }
-    utterance.onend = () => setSpeaking(false)
-    utterance.onerror = () => { setSpeaking(false); setLoading(false) }
+    if (audioUrl) {
+      // Play backend audio
+      const audio = new Audio(audioUrl)
+      audioRef.current = audio
+      audio.onplay = () => { setLoading(false); setSpeaking(true) }
+      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(audioUrl) }
+      audio.onerror = () => { setSpeaking(false); setLoading(false); URL.revokeObjectURL(audioUrl) }
+      audio.play().catch(() => { setLoading(false) })
+    } else {
+      // Fallback to browser SpeechSynthesis
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.rate = 0.95
+      utterance.pitch = 1.0
 
-    synthRef.current = utterance
-    window.speechSynthesis.speak(utterance)
+      const voices = window.speechSynthesis.getVoices()
+      const preferred = voices.find(v =>
+        v.name.includes('Samantha') || v.name.includes('Karen') ||
+        v.name.includes('Google') || v.name.includes('Natural')
+      ) || voices.find(v => v.lang.startsWith('en'))
+      if (preferred) utterance.voice = preferred
+
+      utterance.onstart = () => { setLoading(false); setSpeaking(true) }
+      utterance.onend = () => setSpeaking(false)
+      utterance.onerror = () => { setSpeaking(false); setLoading(false) }
+
+      synthRef.current = utterance
+      window.speechSynthesis.speak(utterance)
+    }
   }, [voiceEnabled])
 
   const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
     window.speechSynthesis.cancel()
     setSpeaking(false)
     setLoading(false)
@@ -94,7 +137,6 @@ export function useVoice() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
       if (handled) return
-      // Only use final results
       const result = event.results[event.results.length - 1]
       if (!result.isFinal) return
       handled = true
@@ -125,7 +167,7 @@ export function useVoice() {
     setVoiceEnabled(prev => !prev)
   }, [voiceEnabled, stopSpeaking, stopListening])
 
-  // Load voices (some browsers load async)
+  // Load browser voices (some browsers load async)
   useEffect(() => {
     window.speechSynthesis?.getVoices()
     window.speechSynthesis?.addEventListener('voiceschanged', () => {

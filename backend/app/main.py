@@ -107,6 +107,20 @@ async def health():
     return {"status": "ok", "variants": stats["total"]}
 
 
+ALL_VIEWS = ["snps", "mental-health", "pgx", "addiction", "risk"]
+
+@app.get("/api/settings/views")
+async def get_visible_views():
+    """Return which views are enabled. Reads display.views from settings.yaml."""
+    settings = _load_user_settings()
+    display = settings.get("display", {})
+    configured = display.get("views", ALL_VIEWS)
+    # Always include snps
+    if "snps" not in configured:
+        configured = ["snps"] + configured
+    return {"views": configured}
+
+
 # Serve built frontend assets at /assets (does NOT catch /api)
 if FRONTEND_DIST.exists():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")

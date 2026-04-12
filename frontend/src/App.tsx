@@ -44,6 +44,7 @@ function App() {
   const [checklistOpen, setChecklistOpen] = useState(false)
   const [checklistHighlight, setChecklistHighlight] = useState(false)
   const [paletteCollapsed, setPaletteCollapsed] = useState(false)
+  const [visibleViews, setVisibleViews] = useState<Set<string>>(new Set(['snps', 'mental-health', 'pgx', 'addiction', 'risk']))
 
   const navigate = useCallback((v: 'snps' | 'mental-health' | 'pgx' | 'addiction' | 'risk') => {
     setView(v)
@@ -67,6 +68,18 @@ function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  const VIEW_TITLES: Record<string, string> = {
+    'snps': 'SNP Browser',
+    'mental-health': 'Mental Health',
+    'pgx': 'PGx / Drugs',
+    'addiction': 'Addiction',
+    'risk': 'Risk Landscape',
+  }
+
+  useEffect(() => {
+    document.title = `${VIEW_TITLES[view] || 'SNP Browser'} — Genome Toolkit`
+  }, [view])
+
   const [cmdkOpen, setCmdkOpen] = useState(false)
   const [cmdkInitialQuery, setCmdkInitialQuery] = useState<string | undefined>(undefined)
   const [selectedSNP, setSelectedSNP] = useState<SNP | null>(null)
@@ -79,6 +92,13 @@ function App() {
   useEffect(() => {
     fetch('/api/genes').then(r => r.json()).then(setGenes).catch(() => {})
     fetch('/api/insights').then(r => r.json()).then(setInsights).catch(() => {})
+    fetch('/api/settings/views').then(r => r.json()).then(d => {
+      const views = new Set<string>(d.views || ['snps', 'mental-health', 'pgx', 'addiction', 'risk'])
+      views.add('snps')
+      setVisibleViews(views)
+      // If current view is hidden, redirect to snps
+      if (!views.has(view)) navigate('snps')
+    }).catch(() => {})
 
     const params = new URLSearchParams(window.location.search)
     const variantId = params.get('variant')
@@ -288,66 +308,27 @@ function App() {
           </span>
         </div>
         <div className="nav-buttons" style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
-          <button
-            className="btn"
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              background: view === 'snps' ? 'var(--bg-inset)' : 'transparent',
-              borderColor: view === 'snps' ? 'var(--primary)' : 'var(--border)',
-              color: view === 'snps' ? 'var(--primary)' : 'var(--text-secondary)',
-            }}
-            onClick={() => navigate('snps')}
-          >
-            SNP_BROWSER
-          </button>
-          <button
-            className="btn"
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              background: view === 'mental-health' ? 'var(--bg-inset)' : 'transparent',
-              borderColor: view === 'mental-health' ? 'var(--primary)' : 'var(--border)',
-              color: view === 'mental-health' ? 'var(--primary)' : 'var(--text-secondary)',
-            }}
-            onClick={() => navigate('mental-health')}
-          >
-            MENTAL_HEALTH
-          </button>
-          <button
-            className="btn"
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              background: view === 'pgx' ? 'var(--bg-inset)' : 'transparent',
-              borderColor: view === 'pgx' ? 'var(--primary)' : 'var(--border)',
-              color: view === 'pgx' ? 'var(--primary)' : 'var(--text-secondary)',
-            }}
-            onClick={() => navigate('pgx')}
-          >
-            PGX_/_DRUGS
-          </button>
-          <button
-            className="btn"
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              background: view === 'addiction' ? 'var(--bg-inset)' : 'transparent',
-              borderColor: view === 'addiction' ? 'var(--primary)' : 'var(--border)',
-              color: view === 'addiction' ? 'var(--primary)' : 'var(--text-secondary)',
-            }}
-            onClick={() => navigate('addiction')}
-          >
-            ADDICTION
-          </button>
-          <button
-            className="btn"
-            style={{
-              fontSize: 'var(--font-size-xs)',
-              background: view === 'risk' ? 'var(--bg-inset)' : 'transparent',
-              borderColor: view === 'risk' ? 'var(--primary)' : 'var(--border)',
-              color: view === 'risk' ? 'var(--primary)' : 'var(--text-secondary)',
-            }}
-            onClick={() => navigate('risk')}
-          >
-            RISK
-          </button>
+          {([
+            { id: 'snps', label: 'SNP_BROWSER' },
+            { id: 'mental-health', label: 'MENTAL_HEALTH' },
+            { id: 'pgx', label: 'PGX_/_DRUGS' },
+            { id: 'addiction', label: 'ADDICTION' },
+            { id: 'risk', label: 'RISK' },
+          ] as const).filter(v => visibleViews.has(v.id)).map(v => (
+            <button
+              key={v.id}
+              className="btn"
+              style={{
+                fontSize: 'var(--font-size-xs)',
+                background: view === v.id ? 'var(--bg-inset)' : 'transparent',
+                borderColor: view === v.id ? 'var(--primary)' : 'var(--border)',
+                color: view === v.id ? 'var(--primary)' : 'var(--text-secondary)',
+              }}
+              onClick={() => navigate(v.id)}
+            >
+              {v.label}
+            </button>
+          ))}
           <button
             className="btn"
             style={{
@@ -524,7 +505,7 @@ function App() {
         <span className="label">
           SIGNAL_PHASE: {loading ? 'SCANNING' : streaming ? (status || 'AI_PROCESSING') : 'IDLE'}
         </span>
-        <span className="label">GENOME_TOOLKIT // V0.1.0</span>
+        <a href="https://github.com/glebis/genome-toolkit" target="_blank" rel="noopener noreferrer" className="label" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>GENOME_TOOLKIT // V0.1.0</a>
       </footer>
 
       {/* Variant Drawer */}

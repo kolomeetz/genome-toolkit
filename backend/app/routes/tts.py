@@ -1,73 +1,80 @@
-"""TTS endpoint — converts text to speech via Orpheus/Groq."""
-import os
-
+"""TTS endpoint — multi-provider text-to-speech with browser fallback."""
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
+
+from backend.app.tts import get_provider, list_providers, get_active_provider_name, get_default_voice
 
 router = APIRouter(prefix="/api")
 
 
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "tara"
+    voice: str = ""
     emotion: str = ""
+    provider: str = ""  # override active provider for this request
 
 
 @router.post("/tts")
 async def text_to_speech(req: TTSRequest):
     """Generate speech audio from text.
 
-    Returns WAV audio bytes with appropriate content type.
-    Falls back to empty response if TTS is disabled or no API key.
+    Uses the configured provider (env TTS_PROVIDER, config, or auto-detect).
+    Returns audio bytes. If provider is 'browser', returns 204 (frontend handles it).
     """
     if not req.text.strip():
         raise HTTPException(status_code=400, detail="Text is required")
 
-    # Check if Groq key is available
-    groq_key = os.environ.get("GROQ_API_KEY", "")
-    if not groq_key:
-        try:
-            from scripts.lib.secrets import get_groq_key
-            groq_key = get_groq_key()
-        except Exception:
-            pass
+    provider_name = req.provider or None
+    provider = get_provider(provider_name)
 
-    if not groq_key:
+    if provider is None:
+        # 'browser' mode — tell frontend to use SpeechSynthesis
+        return Response(status_code=204)
+
+    if not provider.is_available():
         raise HTTPException(
             status_code=503,
-            detail="TTS not configured. Run `python scripts/setup.py` to set GROQ_API_KEY.",
+            detail=f"TTS provider '{provider.name}' not configured. Set the appropriate API key.",
         )
 
+    voice = req.voice or get_default_voice()
     try:
-        from backend.app.tts import synthesize
-        audio_bytes = await synthesize(
+        result = await provider.synthesize(
             text=req.text,
-            voice=req.voice,
+            voice=voice,
             emotion=req.emotion,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"TTS error: {e}")
 
     return Response(
-        content=audio_bytes,
-        media_type="audio/wav",
+        content=result.audio,
+        media_type=result.content_type,
         headers={"Content-Disposition": "inline"},
     )
 
 
 @router.get("/tts/voices")
-async def list_voices():
-    """List available TTS voices."""
+async def get_voices():
+    """List voices for the active provider."""
+    provider = get_provider()
+    if provider is None:
+        return {"provider": "browser", "voices": [], "emotions": [], "note": "Using browser SpeechSynthesis"}
+
+    voices = provider.voices()
+    emotions = provider.emotions()
     return {
-        "voices": [
-            {"id": "tara", "name": "Tara", "description": "Female, conversational, clear"},
-            {"id": "leah", "name": "Leah", "description": "Female, warm, gentle"},
-            {"id": "mia", "name": "Mia", "description": "Female, professional, articulate"},
-            {"id": "jess", "name": "Jess", "description": "Female, energetic"},
-            {"id": "leo", "name": "Leo", "description": "Male, confident"},
-            {"id": "dan", "name": "Dan", "description": "Male, casual"},
-        ],
-        "emotions": ["cheerful", "whisper", "calm", "excited", "sad", "angry"],
-        "emotion_tags": ["<laugh>", "<sigh>", "<gasp>", "<chuckle>", "<cough>", "<yawn>", "<groan>"],
+        "provider": provider.name,
+        "voices": voices,
+        "emotions": emotions,
+    }
+
+
+@router.get("/tts/providers")
+async def get_providers():
+    """List all available TTS providers and which is active."""
+    return {
+        "active": get_active_provider_name(),
+        "providers": list_providers(),
     }

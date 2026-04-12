@@ -77,6 +77,11 @@ describe('useVoice', () => {
       writable: true,
       configurable: true,
     })
+
+    // Mock fetch to return 204 (browser TTS fallback) for /api/tts
+    vi.stubGlobal('fetch', vi.fn(() =>
+      Promise.resolve({ status: 204, ok: false } as Response)
+    ))
   })
 
   afterEach(() => {
@@ -155,8 +160,8 @@ describe('useVoice', () => {
   // 6
   it('speak does nothing when voiceEnabled is false', async () => {
     const { result } = await importAndRender()
-    act(() => {
-      result.current.speak('hello')
+    await act(async () => {
+      await result.current.speak('hello')
     })
     expect(mockSynth.speak).not.toHaveBeenCalled()
   })
@@ -167,20 +172,20 @@ describe('useVoice', () => {
     act(() => {
       result.current.toggleVoice()
     })
-    act(() => {
-      result.current.speak('')
+    await act(async () => {
+      await result.current.speak('')
     })
     expect(mockSynth.speak).not.toHaveBeenCalled()
   })
 
   // 8
-  it('speak calls speechSynthesis.speak when enabled', async () => {
+  it('speak calls speechSynthesis.speak when enabled (browser fallback)', async () => {
     const { result } = await importAndRender()
     act(() => {
       result.current.toggleVoice()
     })
-    act(() => {
-      result.current.speak('hello world')
+    await act(async () => {
+      await result.current.speak('hello world')
     })
     expect(mockSynth.speak).toHaveBeenCalledTimes(1)
     const utterance = mockSynth.speak.mock.calls[0][0]
@@ -193,8 +198,8 @@ describe('useVoice', () => {
     act(() => {
       result.current.toggleVoice()
     })
-    act(() => {
-      result.current.speak('first')
+    await act(async () => {
+      await result.current.speak('first')
     })
     // cancel is called before speak
     expect(mockSynth.cancel).toHaveBeenCalled()
@@ -325,8 +330,8 @@ describe('useVoice', () => {
     act(() => {
       result.current.toggleVoice()
     })
-    act(() => {
-      result.current.speak('hello')
+    await act(async () => {
+      await result.current.speak('hello')
     })
 
     const utterance = mockSynth.speak.mock.calls[0][0]
@@ -349,8 +354,8 @@ describe('useVoice', () => {
     act(() => {
       result.current.toggleVoice()
     })
-    act(() => {
-      result.current.speak('hello')
+    await act(async () => {
+      await result.current.speak('hello')
     })
 
     const utterance = mockSynth.speak.mock.calls[0][0]

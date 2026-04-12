@@ -32,30 +32,52 @@ cd genome-toolkit
 # Install Python dependencies
 pip install -e .
 
-# Set your vault location
-export GENOME_VAULT_ROOT=~/my-genome-vault
-
-# Copy the vault template
-cp -r vault-template/* $GENOME_VAULT_ROOT/
-
-# Install skills (copy to Claude Code skills directory)
-cp -r skills/* ~/.claude/skills/
+# Interactive setup (API keys, vault path, TTS, visible sections)
+python scripts/setup.py
 ```
+
+### Setup with Claude Code (or any AI agent)
+
+The setup script supports a fully non-interactive `--auto` mode that reads API keys from environment variables and accepts all options as CLI flags:
+
+```bash
+# Set API keys as env vars (or store in macOS Keychain)
+export ANTHROPIC_API_KEY=sk-ant-...
+export GROQ_API_KEY=gsk_...
+
+# Run non-interactive setup
+python scripts/setup.py --auto \
+  --vault ~/my-genome-vault \
+  --tts-provider orpheus \
+  --tts-voice leo \
+  --population EUR
+
+# Optionally hide nav sections
+python scripts/setup.py --auto --hide-views addiction risk
+
+# Show them back
+python scripts/setup.py --auto --show-views addiction
+```
+
+All flags are optional — omitted values use existing config or sensible defaults. This means an AI agent can run `python scripts/setup.py --auto` with zero arguments and get a working config.
 
 ### First Run
 
 ```bash
-# 1. Place your raw genome file
+# 1. Place your raw genome file in the vault
 cp ~/Downloads/23andme_raw.txt $GENOME_VAULT_ROOT/data/raw/
 
-# 2. Import your data
-# In Claude Code:
+# 2. Import your data (in Claude Code)
 /genome-import
 
 # 3. Set up your vault with health goals
 /genome-onboard
 
-# 4. Open your vault in Obsidian and start exploring
+# 4. Start the app
+uvicorn backend.app.main:app --port 8000 &
+cd frontend && npm run dev
+
+# 5. Open http://localhost:5173
 ```
 
 ## Web Application

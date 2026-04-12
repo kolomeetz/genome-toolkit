@@ -11,11 +11,15 @@ genome_db_path: "~/genome-vault/data/genome.db"
 genome_vault_path: "~/genome-vault"
 
 # --- Text-to-Speech ---
+# Provider priority: TTS_PROVIDER env > this config > first available API key > browser
 tts:
-  provider: "orpheus"      # orpheus | browser | none
-  voice: "tara"            # tara | leah | mia | jess | leo | dan
+  provider: "orpheus"      # orpheus | elevenlabs | deepgram | browser | none
+  voice: "tara"            # provider-specific voice ID (see /api/tts/voices)
   emotion_default: ""      # e.g. "cheerful", "calm" — prepended to all TTS text
   speed: 1.0               # playback speed multiplier
+  # Orpheus voices: tara | leah | mia | jess | leo | dan
+  # ElevenLabs voices: use voice ID from /api/tts/voices
+  # Deepgram voices: aura-asteria-en | aura-luna-en | aura-orion-en | etc.
 
 # --- Speech-to-Text ---
 stt:
@@ -31,3 +35,9 @@ genetics:
 display:
   theme: "warm"            # warm (default)
   units: "metric"          # metric | imperial
+  views:                   # which nav sections to show (comment out to hide)
+    - snps                 # always shown
+    - mental-health
+    - pgx
+    - addiction
+    - risk
