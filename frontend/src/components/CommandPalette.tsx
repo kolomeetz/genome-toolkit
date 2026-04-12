@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type ReactNode, type ComponentPropsWithoutRef } from 'react'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { ChatMessage, AgentAction } from '../hooks/useChat'
@@ -414,6 +415,8 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const paletteRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(paletteRef, open, { onEscape: onClose })
   const [showHistory, setShowHistory] = useState(false)
   const [deletedSession, setDeletedSession] = useState<{ id: string; title: string } | null>(null)
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -430,14 +433,6 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages, streamingText])
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) onClose()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, onClose])
 
   const handleCopyMessage = useCallback((idx: number) => {
     copyToClipboard(singleMessageMarkdown(messages[idx]))
@@ -467,6 +462,7 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
 
   return (
     <div
+      ref={paletteRef}
       style={{
         position: 'fixed',
         inset: 0,
