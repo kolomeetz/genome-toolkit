@@ -83,22 +83,26 @@ describe('useSessionHistory', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/sessions/s2', { method: 'DELETE' })
   })
 
-  it('createSession calls POST and returns id', async () => {
+  it('renameSession calls PATCH and optimistically updates title', async () => {
     ;(global.fetch as any)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockSessions) }) // initial load
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: 's4' }) }) // POST
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([...mockSessions, { id: 's4', title: '', view_context: '', created_at: '', last_active: '', message_count: 0, first_message: null }]) }) // refresh
+      .mockResolvedValueOnce({ ok: true }) // PATCH
 
     const { result } = await getHook()
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    let newId: string | null = null
     await act(async () => {
-      newId = await result.current.createSession()
+      await result.current.renameSession('s1', 'New Title')
     })
 
-    expect(newId).toBe('s4')
-    expect(global.fetch).toHaveBeenCalledWith('/api/sessions', { method: 'POST' })
+    // Optimistic update
+    expect(result.current.sessions.find(s => s.id === 's1')?.title).toBe('New Title')
+    // PATCH called
+    expect(global.fetch).toHaveBeenCalledWith('/api/sessions/s1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'New Title' }),
+    })
   })
 
   it('handles fetch error gracefully', async () => {

@@ -559,6 +559,7 @@ function App() {
             await newSession()
           }
         }}
+        onRenameSession={(id, title) => sessionHistory.renameSession(id, title)}
       />
 
       {/* Checklist Sidebar */}

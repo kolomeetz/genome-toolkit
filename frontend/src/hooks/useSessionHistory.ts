@@ -41,24 +41,24 @@ export function useSessionHistory() {
     }
   }, [refresh])
 
-  const createSession = useCallback(async (): Promise<string | null> => {
+  const renameSession = useCallback(async (id: string, title: string) => {
+    // Optimistic update
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, title } : s))
     try {
-      const res = await fetch('/api/sessions', { method: 'POST' })
-      if (res.ok) {
-        const data = await res.json()
-        await refresh()
-        return data.id
-      }
+      await fetch(`/api/sessions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
     } catch {
-      // ignore
+      refresh()
     }
-    return null
   }, [refresh])
 
   // Group sessions by time period
   const grouped = groupByTime(sessions)
 
-  return { sessions, grouped, loading, refresh, deleteSession, createSession }
+  return { sessions, grouped, loading, refresh, deleteSession, renameSession }
 }
 
 function groupByTime(sessions: SessionSummary[]): Record<string, SessionSummary[]> {

@@ -191,6 +191,7 @@ interface Props {
   onSelectSession?: (id: string) => void
   onNewSession?: () => void
   onDeleteSession?: (id: string) => void
+  onRenameSession?: (id: string, title: string) => void
 }
 
 function messagesToMarkdown(messages: ChatMessage[]): string {
@@ -226,12 +227,21 @@ const VIEW_LABELS: Record<string, string> = {
   'snps': 'SNP_BROWSER',
 }
 
-function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
+function SessionList({ sessions, currentSessionId, onSelect, onDelete, onRename }: {
   sessions: SessionSummary[]
   currentSessionId?: string | null
   onSelect: (id: string) => void
   onDelete: (id: string) => void
+  onRename?: (id: string, title: string) => void
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const editRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editingId) editRef.current?.focus()
+  }, [editingId])
+
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today.getTime() - 86400000)
@@ -263,6 +273,12 @@ function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
     )
   }
 
+  const handleRenameSubmit = (id: string) => {
+    const trimmed = editTitle.trim()
+    if (trimmed && onRename) onRename(id, trimmed)
+    setEditingId(null)
+  }
+
   return (
     <div style={{ padding: 'var(--space-md) var(--space-xl)' }}>
       {groups.map(([label, items]) => (
@@ -278,6 +294,7 @@ function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
           </div>
           {items.map(s => {
             const isCurrent = s.id === currentSessionId
+            const isEditing = editingId === s.id
             const time = new Date(s.last_active)
             const timeStr = time >= today
               ? time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -285,7 +302,7 @@ function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
             return (
               <div
                 key={s.id}
-                onClick={() => onSelect(s.id)}
+                onClick={() => { if (!isEditing) onSelect(s.id) }}
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
@@ -311,10 +328,38 @@ function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
               >
                 <span style={{ color: isCurrent ? 'var(--primary)' : 'var(--text-tertiary)', fontSize: 'var(--font-size-sm)', marginTop: 1 }}>&gt;</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: isCurrent ? 600 : 400, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {s.title || s.first_message || 'Untitled'}
-                  </div>
-                  {s.first_message && s.title && (
+                  {isEditing ? (
+                    <input
+                      ref={editRef}
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      onBlur={() => handleRenameSubmit(s.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleRenameSubmit(s.id)
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-mono)',
+                        border: '1px solid var(--primary)', borderRadius: 3,
+                        background: 'var(--bg)', color: 'var(--text)',
+                        padding: '2px 6px', width: '100%', outline: 'none',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{ fontSize: 'var(--font-size-sm)', fontWeight: isCurrent ? 600 : 400, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      onDoubleClick={e => {
+                        e.stopPropagation()
+                        setEditingId(s.id)
+                        setEditTitle(s.title || s.first_message || '')
+                      }}
+                      title="Double-click to rename"
+                    >
+                      {s.title || s.first_message || 'Untitled'}
+                    </div>
+                  )}
+                  {!isEditing && s.first_message && s.title && (
                     <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>
                       &quot;{s.first_message.slice(0, 60)}&quot;
                     </div>
@@ -364,12 +409,14 @@ function SessionList({ sessions, currentSessionId, onSelect, onDelete }: {
   )
 }
 
-export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction, initialQuery, voiceSupported, voiceListening, onStartListening, onStopListening, starterPrompts, starterCapabilities, starterExplore, collapsed, onToggleCollapse, sessions, sessionsLoading, currentSessionId, onSelectSession, onNewSession, onDeleteSession }: Props) {
+export function CommandPalette({ open, onClose, messages, streaming, streamingText, status, suggestions, actions, onSend, onAction, initialQuery, voiceSupported, voiceListening, onStartListening, onStopListening, starterPrompts, starterCapabilities, starterExplore, collapsed, onToggleCollapse, sessions, sessionsLoading, currentSessionId, onSelectSession, onNewSession, onDeleteSession, onRenameSession }: Props) {
   const [input, setInput] = useState('')
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [deletedSession, setDeletedSession] = useState<{ id: string; title: string } | null>(null)
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -550,12 +597,60 @@ export function CommandPalette({ open, onClose, messages, streaming, streamingTe
             padding: collapsed ? 'var(--space-sm) var(--space-md)' : 'var(--space-lg) var(--space-xl)',
           }}
         >
-          {showHistory && sessions ? (
+          {/* Undo delete toast */}
+          {deletedSession && (
+            <div style={{
+              padding: '8px var(--space-xl)',
+              background: 'var(--bg)',
+              borderBottom: '1px solid var(--primary)',
+              display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
+            }}>
+              <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text)' }}>
+                Thread deleted: &quot;{deletedSession.title.slice(0, 40)}&quot;
+              </span>
+              <button
+                className="btn"
+                style={{ fontSize: '9px', padding: '2px 8px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                onClick={() => {
+                  if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+                  // Re-fetch to restore (backend hasn't deleted yet during undo window)
+                  setDeletedSession(null)
+                }}
+              >
+                UNDO
+              </button>
+            </div>
+          )}
+
+          {showHistory && sessionsLoading ? (
+            <div style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{
+                  height: 36, borderRadius: 4,
+                  background: 'var(--bg-inset)',
+                  marginBottom: 'var(--space-sm)',
+                  animation: 'blink 1.5s ease-in-out infinite',
+                }} />
+              ))}
+              <span className="label" style={{ color: 'var(--text-tertiary)' }}>LOADING HISTORY...</span>
+            </div>
+          ) : showHistory && sessions ? (
             <SessionList
               sessions={sessions}
               currentSessionId={currentSessionId}
               onSelect={(id) => { onSelectSession?.(id); setShowHistory(false) }}
-              onDelete={(id) => onDeleteSession?.(id)}
+              onDelete={(id) => {
+                const session = sessions.find(s => s.id === id)
+                const title = session?.title || session?.first_message || 'Untitled'
+                setDeletedSession({ id, title })
+                // Delay actual deletion for undo window
+                if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+                undoTimerRef.current = setTimeout(() => {
+                  onDeleteSession?.(id)
+                  setDeletedSession(null)
+                }, 3000)
+              }}
+              onRename={onRenameSession}
             />
           ) : (
           <>
