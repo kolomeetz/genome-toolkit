@@ -24,6 +24,32 @@ export function downloadFile(content: string, filename: string, mimeType = 'text
   URL.revokeObjectURL(url)
 }
 
+// ── PDF export ──────────────────────────────────────────────────────────────
+
+export async function exportPdf(
+  markdown: string,
+  reportType: 'pgx' | 'mental-health' | 'full',
+  metadata?: { title?: string; date?: string },
+): Promise<void> {
+  const resp = await fetch('/api/export/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ markdown, report_type: reportType, metadata }),
+  })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ detail: 'PDF export failed' }))
+    throw new Error(err.detail || 'PDF export failed')
+  }
+  const blob = await resp.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = resp.headers.get('content-disposition')?.match(/filename="(.+)"/)?.[1]
+    || `genome-report-${reportType}-${new Date().toISOString().slice(0, 10)}.pdf`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function today() {
