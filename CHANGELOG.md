@@ -1,0 +1,213 @@
+# Changelog
+
+All notable changes to Genome Toolkit are documented here.
+
+## [0.2.0] — 2026-04-12
+
+### Bug Fixes
+
+- preserve hash fragment in URL when replaceState updates query params
+- matrix-style block cursor, risk expanded detail layout
+- starter-prompts path resolution and edge cases
+- voice dictation — add VoiceState type, recording timer, mic in chat input
+- universality audit — env vars, deps, config, paths
+- remove s.gene_symbol reference from get_snp query
+- vite proxy uses 127.0.0.1 instead of localhost
+- PGx drug cards not loading + richer markdown export
+- consistent layout width across all sections
+- Risk Landscape expanded detail — skip duplicate narrative, fix badge overflow
+- simplify data loading — direct /api/mental-health/dashboard call
+- vault data now loads — fix system tag matching + action heading parser
+- data loading + GenomeGlyph icons + system name matching
+- clean up AI chat formatting — no unicode dashes, proper hr styling
+- GeneDetail auto-scrolls into view on expand, remove flex layout gaps
+- vault notes now load correctly (14/15 genes found)
+- wire View References links to PubMed and SNPedia
+- action type filters now work + add startup healthchecks
+- remove flex:1 from dashboard to prevent GeneDetail layout gap
+- voice STT sends only final transcript, deduplicate agent output
+- 5 UX improvements from Codex filter audit
+- gene list now includes vault genes with personal_variant counts
+- total card overflow, conditions as list card
+- deduplicate query results + add AI suggested responses
+- condition filter excludes variants without ClinVar annotation
+- address Agent SDK verifier findings
+- SSE parser now handles ping comments and empty lines
+- correct static file serving, add setup script
+- remove hardcoded personal paths and identity from scripts
+- fix triage table: drop bucket column, single-line items with ellipsis
+- fix triage CLI: show full item text, widen table to 160 cols
+- fix TUI double meta line, add three insight-driven genome visualizations
+- fix task parser: only include items with triage inline fields, fix matrix labels
+- fix collapsed card: no duplicate, wikilinks stripped, description only when expanded
+- fix item card buttons visible, add dedup, ensure Triage Report has frontmatter
+- fix triage history: show item text instead of hash, refresh after Apply
+- fix TUI layout: batch bar visible, compact suggestions, multiline SVG text, markdown rendering
+- fix all 5 Codex audit blockers: gene seeding, onboarding engine, imputation, graceful degradation, report stubs
+- fix issues from Codex audit: error handling, VCF FILTER, templates, README honesty
+
+### Documentation
+
+- page-aware chat context implementation plan
+- page-aware chat context design spec
+- update roadmap — mark 4 items done, link 7 GitHub issues
+- clean up roadmap — remove checkboxes, trim stale items
+- update README with web app, Ask AI, and roadmap progress
+- add research materials for mental health UX and competitive landscape
+- add reference mockup images for mental health and risk landscape
+- action checklist design spec — sidebar, grouping, research prompts
+- add database schema reference + fix startup schema init
+- mental health UX design spec — approved with mockups
+
+### Features
+
+- add Genotek (Генотек) provider, SOPS docs
+- multi-provider TTS, configurable nav views, agent-friendly setup
+- wire session history into App.tsx
+- add chat history panel to CommandPalette
+- add switchSession and newSession to useChat
+- add useSessionHistory hook with tests
+- session list/title/delete APIs for chat history
+- collapsible AI palette with auto-collapse on table filtering
+- wire buildPageContext into App.tsx send wrapper
+- thread pageContext through SSE and useChat
+- add buildPageContext utility with tests
+- backend accepts page_context and injects into system prompt
+- resolve all 7 roadmap issues
+- add vault migration script with dry-run mode (fixes #8)
+- GRCh38 liftover support via pyliftover (fixes #6)
+- normalize genes.rsids to JSON arrays via migration 006 (fixes #5)
+- implement warn_on and tolerance thresholds in consensus (fixes #4)
+- add validator wrappers for multi-agent consensus (fixes #3)
+- wire provider_formats.yaml into detection logic (fixes #2)
+- common components, expanded tests, design specs
+- wire useStarterPrompts to CommandPalette in App.tsx
+- CommandPalette guided empty state with 3-zone layout
+- add useStarterPrompts hook with sessionStorage caching and fallback
+- add GET /api/starter-prompts endpoint for Ask.ai empty state
+- SOPS-encrypted secrets, remove all plaintext keys
+- VCF shard parser and fallback config for ptsd2024
+- gene annotation, VCF parser for ptsd2024, and weekly freshness cron
+- add LD clumping, gene-level PRS, vault notes generator, and freshness monitor
+- add cross-trait overlap, summary, addiction, and risk-landscape GWAS endpoints
+- complete PGC GWAS ingest for all 6 traits with per-shard schema detection
+- upgrade depression GWAS to mdd2025 (43k hits) and harden ingest pipeline
+- expand PGC GWAS pipeline with depression, ADHD, bipolar, PTSD, substance-use traits
+- add plain-language interpretation and Ask AI button to GWAS findings
+- resolve genome_db_path from settings.yaml (fallback chain)
+- ingest anxiety GWAS hits (2729 SNPs from PGC anx2026)
+- PGC GWAS pipeline for mental health panel (anxiety)
+- add Evidence Panel and mental health foundation plan
+- add TTS voice output with VoiceButton component
+- add setup script with keychain-backed secrets management
+- add gene_type field and expandable educational text to PGx
+- PGx tier 1 expansion — SLCO1B1, antipsychotics, tricyclics, grapefruit
+- expand PGx config with CYP2C19, CYP2C9, CYP2B6, CYP2E1
+- add substances list to PGx panel
+- responsive layout for mobile/tablet/desktop
+- implement export/print across all sections
+- connect Mental Health dashboard to real vault data via parser
+- replace all mock data with vault-backed API + config YAML
+- add checklist buttons to Risk Landscape, Addiction Profile, and PGx DrugCards
+- add GenomeGlyph to PGx Panel hero header
+- replace dummy checkbox with real Add to Checklist button
+- wire Risk Landscape + Addiction Profile into nav with 5 views
+- add Addiction & Reward Profile view with substance harm reduction cards
+- add Risk Landscape view with mortality causes and inline gene detail
+- shift+click range select and cmd+click toggle in SNP table
+- redesign AI command interface — larger modal, actions, clickable vault links
+- add 16 bioicons SVGs (brain, heart, liver, snp, enzyme, pill, etc.)
+- add GenomeGlyph visual fingerprint + install seqviz
+- add PGx Panel with metabolizer bars, drug cards, substance coverage
+- add ChecklistSidebar with grouping, filters, delete, and API persistence
+- checklist API — CRUD endpoints + migration 005 for categories
+- hero block shows dynamic integral evaluation of user's genetic profile
+- add prominent hero header to Mental Health dashboard with stats
+- integrate ActionCard + GeneDetail into dashboard with mock data
+- add GeneDetail expanded view with actions and interactions
+- add ActionCard component with progressive disclosure and checkbox
+- migration 003 (mental health tables) + migration docs + policy
+- add MentalHealthDashboard page with view toggle and mock data
+- add mental-health component index re-exports
+- add mental health API routes for gene listing and detail
+- add FilterBar component and useMentalHealthFilters hook
+- add NarrativeBlock component with pathway tab and footer
+- add GeneCard component with status colors and evidence badge
+- add EvidenceBadge component with tier labels and study count
+- add shared genomics types for mental health UI
+- voice interface with dual-output (text + spoken summary)
+- vault integration — agent reads Obsidian gene notes
+- color-coded genotype nucleotides (Shapely scheme)
+- copy/download chat + clickable ESC/CLOSE
+- agent auto-disables restrictive filters when showing results
+- merge gene list from myvariant + vault (149 genes total)
+- multi-select gene filter with suggest dropdown + counts
+- variant drawer gets unique URL (?variant=rs4680)
+- condition suggest dropdown on focus, remove dedicated card
+- unified card-based filter panel with top conditions
+- variant guidance blocks with severity, actions, external links
+- actionable ON by default, URL params, localStorage persistence
+- implement P0 improvements from UX audit
+- add significance, gene, and zygosity filters
+- actionable filter — excludes benign/not-provided variants
+- enrich SNP table with ClinVar data, add variant drawer
+- stream live status updates in command palette
+- add proper markdown rendering with GFM tables
+- add frontend with retro instrument panel design
+- add Agent SDK backend with custom MCP tools and FastAPI routes
+- add database layer (GenomeDB + UsersDB) with uv web deps
+
+### Housekeeping
+
+- fix all Codex audit findings, migrate beads to GitHub issues
+- remove hardcoded test counts and roadmap from README, update .env.example
+- add backup-db hook for local SQLite genome database
+- gitignore .claude local state (settings.local, projects, worktrees)
+- gitignore node_modules and relay.db state files
+- add vitest + testing-library for frontend tests
+
+### Other
+
+- Merge branch 'worktree-agent-a9832373'
+- Merge branch 'worktree-agent-afdfa828'
+- Merge branch 'worktree-agent-a7e6fd70'
+- Merge branch 'worktree-agent-aeb22d5e'
+- Merge branch 'worktree-agent-a2f7c4c9'
+- Merge branch 'worktree-agent-a60e7c13'
+- remove personal data, secrets, and hardcoded paths
+- switch to Beads for improvement tracking, drop SQLite
+- add improvements tracking database (18 items from Codex UX audit)
+- add implementation plan for genome toolkit web MVP
+- add MVP design spec for genome toolkit web platform
+- Merge pull request #1 from kolomeetz/fix/remove-hardcoded-personal-paths
+- add health pattern analyzer + analysis mode in genome-log skill
+- improve genome-log skill: conversational mode, genetic context, interactive setup
+- add genome-log: daily health logger CLI + skill
+- add genome_toolkit.verify: evidence-check integration layer
+- update README: add triage system, onboarding modes, evidence-check link, heartbeat script
+- address Codex audit: gitignore assessments, exploratory disclaimers, weight calibration label
+- reduce card redundancy: remove Systems from description, show only actionable context
+- add description, source file, automation level to item cards
+- add action buttons to expanded item cards in Urgency/Context tabs
+- wire TUI to real vault data with functional actions
+- update all TUI screens to accept real data, fallback to stubs
+- wire TriageApp to accept vault_path and load real data
+- add action handlers module mapping TUI actions to domain commands
+- add visual feedback on item card actions (approve/defer/drop)
+- add data bridge converting domain ScoredItem/Suggestion to TUI stubs
+- add triage system: DDD architecture with scoring engine, SVG reports, TUI dashboard
+- complete Tasks 1-5: migrate scripts, reference files, integration tests, gzip support
+- expand README with development guide, architecture, roadmap, and disclaimer
+- add comprehensive test suite: 98 tests covering providers, parser, migrations, and validation
+- initial scaffold: genome-toolkit with 6 skills, multi-provider import, and multi-agent validation
+
+### Releases
+
+- v0.2.0 — multi-provider TTS, chat history, test coverage boost
+
+### Testing
+
+- add useChat and useVoice hook tests with browser API mocks
+- add smoke tests for skill-referenced files (fixes #7)
+
+

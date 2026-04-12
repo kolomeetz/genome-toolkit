@@ -81,9 +81,21 @@ cd frontend && npx vitest run      # 362 frontend tests
 cd .. && python -m pytest tests/   # 98 backend tests
 ```
 
+## Versioning
+
+Semantic versioning: `MAJOR.MINOR.PATCH`. Version lives in 4 places:
+- `pyproject.toml` (line 3)
+- `backend/app/main.py` (FastAPI version)
+- `frontend/src/App.tsx` (footer)
+- `README.md` (note block)
+
+Use conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`).
+CHANGELOG is auto-generated: `git-cliff --output CHANGELOG.md`
+
 ## Common Tasks
 
 - **Add a new view**: Add to `ALL_VIEWS` in `backend/app/main.py`, add component + route in `App.tsx`
 - **Add a TTS provider**: Create `backend/app/tts/<name>.py` implementing `TTSProvider`, register in `registry.py`
 - **Add an MCP tool**: Add to `backend/app/agent/tools.py`
 - **Database migration**: Add `.sql` to `scripts/data/migrations/`, auto-applied on startup
+- **Release**: Bump version in 4 places, `git-cliff --output CHANGELOG.md`, commit, tag `vX.Y.Z`, push with tags
