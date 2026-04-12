@@ -37,6 +37,8 @@ web = [
     "groq>=0.11.0",
     "httpx>=0.27.0",
     "keyring>=24.0",
+    "weasyprint>=62.0",
+    "markdown>=3.5",
 ]
 gwas = [
     "datasets>=3.0.0",
