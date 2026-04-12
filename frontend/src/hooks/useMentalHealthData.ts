@@ -26,27 +26,27 @@ const MH_SYSTEMS: Record<string, { name: string; tags: string[] }> = {
   },
 }
 
-function mapStatus(ps: string): GeneStatus {
+export function mapStatus(ps: string): GeneStatus {
   if (ps === 'risk' || ps === 'actionable') return 'actionable'
   if (ps === 'intermediate' || ps === 'monitor') return 'monitor'
   if (ps === 'optimal' || ps === 'normal' || ps === 'typical') return 'optimal'
   return 'neutral'
 }
 
-function mapTier(tier: string): EvidenceTier {
+export function mapTier(tier: string): EvidenceTier {
   if (tier === 'E1' || tier === 'E2' || tier === 'E3' || tier === 'E4' || tier === 'E5')
     return tier
   return 'E3'
 }
 
-function worstStatus(statuses: GeneStatus[]): GeneStatus {
+export function worstStatus(statuses: GeneStatus[]): GeneStatus {
   if (statuses.includes('actionable')) return 'actionable'
   if (statuses.includes('monitor')) return 'monitor'
   if (statuses.includes('optimal')) return 'optimal'
   return 'neutral'
 }
 
-function matchesSystem(gene: VaultGene, tags: string[]): boolean {
+export function matchesSystem(gene: VaultGene, tags: string[]): boolean {
   const lower = tags.map((t) => t.toLowerCase())
   return gene.systems.some((s) => {
     // Strip wikilinks: "[[Methylation]]" -> "methylation"
@@ -55,7 +55,7 @@ function matchesSystem(gene: VaultGene, tags: string[]): boolean {
   })
 }
 
-function vaultGeneToGeneData(g: VaultGene, pathway: string): GeneData {
+export function vaultGeneToGeneData(g: VaultGene, pathway: string): GeneData {
   const v = g.personal_variants?.[0]
   return {
     symbol: g.symbol,
@@ -72,12 +72,12 @@ function vaultGeneToGeneData(g: VaultGene, pathway: string): GeneData {
   }
 }
 
-function mapActionType(t: string): ActionType {
+export function mapActionType(t: string): ActionType {
   if (t === 'consider' || t === 'monitor' || t === 'discuss' || t === 'try') return t
   return 'consider'
 }
 
-async function buildFromVaultGenes(
+export async function buildFromVaultGenes(
   genes: VaultGene[],
   setSections: (s: PathwaySection[]) => void,
   setActions: (a: Record<string, ActionData[]>) => void,

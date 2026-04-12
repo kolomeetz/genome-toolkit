@@ -505,7 +505,7 @@ function App() {
         <span className="label">
           SIGNAL_PHASE: {loading ? 'SCANNING' : streaming ? (status || 'AI_PROCESSING') : 'IDLE'}
         </span>
-        <a href="https://github.com/glebis/genome-toolkit" target="_blank" rel="noopener noreferrer" className="label" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>GENOME_TOOLKIT // V0.1.0</a>
+        <a href="https://github.com/glebis/genome-toolkit" target="_blank" rel="noopener noreferrer" className="label" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>GENOME_TOOLKIT // V0.2.0</a>
       </footer>
 
       {/* Variant Drawer */}
