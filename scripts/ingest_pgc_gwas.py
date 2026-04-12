@@ -97,6 +97,26 @@ TRAITS: dict[str, dict] = {
         ),
         "display_name": "Substance use disorders",
     },
+    "schizophrenia": {
+        "dataset": "introvoyz041/pgc-schizophrenia",
+        "default_config": "scz2022",
+        "publication": "Trubetskoy et al., Nature, 2022",
+        "citation": (
+            "Trubetskoy V et al. Mapping genomic loci implicates genes and "
+            "synaptic biology in schizophrenia. Nature, 2022."
+        ),
+        "display_name": "Schizophrenia",
+    },
+    "autism": {
+        "dataset": "introvoyz041/pgc-autism",
+        "default_config": "asd2019",
+        "publication": "Grove et al., Nature Genetics, 2019",
+        "citation": (
+            "Grove J et al. Identification of common genetic risk variants "
+            "for autism spectrum disorder. Nature Genetics, 2019."
+        ),
+        "display_name": "Autism spectrum disorder",
+    },
 }
 
 
