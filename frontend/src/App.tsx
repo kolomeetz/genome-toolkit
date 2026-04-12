@@ -22,6 +22,7 @@ import {
   downloadFile,
   mentalHealthToMarkdown,
   checklistToMarkdown,
+  exportPdf,
 } from './lib/export'
 import { buildPageContext } from './lib/pageContext'
 import type { PageContextData } from './lib/pageContext'
@@ -185,8 +186,12 @@ function App() {
     }
   }, [streaming])
 
-  const handleExport = useCallback((format: 'pdf' | 'md' | 'doctor' | 'prescriber' | string) => {
-    if (format === 'doctor' || format === 'prescriber' || format === 'pdf') {
+  const handleExport = useCallback((format: 'pdf' | 'md' | 'doctor' | 'prescriber' | 'export-pdf' | string) => {
+    if (format === 'export-pdf') {
+      if (view === 'mental-health') {
+        exportPdf(mentalHealthToMarkdown(mentalHealth.sections, mentalHealth.actions), 'mental-health')
+      }
+    } else if (format === 'doctor' || format === 'prescriber' || format === 'pdf') {
       printPage(format as 'doctor' | 'prescriber' | 'pdf')
     } else if (format === 'md') {
       // Generate markdown based on current view
