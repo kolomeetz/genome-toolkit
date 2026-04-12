@@ -8,39 +8,105 @@ causes:
     pct: 31
     relevant_genes: [MTHFR, APOE, LPA]
     relevant_systems: [Methylation Pathway, Lipid Metabolism, Cardiovascular]
+    screenings:
+      - name: Blood pressure check
+        frequency: quarterly
+        type: monitor
+      - name: Lipid panel (total, LDL, HDL, triglycerides)
+        frequency: annually
+        type: monitor
+      - name: Coronary calcium score (CAC)
+        frequency: once
+        type: discuss
   - cause: Cancer
     pct: 24
     relevant_genes: [BRCA1, BRCA2, CHEK2, APC, TP53]
     relevant_systems: [DNA Repair, Tumor Suppression]
+    screenings:
+      - name: Skin cancer screening (dermatologist)
+        frequency: annually
+        type: monitor
+      - name: Colonoscopy baseline
+        frequency: once
+        type: discuss
   - cause: Accidents & Substance-Related
     pct: 12
     relevant_genes: [DRD2, GABRA2, CYP2D6, COMT]
     relevant_systems: [Dopamine System, GABA System, Drug Metabolism]
+    screenings:
+      - name: Review substance use patterns with clinician
+        frequency: annually
+        type: discuss
   - cause: Cerebrovascular Disease (Stroke)
     pct: 6
     relevant_genes: [MTHFR, APOE, F5, F2]
     relevant_systems: [Methylation Pathway, Coagulation]
+    screenings:
+      - name: Blood pressure check
+        frequency: quarterly
+        type: monitor
+      - name: Homocysteine level
+        frequency: biannual
+        type: monitor
+        gene: MTHFR
+      - name: Coagulation panel if family history
+        frequency: once
+        type: discuss
   - cause: Suicide
     pct: 5
     relevant_genes: [SLC6A4, COMT, BDNF, TPH2, HTR2A]
     relevant_systems: [Serotonin System, Neuroplasticity]
+    screenings:
+      - name: Mental health check-in (PHQ-9 / GAD-7)
+        frequency: quarterly
+        type: monitor
+      - name: Discuss genetic predisposition context with therapist
+        frequency: once
+        type: discuss
   - cause: Diabetes (Type 2)
     pct: 4
     relevant_genes: [TCF7L2, FTO, PPARG]
     relevant_systems: [Glucose Metabolism, Metabolic]
+    screenings:
+      - name: Fasting glucose / HbA1c
+        frequency: annually
+        type: monitor
+      - name: Insulin sensitivity assessment
+        frequency: biannual
+        type: monitor
   - cause: Liver Disease
     pct: 3
     relevant_genes: [ALDH2, PNPLA3, HFE]
     relevant_systems: [Alcohol Metabolism, Liver Function]
+    screenings:
+      - name: Liver function panel (ALT, AST, GGT)
+        frequency: annually
+        type: monitor
+      - name: Ferritin / iron studies
+        frequency: annually
+        type: monitor
+        gene: HFE
   - cause: "Alzheimer's / Dementia"
     pct: 3
     relevant_genes: [APOE, CLU, PICALM]
     relevant_systems: [Lipid Metabolism, Neurodegeneration]
+    screenings:
+      - name: Cognitive baseline assessment
+        frequency: once
+        type: discuss
   - cause: Chronic Respiratory Disease
     pct: 2
     relevant_genes: [SERPINA1]
     relevant_systems: [Immune System]
+    screenings:
+      - name: Pulmonary function test (spirometry)
+        frequency: once
+        type: discuss
   - cause: Kidney Disease
     pct: 2
     relevant_genes: [APOL1, UMOD]
     relevant_systems: [Renal Function]
+    screenings:
+      - name: eGFR / creatinine / urine albumin
+        frequency: annually
+        type: monitor
