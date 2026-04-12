@@ -6,7 +6,7 @@ import { HeroHeader, FilterChip, ExportButton, InfoCallout, LoadingLabel, Toolba
 import { usePGxData } from '../../hooks/usePGxData'
 import { useSubstancesData } from '../../hooks/useSubstancesData'
 import type { SubstanceCard } from '../../hooks/useSubstancesData'
-import { printPage, downloadFile, pgxToMarkdown } from '../../lib/export'
+import { printPage, downloadFile, pgxToMarkdown, exportPdf } from '../../lib/export'
 
 type DrugFilter = 'all' | 'antidepressants' | 'pain' | 'cardio' | 'substances' | 'safety'
 
@@ -66,6 +66,7 @@ export function PGxPanel({ onExport, onAddToChecklist }: PGxPanelProps) {
         right={<>
           <ExportButton label="Print for prescriber" accent onClick={() => printPage('prescriber')} />
           <ExportButton label="Export" onClick={() => { const md = pgxToMarkdown(MOCK_PGX); downloadFile(md, `pgx-report-${new Date().toISOString().slice(0,10)}.md`) }} />
+          <ExportButton label="Export PDF" onClick={() => exportPdf(pgxToMarkdown(MOCK_PGX), 'pgx')} />
         </>}
       />
 
