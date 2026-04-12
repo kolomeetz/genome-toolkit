@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { GroupBy, FilterStatus, ChecklistItem } from '../../hooks/useChecklist'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // Evidence type colors
 const TYPE_COLORS: Record<string, string> = {
@@ -50,6 +51,9 @@ export function ChecklistSidebar({
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
 
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(sidebarRef, true, { onEscape: onClose })
+
   const handleAdd = () => {
     if (addText.trim()) {
       onAdd(addText.trim())
@@ -84,7 +88,7 @@ export function ChecklistSidebar({
   })
 
   return (
-    <div className="sidebar-drawer" style={{
+    <div ref={sidebarRef} className="sidebar-drawer" style={{
       width: 'min(420px, calc(100vw - 24px))',
       background: 'var(--bg-raised)',
       borderLeft: '1px solid var(--border)',
