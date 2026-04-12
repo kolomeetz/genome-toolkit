@@ -33,6 +33,35 @@ function ColoredGenotype({ genotype }: { genotype: string }) {
   )
 }
 
+function getZygosity(genotype: string, chromosome: string): 'HOM' | 'HET' | 'HEMI' | null {
+  if (!genotype || genotype === '--') return null
+  if (genotype.length === 1) return 'HEMI'
+  if (genotype.length === 2) {
+    if (genotype[0] === genotype[1]) return 'HOM'
+    return 'HET'
+  }
+  // Single allele on sex chromosomes
+  if ((chromosome === 'X' || chromosome === 'Y') && genotype.length === 1) return 'HEMI'
+  return null
+}
+
+const ZYG_STYLES: Record<string, { color: string }> = {
+  HET: { color: 'var(--accent)' },
+  HOM: { color: 'var(--text-secondary)' },
+  HEMI: { color: 'var(--text-tertiary)' },
+}
+
+function ZygosityLabel({ genotype, chromosome }: { genotype: string; chromosome: string }) {
+  const zyg = getZygosity(genotype, chromosome)
+  if (!zyg) return <span style={{ color: 'var(--text-tertiary)' }}>--</span>
+  const style = ZYG_STYLES[zyg]
+  return (
+    <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: style.color }}>
+      {zyg}
+    </span>
+  )
+}
+
 function SignificanceBadge({ value }: { value: string | null }) {
   if (!value) return <span style={{ color: 'var(--text-tertiary)' }}>--</span>
   const lower = value.toLowerCase()
@@ -69,6 +98,17 @@ const columns: ColumnDef<SNP, any>[] = [
   col.accessor('genotype', {
     header: 'GENOTYPE',
     cell: info => <ColoredGenotype genotype={info.getValue() as string} />,
+  }),
+  col.display({
+    id: 'zygosity',
+    header: 'ZYG',
+    size: 55,
+    cell: info => (
+      <ZygosityLabel
+        genotype={info.row.original.genotype}
+        chromosome={info.row.original.chromosome}
+      />
+    ),
   }),
   col.accessor('significance', {
     header: 'CLINICAL',

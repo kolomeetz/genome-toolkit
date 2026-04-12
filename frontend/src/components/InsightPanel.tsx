@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, useRef, type CSSProperties } from 'react'
 
 export interface InsightData {
   total_variants: number
@@ -133,6 +133,78 @@ function StatCard({ label, value, sub, color, active, onClick, title }: {
   )
 }
 
+const tooltipWrapperStyle: CSSProperties = {
+  position: 'relative',
+  display: 'inline-flex',
+  alignItems: 'center',
+  marginLeft: 6,
+  cursor: 'help',
+}
+
+const tooltipTriggerStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 14,
+  height: 14,
+  borderRadius: 1,
+  border: '1px solid var(--border-strong)',
+  fontSize: 9,
+  fontWeight: 600,
+  fontFamily: 'var(--font-mono)',
+  color: 'var(--text-tertiary)',
+  lineHeight: 1,
+  userSelect: 'none',
+}
+
+const tooltipBodyStyle: CSSProperties = {
+  position: 'absolute',
+  top: 'calc(100% + 6px)',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: 280,
+  padding: 'var(--space-sm) var(--space-md)',
+  background: 'var(--bg-raised)',
+  border: '1px solid var(--border)',
+  fontSize: 'var(--font-size-xs)',
+  fontFamily: 'var(--font-mono)',
+  color: 'var(--text-secondary)',
+  lineHeight: 1.5,
+  letterSpacing: 'var(--tracking-normal)',
+  zIndex: 200,
+  pointerEvents: 'none',
+  whiteSpace: 'normal',
+}
+
+function InfoTooltip({ text }: { text: string }) {
+  const [visible, setVisible] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const show = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setVisible(true)
+  }
+  const hide = () => {
+    timeoutRef.current = setTimeout(() => setVisible(false), 120)
+  }
+
+  return (
+    <span
+      style={tooltipWrapperStyle}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      tabIndex={0}
+      role="button"
+      aria-label="More info"
+    >
+      <span style={tooltipTriggerStyle}>?</span>
+      {visible && <span style={tooltipBodyStyle}>{text}</span>}
+    </span>
+  )
+}
+
 export function InsightPanel({
   data, filters, genes, activeFilterCount,
   searchText, geneText, conditionText,
@@ -179,15 +251,19 @@ export function InsightPanel({
               active={filters.significance.toLowerCase().includes('drug')}
               onClick={() => onFilterChange({ significance: 'drug response', clinical: false })}
             />
-            <StatCard
-              label="ACTIONABLE"
-              value={data.actionable_count}
-              sub="EXCLUDES_BENIGN"
-              color="var(--primary)"
-              active={filters.clinical}
-              onClick={() => onFilterChange({ clinical: !filters.clinical, significance: '' })}
-              title="Variants with clinical significance (pathogenic, drug response, risk factor, uncertain). Excludes benign and not-provided."
-            />
+            <div style={{ position: 'relative' }}>
+              <StatCard
+                label="ACTIONABLE"
+                value={data.actionable_count}
+                sub="EXCLUDES_BENIGN"
+                color="var(--primary)"
+                active={filters.clinical}
+                onClick={() => onFilterChange({ clinical: !filters.clinical, significance: '' })}
+              />
+              <span style={{ position: 'absolute', top: 6, right: 6 }}>
+                <InfoTooltip text="When ON, shows only variants with clinical significance in ClinVar (pathogenic, likely pathogenic, drug response). When OFF, shows all variants including benign and uncertain." />
+              </span>
+            </div>
           </>
         )}
 
