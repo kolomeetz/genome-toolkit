@@ -52,6 +52,22 @@ providers:
     strand: "plus"
     file_extensions: [".csv", ".txt"]
 
+  genotek:
+    name: "Genotek"
+    detection:
+      comment_patterns:
+        - "Genotek"
+        - "genotek"
+        - "genotek.ru"
+      header_pattern: "rsid\tchromosome\tposition\tgenotype"
+      delimiter: "\t"
+      columns: 4
+      column_names: ["rsid", "chromosome", "position", "genotype"]
+    assembly: "GRCh37"
+    strand: "plus"
+    file_extensions: [".txt", ".tsv"]
+    notes: "Same TSV format as 23andMe. Russian DTC provider (Генотек), Illumina GSA arrays."
+
   nebula:
     name: "Nebula Genomics"
     detection:
@@ -74,6 +90,7 @@ providers:
 # Detection priority (check in this order)
 detection_order:
   - "23andme"
+  - "genotek"
   - "ancestry"
   - "myheritage"
   - "nebula"

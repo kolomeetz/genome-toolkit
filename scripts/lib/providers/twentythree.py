@@ -1,4 +1,4 @@
-"""23andMe v4/v5 raw data parser."""
+"""23andMe raw data parser (v2-v5)."""
 from __future__ import annotations
 
 import gzip
@@ -13,7 +13,7 @@ AUTOSOMAL_CHROMS = {str(i) for i in range(1, 23)} | {"X"}
 
 
 class TwentyThreeAndMe(GenomeProvider):
-    """Parser for 23andMe v4 and v5 raw data files."""
+    """Parser for 23andMe raw data files (v2 through v5, same TSV format)."""
 
     @classmethod
     def detect(cls, filepath: Path, header_lines: list[str]) -> float:

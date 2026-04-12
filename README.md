@@ -139,7 +139,8 @@ cd frontend && npm run dev
 
 | Provider | Format | Detected By |
 |----------|--------|-------------|
-| 23andMe v4/v5 | TSV | "23andMe" in file header |
+| 23andMe (v2-v5) | TSV | "23andMe" in file header |
+| Genotek (Генотек) | TSV | "Genotek" in file header |
 | AncestryDNA | TSV (5 cols) | allele1/allele2 column pattern |
 | MyHeritage | CSV | "RSID,CHROMOSOME,POSITION,RESULT" header |
 | Nebula Genomics | VCF | "source=Nebula" in VCF header |
@@ -263,6 +264,22 @@ All config in `config/`:
 - `agents.yaml` — multi-agent validation pipeline
 
 Override paths via environment variables: `GENOME_VAULT_ROOT`, `GENOME_DB_PATH`.
+
+### Secrets (SOPS + age)
+
+API keys are stored in **macOS Keychain** by default (via `scripts/setup.py`). For team use or version-controlled secrets, the project optionally supports [SOPS](https://github.com/getsops/sops) encryption with [age](https://github.com/FiloSottile/age):
+
+```bash
+brew install sops age
+
+# Load encrypted secrets into current shell
+source scripts/load_secrets.sh
+
+# Edit encrypted secrets (requires age key in ~/.config/sops/age/keys.txt)
+sops config/secrets.yaml
+```
+
+`config/secrets.yaml` is encrypted at rest and safe to commit — only age key holders can decrypt.
 
 ## Privacy
 

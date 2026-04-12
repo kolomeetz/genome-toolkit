@@ -21,6 +21,25 @@ cd frontend && npm run dev
 
 Required env var: `ANTHROPIC_API_KEY`. Optional: `GROQ_API_KEY` (TTS), `ELEVENLABS_API_KEY`, `DEEPGRAM_API_KEY`.
 
+### Secrets Management
+
+API keys are stored in **macOS Keychain** (via `scripts/lib/secrets.py`), falling back to `.env`.
+
+For team/CI use, the project supports **SOPS + age** encryption:
+
+```bash
+# Install sops and age
+brew install sops age
+
+# Decrypt secrets into env vars (requires age key in ~/.config/sops/age/keys.txt)
+source scripts/load_secrets.sh
+
+# Edit encrypted secrets
+sops config/secrets.yaml
+```
+
+`config/secrets.yaml` is SOPS-encrypted and safe to commit. It stores API keys encrypted with age — only holders of the private key can decrypt. See `scripts/load_secrets.sh` for the decryption flow.
+
 ### Setup flags
 
 ```

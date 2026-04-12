@@ -111,12 +111,13 @@ def _load_provider_config() -> dict:
 
 def _build_provider_map() -> dict[str, "type[GenomeProvider]"]:
     """Return a mapping from config provider keys to provider classes."""
-    from . import twentythree, ancestry, myheritage, vcf
+    from . import twentythree, ancestry, myheritage, vcf, genotek
 
     return {
         "23andme": twentythree.TwentyThreeAndMe,
         "ancestry": ancestry.AncestryDNA,
         "myheritage": myheritage.MyHeritage,
+        "genotek": genotek.Genotek,
         "nebula": vcf.GenericVCF,   # Nebula is handled by GenericVCF (sets provider="nebula" in metadata)
         "vcf": vcf.GenericVCF,
     }
