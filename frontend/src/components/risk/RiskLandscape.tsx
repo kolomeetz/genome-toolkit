@@ -277,7 +277,14 @@ function ExpandedDetail({ cause, addedSet, onAddToChecklist }: { cause: Mortalit
         </div>
       )}
 
-      {cause.actions && cause.actions.length > 0 && (
+      {cause.timeline && cause.timeline.length > 0 ? (
+        <TimelineSection
+          groups={cause.timeline}
+          addedSet={addedSet}
+          onAddToChecklist={onAddToChecklist}
+          causeName={cause.cause}
+        />
+      ) : cause.actions && cause.actions.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {cause.actions.map((action, idx) => {
             const key = cause.cause + action.text
@@ -291,7 +298,7 @@ function ExpandedDetail({ cause, addedSet, onAddToChecklist }: { cause: Mortalit
             )
           })}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
@@ -311,6 +318,101 @@ function PersonalBar({ status, widthPct, delay = 0 }: { status: RiskStatus; widt
         animationDelay: `${delay + 100}ms`,
       }}
     />
+  )
+}
+
+function ConfidenceDots({ confidence }: { confidence: ConfidenceScore }) {
+  return (
+    <span
+      style={{ display: 'inline-flex', gap: 3, marginLeft: 6 }}
+      aria-label={confidence.tooltip}
+      title={confidence.tooltip}
+    >
+      {Array.from({ length: confidence.total }, (_, i) => (
+        <span
+          key={i}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: i < confidence.filled ? 'var(--sig-benefit)' : 'var(--border-strong)',
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
+function TimelineSection({ groups, addedSet, onAddToChecklist, causeName }: {
+  groups: TimelineGroup[]
+  addedSet?: Set<string>
+  onAddToChecklist?: (title: string, causeName: string) => void
+  causeName: string
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {groups.map((group) => (
+        <div key={group.frequency}>
+          <div style={{
+            fontSize: 'var(--font-size-xs)',
+            fontWeight: 600,
+            color: group.color,
+            letterSpacing: '0.1em',
+            marginBottom: 6,
+          }}>
+            {group.label}
+          </div>
+          <div style={{
+            borderLeft: `3px solid ${group.color}`,
+            paddingLeft: 14,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}>
+            {group.items.map((item, idx) => {
+              const key = causeName + item.name
+              const added = addedSet?.has(key)
+              return (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
+                      {item.name}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                      {item.gene ? `${item.gene} — Gene-specific` : 'General screening'}
+                      {item.source === 'vault' && !item.gene && ' — Vault'}
+                    </div>
+                  </div>
+                  {onAddToChecklist && (
+                    <button
+                      className="btn btn-add-action"
+                      aria-label={added ? 'Added to checklist' : 'Add to checklist'}
+                      style={{
+                        fontSize: 'var(--font-size-xs)',
+                        padding: '4px 8px',
+                        minWidth: 32,
+                        minHeight: 24,
+                        flexShrink: 0,
+                        opacity: added ? 0.4 : 0.6,
+                        color: added ? 'var(--sig-benefit)' : 'var(--primary)',
+                        borderColor: added ? 'var(--sig-benefit)' : 'var(--border)',
+                        cursor: added ? 'default' : 'pointer',
+                      }}
+                      disabled={added}
+                      onClick={(e) => { e.stopPropagation(); onAddToChecklist(item.name, causeName) }}
+                      onMouseEnter={e => { if (!added) e.currentTarget.style.opacity = '1' }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = added ? '0.4' : '0.6' }}
+                    >
+                      {added ? 'ADDED' : '+'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -430,6 +532,7 @@ function MortalityRow({
               }}
             >
               {cause.statusText}
+              <ConfidenceDots confidence={cause.confidence} />
               {hasDetail && (
                 <span
                   className={`expand-chevron ${isExpanded ? 'expand-chevron--open' : ''}`}
@@ -561,8 +664,9 @@ export function RiskLandscape({ onExport, onAddToChecklist }: RiskLandscapeProps
         {/* Context block */}
         <InfoCallout>
           Population bars show how common each cause of death is for{' '}
-          <strong>{demographic ? formatDemographic(demographic) : 'your demographic profile'}</strong>{' '}
-          (based on your profile). Your personal bar shows where you have relevant genetic variants.
+          <strong>{demographic ? formatDemographic(demographic) : 'your demographic profile'}</strong>.
+          Your personal bar reflects the number and severity of relevant genetic variants found
+          — <strong>it is a qualitative assessment, not a calibrated risk score or PRS</strong>.
           Having variants does not predict outcomes — it shows where awareness and prevention can
           make a difference.
         </InfoCallout>
