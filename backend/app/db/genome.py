@@ -184,7 +184,12 @@ class GenomeDB:
                    json_extract(e_mv.data, '$.gene_name') as gene_name,
                    json_extract(e_mv.data, '$.clinvar_significance') as mv_significance,
                    COALESCE(gsm.gene_symbol,
-                            json_extract(e_mv.data, '$.gene_symbol')) as gene_symbol
+                            json_extract(e_mv.data, '$.gene_symbol')) as gene_symbol,
+                   COALESCE(
+                       json_extract(e_mv.data, '$.allele_freq'),
+                       json_extract(e_cv.data, '$.allele_freq')
+                   ) as allele_freq,
+                   json_extract(e_mv.data, '$.allele_freq_source') as allele_freq_source
             FROM snps s
             LEFT JOIN enrichments e_cv ON s.rsid = e_cv.rsid AND e_cv.source = 'clinvar'
             LEFT JOIN enrichments e_mv ON s.rsid = e_mv.rsid AND e_mv.source = 'myvariant'

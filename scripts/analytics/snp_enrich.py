@@ -172,6 +172,13 @@ def import_clinvar_vcf(vcf_path: Path, conn) -> int:
                 "ref": ref,
                 "alt": alt,
             }
+            # Capture allele frequency if present in ClinVar VCF (AF or CLNAF field)
+            af_raw = info_dict.get("AF") or info_dict.get("CLNAF")
+            if af_raw:
+                try:
+                    parsed["allele_freq"] = float(af_raw.split(",")[0])
+                except (ValueError, IndexError):
+                    pass
 
             expires = (datetime.now() + timedelta(days=CACHE_TTL["clinvar"])).isoformat()
             conn.execute(

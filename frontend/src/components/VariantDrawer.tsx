@@ -7,6 +7,8 @@ interface VariantDetail extends SNP {
   alt_allele?: string | null
   gene_name?: string | null
   mv_significance?: string | null
+  allele_freq?: number | null
+  allele_freq_source?: string | null
 }
 
 interface GuidanceData {
@@ -29,6 +31,96 @@ const SEVERITY_COLORS: Record<string, string> = {
   moderate: 'var(--sig-reduced)',
   low: 'var(--sig-benefit)',
   unknown: 'var(--border)',
+}
+
+function PopulationFrequency({ detail }: { detail: VariantDetail | null }) {
+  const freq = detail?.allele_freq
+  const source = detail?.allele_freq_source
+
+  return (
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
+      <span className="label label--accent" style={{ display: 'block', marginBottom: 'var(--space-sm)' }}>
+        POPULATION_FREQUENCY //
+      </span>
+      {freq != null ? (
+        <div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-xs)',
+          }}>
+            <span style={{
+              fontSize: 'var(--font-size-md)',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+            }}>
+              {freq < 0.01
+                ? `${(freq * 100).toFixed(3)}%`
+                : freq < 0.1
+                  ? `${(freq * 100).toFixed(2)}%`
+                  : `${(freq * 100).toFixed(1)}%`}
+            </span>
+            {freq < 0.01 && (
+              <span style={{
+                fontSize: 'var(--font-size-xs)',
+                letterSpacing: 'var(--tracking-wide)',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                color: 'var(--sig-reduced)',
+                border: '1px solid var(--sig-reduced)',
+                padding: '1px 6px',
+              }}>
+                RARE
+              </span>
+            )}
+          </div>
+          {/* Frequency bar */}
+          <div style={{
+            width: '100%',
+            height: 6,
+            background: 'var(--bg-inset)',
+            borderRadius: 0,
+            overflow: 'hidden',
+            marginBottom: 'var(--space-xs)',
+          }}>
+            <div style={{
+              width: `${Math.max(freq * 100, 0.5)}%`,
+              height: '100%',
+              background: freq < 0.01
+                ? 'var(--sig-reduced)'
+                : freq < 0.05
+                  ? 'var(--accent)'
+                  : 'var(--primary)',
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+          {source && (
+            <span style={{
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--text-tertiary)',
+              letterSpacing: 'var(--tracking-wide)',
+              textTransform: 'uppercase',
+            }}>
+              SOURCE: {source}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div style={{
+          fontSize: 'var(--font-size-sm)',
+          color: 'var(--text-tertiary)',
+          lineHeight: 1.5,
+        }}>
+          {/* Population frequency data not yet available for this variant.
+              Future: integrate gnomAD v4, 1000 Genomes, or dbSNP allele
+              frequency data via the myvariant enrichment pipeline or direct
+              gnomAD API queries. */}
+          Population frequency data not available.
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function VariantDrawer({ snp, onClose, onAskAI, onAddToChecklist }: Props) {
@@ -180,6 +272,9 @@ export function VariantDrawer({ snp, onClose, onAskAI, onAddToChecklist }: Props
                 </table>
               </>
             )}
+
+            {/* Population Frequency */}
+            <PopulationFrequency detail={detail} />
 
             {/* Guidance blocks */}
             {guidance && guidance.what_it_means && (
