@@ -1,3 +1,4 @@
+import { useTableKeyboardNav } from '../hooks/useTableKeyboardNav'
 import { useState, useCallback, useRef } from 'react'
 import {
   useReactTable,
@@ -196,6 +197,14 @@ export function SNPTable({ data, loading, totalVariants, onRowClick, onPageChang
     pageCount: Math.ceil(data.total / data.limit),
   })
 
+  const tbodyRef = useRef<HTMLTableSectionElement>(null)
+  const rows = table.getRowModel().rows
+  const { getRowTabIndex, onRowKeyDown } = useTableKeyboardNav({
+    rowCount: rows.length,
+    onSelect: (index) => onRowClick?.(rows[index].original),
+    tableRef: tbodyRef,
+  })
+
   const totalPages = Math.ceil(data.total / data.limit)
 
   return (
@@ -222,7 +231,7 @@ export function SNPTable({ data, loading, totalVariants, onRowClick, onPageChang
               </tr>
             ))}
           </thead>
-          <tbody>
+          <tbody ref={tbodyRef}>
             {loading ? (
               <tr>
                 <td colSpan={columns.length} style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
@@ -260,15 +269,10 @@ export function SNPTable({ data, loading, totalVariants, onRowClick, onPageChang
                 return (
                 <tr
                   key={row.id}
-                  tabIndex={0}
+                  tabIndex={getRowTabIndex(i)}
                   role="button"
                   onClick={(e) => handleRowClick(row.original, i, e)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      onRowClick?.(row.original)
-                    }
-                  }}
+                  onKeyDown={(e) => onRowKeyDown(e, i)}
                   style={{
                     cursor: 'pointer',
                     background: baseBg,
