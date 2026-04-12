@@ -24,6 +24,24 @@ interface FilterState {
   clinical: boolean
 }
 
+interface GoalPill {
+  id: string
+  label: string
+  actionType: 'navigate' | 'filter'
+  target: string // view id or comma-separated gene list
+  tooltip: string
+}
+
+const GOAL_PILLS: GoalPill[] = [
+  { id: 'mental_health', label: 'MOOD', actionType: 'navigate', target: 'mental-health', tooltip: 'Open Mental Health dashboard' },
+  { id: 'medication_safety', label: 'DRUGS', actionType: 'navigate', target: 'pgx', tooltip: 'Open Pharmacogenomics dashboard' },
+  { id: 'addiction_recovery', label: 'RECOVERY', actionType: 'navigate', target: 'addiction', tooltip: 'Open Addiction dashboard' },
+  { id: 'cardiovascular', label: 'HEART', actionType: 'navigate', target: 'risk', tooltip: 'Open Risk Landscape' },
+  { id: 'sleep_optimization', label: 'SLEEP', actionType: 'filter', target: 'CLOCK,PER2,PER3,ADORA2A,CYP1A2,MTNR1B', tooltip: 'Filter SNPs by sleep-related genes' },
+  { id: 'gut_health', label: 'GUT', actionType: 'filter', target: 'ATG16L1,FUT2,IL1B,PTPN22,NOD2,TNF,IL6,HLA-B', tooltip: 'Filter SNPs by gut health genes' },
+  { id: 'liver_health', label: 'LIVER', actionType: 'filter', target: 'PNPLA3,HFE,CYP2E1,UGT1A1,GSTM1,NAT2,FADS1,FADS2,APOE', tooltip: 'Filter SNPs by liver health genes' },
+]
+
 interface Props {
   data: InsightData | null
   filters: FilterState
@@ -37,6 +55,7 @@ interface Props {
   onConditionChange: (v: string) => void
   onFilterChange: (partial: Partial<FilterState>) => void
   onClearAll: () => void
+  onNavigate?: (view: string) => void
 }
 
 const cardBase: CSSProperties = {
@@ -209,8 +228,9 @@ export function InsightPanel({
   data, filters, genes, activeFilterCount,
   searchText, geneText, conditionText,
   onSearchChange, onGeneChange, onConditionChange,
-  onFilterChange, onClearAll,
+  onFilterChange, onClearAll, onNavigate,
 }: Props) {
+  const [activeGoalPill, setActiveGoalPill] = useState<string | null>(null)
   const [conditionFocused, setConditionFocused] = useState(false)
   const [geneFocused, setGeneFocused] = useState(false)
   const selectedGenes = filters.gene ? filters.gene.split(',').map(g => g.trim()).filter(Boolean) : []
@@ -268,6 +288,67 @@ export function InsightPanel({
         )}
 
 
+      </div>
+
+      {/* Row 1.5: Goal-centric quick filter pills */}
+      <div style={{
+        display: 'flex',
+        gap: 'var(--space-xs)',
+        flexWrap: 'wrap',
+        marginBottom: 'var(--space-sm)',
+      }}>
+        {GOAL_PILLS.map(pill => {
+          const isActive = activeGoalPill === pill.id
+          const isNav = pill.actionType === 'navigate'
+          return (
+            <button
+              key={pill.id}
+              title={pill.tooltip}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--font-size-xs)',
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                padding: '3px 10px',
+                border: `1px solid ${isActive ? 'var(--primary)' : isNav ? 'var(--primary)' : 'var(--border)'}`,
+                borderRadius: 1,
+                background: isActive ? 'var(--primary)' : 'transparent',
+                color: isActive ? 'var(--bg)' : isNav ? 'var(--primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = 'var(--primary)'
+                  e.currentTarget.style.color = isNav ? 'var(--primary)' : 'var(--text)'
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isActive) {
+                  e.currentTarget.style.borderColor = isNav ? 'var(--primary)' : 'var(--border)'
+                  e.currentTarget.style.color = isNav ? 'var(--primary)' : 'var(--text-secondary)'
+                }
+              }}
+              onClick={() => {
+                if (isNav) {
+                  onNavigate?.(pill.target)
+                } else {
+                  if (isActive) {
+                    // Deactivate: clear gene filter
+                    setActiveGoalPill(null)
+                    onFilterChange({ gene: '' })
+                  } else {
+                    setActiveGoalPill(pill.id)
+                    onFilterChange({ gene: pill.target })
+                  }
+                }
+              }}
+            >
+              {isNav ? '→ ' : '▼ '}{pill.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Row 2: Text inputs + dropdowns */}

@@ -395,6 +395,7 @@ function App() {
             onGeneChange={setGeneText}
             onConditionChange={(v) => { setConditionText(v); debouncedUpdateFilters({ condition: v }) }}
             onFilterChange={updateFilters}
+            onNavigate={navigate}
             onClearAll={() => {
               setSearchText('')
               setGeneText('')
