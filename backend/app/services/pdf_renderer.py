@@ -1,8 +1,15 @@
 """Markdown-to-PDF renderer using WeasyPrint."""
+import os
 from datetime import date
 
 import markdown as md_lib
-from weasyprint import HTML
+
+# WeasyPrint needs GLib/Pango native libs — on macOS with Homebrew they live
+# in /opt/homebrew/lib which conda Python doesn't search by default.
+if "DYLD_FALLBACK_LIBRARY_PATH" not in os.environ:
+    _brew_lib = "/opt/homebrew/lib"
+    if os.path.isdir(_brew_lib):
+        os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = _brew_lib
 
 
 VALID_TYPES = {"pgx", "mental-health", "full"}
@@ -132,4 +139,5 @@ def render_pdf(
 </html>
 """
 
+    from weasyprint import HTML  # lazy import — avoid crash if native libs missing at startup
     return HTML(string=html).write_pdf()
