@@ -3,6 +3,7 @@ import type { PathwaySection, GeneData, ActionData, GeneStatus } from '../../typ
 import { STATUS_COLORS } from '../../types/genomics'
 import { useMentalHealthFilters } from '../../hooks/useMentalHealthFilters'
 import { FilterBar } from './FilterBar'
+import { ActionRoadmap } from './ActionRoadmap'
 import { NarrativeBlock } from './NarrativeBlock'
 import { GeneCard } from './GeneCard'
 import { GeneDetail } from './GeneDetail'
@@ -170,6 +171,15 @@ export function MentalHealthDashboard({
         onActionTypeChange={setActionType}
         onClearAll={clearAll}
         onExport={onExport}
+      />
+
+      <ActionRoadmap
+        sections={data}
+        actions={actions}
+        onAddToChecklist={onAddToChecklist ? (action) => onAddToChecklist(action) : () => {}}
+        checklistIds={checklistIds}
+        activeCategory={activeCategory}
+        activeActionType={activeActionType}
       />
 
       {/* Color legend */}
