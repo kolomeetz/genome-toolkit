@@ -97,9 +97,33 @@ describe('ActionRoadmap', () => {
     expect(screen.queryByText('Methylfolate 400-800mcg/day')).not.toBeInTheDocument()
   })
 
-  it('shows expand toggle when more than 5 actions', () => {
+  it('hides expand toggle when 5 or fewer actions', () => {
     render(<ActionRoadmap sections={mockSections} actions={mockActions} onAddToChecklist={vi.fn()} />)
     expect(screen.queryByText(/SHOW ALL/)).not.toBeInTheDocument()
+  })
+
+  it('shows expand toggle and expands when more than 5 actions', () => {
+    // Create 6+ actions by adding extra to MTHFR
+    const manyActions = {
+      ...mockActions,
+      MTHFR: [
+        ...mockActions.MTHFR,
+        { id: 'mthfr-2', type: 'try' as const, title: 'Exercise regularly', description: '', evidenceTier: 'E1' as const, studyCount: 50, tags: [], geneSymbol: 'MTHFR', done: false },
+        { id: 'mthfr-3', type: 'consider' as const, title: 'Reduce alcohol intake', description: '', evidenceTier: 'E1' as const, studyCount: 50, tags: [], geneSymbol: 'MTHFR', done: false },
+        { id: 'mthfr-4', type: 'monitor' as const, title: 'Track energy levels', description: '', evidenceTier: 'E1' as const, studyCount: 50, tags: [], geneSymbol: 'MTHFR', done: false },
+      ],
+    }
+    render(<ActionRoadmap sections={mockSections} actions={manyActions} onAddToChecklist={vi.fn()} />)
+    // Should show SHOW ALL with count
+    expect(screen.getByText(/SHOW ALL 7/)).toBeInTheDocument()
+    // Only 5 visible by default
+    expect(screen.getAllByTestId('roadmap-item')).toHaveLength(5)
+    // Click expand
+    fireEvent.click(screen.getByText(/SHOW ALL 7/))
+    // Now all 7 visible
+    expect(screen.getAllByTestId('roadmap-item')).toHaveLength(7)
+    // Toggle shows SHOW LESS
+    expect(screen.getByText('SHOW LESS')).toBeInTheDocument()
   })
 
   it('hides roadmap when no actions available', () => {
