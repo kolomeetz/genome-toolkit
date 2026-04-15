@@ -46,7 +46,7 @@ Triggered by: "prepare for imputation", "I want to impute"
    - [ ] File compressed with bgzip (optional)
 4. **Server guidance**: Show comparison table (Michigan vs TOPMed vs Sanger)
 5. **Known gotchas**:
-   - Michigan requires >= 5 samples (duplicate sample column as workaround)
+   - Michigan requires >= 20 samples (duplicate sample column as workaround)
    - HRC r1.1 for EUR, TOPMed r3 for diverse ancestry
    - Processing: 2-12 hours
    - Results encrypted, deleted after 7 days
@@ -65,7 +65,7 @@ Triggered by: "import imputed data", user provides VCF files
 Common issues and fixes:
 - **Allele switches**: Run `bcftools norm --check-ref ws` before upload
 - **Chromosome naming**: UCSC uses `chr1`, HRC expects bare `1`
-- **5-sample minimum**: Duplicate sample column 5x in VCF header
+- **20-sample minimum**: Duplicate sample column 20x in VCF header
 - **Low overlap**: Check assembly match (GRCh37 vs GRCh38)
 
 ## Supported Providers

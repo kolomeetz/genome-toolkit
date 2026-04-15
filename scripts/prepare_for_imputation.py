@@ -118,10 +118,12 @@ def genotype_to_vcf_fields(genotype):
     return None
 
 
-def write_vcf(variants, output_path):
+def write_vcf(variants, output_path, num_samples=20):
     """Write sorted variants to VCF format.
 
     Sorts by chromosome (numeric order) then position.
+    Michigan Imputation Server requires >= 20 samples per VCF.
+    For single-person data, we duplicate the genotype column to meet this minimum.
     """
     # Sort: chromosome by numeric order, then by position
     variants.sort(key=lambda v: (CHROM_ORDER.get(v[0], 99), v[1]))
@@ -130,6 +132,8 @@ def write_vcf(variants, output_path):
 
     skipped_conversion = 0
     written = 0
+
+    sample_names = [f"SAMPLE_{i:02d}" for i in range(1, num_samples + 1)]
 
     with open(output_path, "w") as f:
         # VCF header
@@ -146,9 +150,10 @@ def write_vcf(variants, output_path):
             f.write(f"##contig=<ID={chrom}>\n")
 
         # Column header
-        f.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n")
+        f.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t")
+        f.write("\t".join(sample_names) + "\n")
 
-        # Data lines
+        # Data lines — duplicate GT across all sample columns
         for chrom, pos, rsid, genotype in variants:
             result = genotype_to_vcf_fields(genotype)
             if result is None:
@@ -156,7 +161,8 @@ def write_vcf(variants, output_path):
                 continue
 
             ref, alt, gt = result
-            f.write(f"{chrom}\t{pos}\t{rsid}\t{ref}\t{alt}\t.\tPASS\t.\tGT\t{gt}\n")
+            gt_cols = "\t".join([gt] * num_samples)
+            f.write(f"{chrom}\t{pos}\t{rsid}\t{ref}\t{alt}\t.\tPASS\t.\tGT\t{gt_cols}\n")
             written += 1
 
     return written, skipped_conversion
@@ -181,6 +187,12 @@ def parse_args():
         "--db",
         default=None,
         help=f"Path to SQLite database (default: {DB_PATH})",
+    )
+    parser.add_argument(
+        "--samples",
+        type=int,
+        default=20,
+        help="Number of duplicate sample columns in VCF (Michigan Imputation Server requires >= 20, default: 20)",
     )
     return parser.parse_args()
 
@@ -211,8 +223,8 @@ def main():
     variants, stats = query_genotyped_snps(db_path, profile_id=args.profile)
 
     # Write VCF
-    print("Writing VCF...")
-    written, skipped_conversion = write_vcf(variants, output_file)
+    print(f"Writing VCF with {args.samples} sample columns...")
+    written, skipped_conversion = write_vcf(variants, output_file, num_samples=args.samples)
 
     # Report
     print()

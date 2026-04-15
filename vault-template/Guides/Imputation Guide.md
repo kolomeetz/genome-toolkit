@@ -84,7 +84,7 @@ python3 scripts/genome_init.py data/output/imputed/chr1.dose.vcf.gz --min-r2 0.3
 
 1. **Always normalize REF/ALT** against the reference FASTA before upload
 2. **Chromosome naming matters**: UCSC uses `chr1`, HRC expects bare `1`
-3. **5-sample minimum**: Michigan server requires >= 5 samples per VCF (duplicate sample column as workaround)
+3. **20-sample minimum**: Michigan server requires >= 20 samples per VCF (duplicate sample column as workaround)
 4. **Assembly match**: Ensure your data is GRCh37 if using HRC, or check server requirements
 
 ## External Tools Required

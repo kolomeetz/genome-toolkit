@@ -15,6 +15,29 @@ Set up a personalized genome vault based on health goals, self-assessment, and i
 - Genome data already imported via `genome-import` (SQLite database populated)
 - Obsidian vault initialized from `vault-template/`
 
+## Preflight Validation
+
+Before onboarding begins, run the automated prerequisite checker. This replaces manual verification and catches common setup issues early.
+
+```bash
+python3 scripts/check_prerequisites.py --vault ~/Brains/genome --db data/genome.db
+```
+
+The checker validates:
+- **Vault structure** — expected directories exist (Genes/, Guides/, Reports/, Templates/)
+- **Community plugins enabled** — `.obsidian/community-plugins.json` exists and is non-empty
+- **Dataview installed** (critical) — MoC pages and dashboards depend on it
+- **Templater installed** (optional) — warns if missing
+- **Database populated** — genome.db exists and has variant data
+
+When run via `scripts/onboard.py`, these checks execute automatically at the start. If any critical check fails, onboarding aborts with fix instructions. Use `--skip-checks` to bypass (not recommended).
+
+If the database check fails, tell the user:
+> It looks like you haven't imported your genome data yet. Run `/genome-import` first — onboarding needs your genotype data to create personalized content.
+
+If the Dataview check fails:
+> Community plugins or Dataview are not set up. Without Dataview, the Dashboard and MoCs will appear empty after onboarding. See [[Getting Started]] Step 1.
+
 ## Vault Configuration
 - Config: `$GENOME_VAULT_ROOT` or config/default.yaml
 - Database: `data/genome.db`
@@ -233,3 +256,34 @@ Or use `/videopublish` skill for full YouTube pipeline.
 - `Reports/Action Plan.md` — personalized, assessment-weighted action plan
 - Assessment scores stored in Profile Card frontmatter for longitudinal tracking
 - Optional: MP4 video summary via Remotion
+
+---
+
+## Next Steps (show after onboarding completes)
+
+After onboarding finishes, display the following to the user:
+
+```
+Your vault is ready. Here's what to do next:
+
+1. **Read your Wallet Card** — open Reports/Wallet Card.md.
+   This is your emergency drug safety reference. Consider printing it
+   or saving a photo on your phone.
+
+2. **Review your Dashboard** — open Dashboard.md.
+   This is your home base. It shows your goals, top genes, and action items.
+
+3. **Check Action Items** — open Action Items.md.
+   These are lab tests and prescriber conversations prioritized by your
+   genetics. The top 2-3 items are the most decision-changing.
+
+4. **Explore a gene note** — pick the highest-scored gene from your
+   Dashboard and read through it. Each note explains what your genotype
+   means, what the evidence says, and what you can do about it.
+
+5. **Import lab results** (if you have them) — run /biomarker.
+   Combining genetics with actual bloodwork is where the real insights are.
+
+For the full setup checklist, see Guides/Setup Checklist.md.
+For detailed guidance on any step, see Guides/Getting Started.md.
+```

@@ -19,8 +19,9 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from lib.config import DB_PATH, GOAL_MAP, SCORING_WEIGHTS, GENERATION_LIMITS, MIGRATIONS_DIR
+from lib.config import DB_PATH, VAULT_ROOT, GOAL_MAP, SCORING_WEIGHTS, GENERATION_LIMITS, MIGRATIONS_DIR
 from lib.db import get_connection, init_db
+from scripts.check_prerequisites import check_prerequisites, has_critical_failures, print_results
 
 
 @dataclass
@@ -259,7 +260,18 @@ def main():
     parser.add_argument("--medications", nargs="*", default=None, help="Current medications")
     parser.add_argument("--profile", default="default", help="Profile ID")
     parser.add_argument("--db", type=Path, default=DB_PATH, help="Database path")
+    parser.add_argument("--vault", type=Path, default=VAULT_ROOT, help="Obsidian vault path")
+    parser.add_argument("--skip-checks", action="store_true", help="Skip prerequisite checks")
     args = parser.parse_args()
+
+    # --- Preflight checks ---
+    if not args.skip_checks:
+        results = check_prerequisites(args.vault, args.db)
+        print_results(results)
+        if has_critical_failures(results):
+            print("Aborting: fix the issues above before running onboarding.")
+            print("Use --skip-checks to bypass (not recommended).")
+            sys.exit(1)
 
     plan = generate_onboarding_plan(args.goals, args.db, args.profile, args.medications)
 
@@ -275,6 +287,35 @@ def main():
     print(f"\nFirst Reports: {', '.join(plan.first_reports)}")
     print(f"First Tests: {', '.join(plan.first_tests)}")
     print(f"First Protocols: {', '.join(plan.first_protocols)}")
+
+    # Post-onboarding guidance
+    print(f"\n{'='*60}")
+    print("WHAT'S NEXT")
+    print(f"{'='*60}")
+    print()
+    print("  1. Read your Wallet Card (Reports/Wallet Card.md)")
+    print("     Your emergency drug safety reference. Print it or")
+    print("     save a photo on your phone.")
+    print()
+    print("  2. Review your Dashboard (Dashboard.md)")
+    print("     Your home base with goals, top genes, and actions.")
+    print()
+    print("  3. Check Action Items (Action Items.md)")
+    print("     Lab tests and prescriber topics ranked by your genetics.")
+    if plan.first_tests:
+        print(f"     Top test: {plan.first_tests[0]}")
+    print()
+    print("  4. Explore your top gene note")
+    if plan.ranked_genes:
+        top = plan.ranked_genes[0]
+        print(f"     Start with {top.symbol} (score={top.score:.1f})")
+    print()
+    print("  5. Import lab results if you have them (/biomarker)")
+    print("     Genetics + bloodwork = real insights.")
+    print()
+    print("  Full setup checklist: Guides/Setup Checklist.md")
+    print("  Detailed guide:       Guides/Getting Started.md")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":
