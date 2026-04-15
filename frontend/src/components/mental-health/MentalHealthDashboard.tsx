@@ -83,9 +83,26 @@ export function MentalHealthDashboard({
 
   const geneDetailRef = useRef<HTMLDivElement>(null)
 
+  // All gene symbols on the dashboard — used by WikilinkText to decide click behavior
+  const allDashboardGenes = new Set(data.flatMap(s => s.genes.map(g => g.symbol)))
+
   const handleGeneClick = (gene: GeneData) => {
     setExpandedGene(prev => (prev?.rsid === gene.rsid ? null : gene))
     onGeneClick(gene)
+  }
+
+  /** Navigate to a gene by symbol — find it across all sections, expand & scroll */
+  const handleNavigateToGene = (symbol: string) => {
+    for (const section of data) {
+      const gene = section.genes.find(g => g.symbol === symbol)
+      if (gene) {
+        setExpandedGene(gene)
+        onGeneClick(gene)
+        return
+      }
+    }
+    // Gene not on dashboard — fall back to chat
+    onDiscuss?.(`Read the vault note for ${symbol}`)
   }
 
   // Scroll GeneDetail into view when expanded
@@ -257,6 +274,8 @@ export function MentalHealthDashboard({
                       onClose={() => setExpandedGene(null)}
                       onToggleAction={onToggleAction}
                       onDiscuss={onDiscuss}
+                      dashboardGenes={allDashboardGenes}
+                      onNavigateToGene={handleNavigateToGene}
                       checklistIds={checklistIds}
                       onAddToChecklist={onAddToChecklist}
                     />

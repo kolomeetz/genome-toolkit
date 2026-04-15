@@ -1,6 +1,7 @@
 import type { GeneData, ActionData } from '../../types/genomics'
 import { EvidenceBadge } from './EvidenceBadge'
 import { ActionCard } from './ActionCard'
+import { WikilinkText } from './WikilinkText'
 import { printPage, downloadFile, geneToMarkdown } from '../../lib/export'
 
 interface GeneDetailProps {
@@ -12,6 +13,10 @@ interface GeneDetailProps {
   onClose: () => void
   onToggleAction: (actionId: string) => void
   onDiscuss?: (context: string) => void
+  /** Symbols of all genes visible on the dashboard */
+  dashboardGenes?: Set<string>
+  /** Navigate to another gene on the dashboard */
+  onNavigateToGene?: (symbol: string) => void
   checklistIds?: Set<string>
   onAddToChecklist?: (action: ActionData) => void
 }
@@ -24,10 +29,18 @@ export function GeneDetail({
   interactions,
   onClose,
   onToggleAction,
-  onDiscuss: _onDiscuss,
+  onDiscuss,
+  dashboardGenes = new Set(),
+  onNavigateToGene,
   checklistIds = new Set(),
   onAddToChecklist,
 }: GeneDetailProps) {
+  const handleReadInChat = (noteName: string) => {
+    onDiscuss?.(`Read the vault note for ${noteName}`)
+  }
+  const handleNavigate = (symbol: string) => {
+    onNavigateToGene?.(symbol)
+  }
   return (
     <div className="gene-detail" style={{
       background: 'var(--bg-raised)',
@@ -245,14 +258,24 @@ export function GeneDetail({
                   color: 'var(--primary)',
                   marginBottom: 4,
                 }}>
-                  {interaction.genes}
+                  <WikilinkText
+                    text={interaction.genes}
+                    dashboardGenes={dashboardGenes}
+                    onNavigateToGene={handleNavigate}
+                    onReadInChat={handleReadInChat}
+                  />
                 </div>
                 <div style={{
                   fontSize: 'var(--font-size-md)',
                   color: 'var(--text-secondary)',
                   lineHeight: 1.5,
                 }}>
-                  {interaction.description}
+                  <WikilinkText
+                    text={interaction.description}
+                    dashboardGenes={dashboardGenes}
+                    onNavigateToGene={handleNavigate}
+                    onReadInChat={handleReadInChat}
+                  />
                 </div>
               </div>
             ))}
